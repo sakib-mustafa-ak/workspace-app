@@ -1,0 +1,17 @@
+node_modules
+
+.next
+
+dist
+
+.env
+
+.env.*
+
+coverage
+
+.turbo
+
+.vscode/settings.json
+
+.DS_Store

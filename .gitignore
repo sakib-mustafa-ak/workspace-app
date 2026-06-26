@@ -37,3 +37,33 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# Dependencies
+node_modules/
+
+# Build
+.next/
+dist/
+.turbo/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# Coverage
+coverage/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/settings.json
+.idea/
+
+# Nest
+apps/api/dist

@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 
 import { configuration } from "./config/index.js";
-import { HealthModule } from "./health/health.module.js";
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [

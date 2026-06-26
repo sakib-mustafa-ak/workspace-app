@@ -1,159 +1,358 @@
-# Turborepo starter
+# Collaborative Workspace
 
-This Turborepo starter is maintained by the Turborepo core team.
+A modern, real-time collaborative workspace platform built with a scalable monorepo architecture.
 
-## Using this example
+The goal of this project is to create an extensible collaboration platform that combines the best features of digital whiteboards, project management tools, collaborative documents, and team workspaces into a single application.
 
-Run the following command:
+---
 
-```sh
-npx create-turbo@latest
+## Vision
+
+The platform is designed to support real-time collaboration for teams of any size.
+
+Users will be able to:
+
+- Create collaborative workspaces
+- Build unlimited whiteboards
+- Draw and edit together in real time
+- Share files and assets
+- Manage projects and tasks
+- Collaborate through comments and discussions
+- Receive live notifications
+- Generate AI-assisted diagrams and summaries
+
+---
+
+## Planned Features
+
+### Authentication
+
+- User Registration
+- Login / Logout
+- OAuth (Google, GitHub)
+- Session Management
+- Role-Based Access Control
+
+---
+
+### Workspace Management
+
+- Multiple Workspaces
+- Member Invitations
+- Workspace Roles
+- Workspace Settings
+
+---
+
+### Whiteboard
+
+- Infinite Canvas
+- Shapes
+- Freehand Drawing
+- Text
+- Sticky Notes
+- Images
+- Connectors
+- Frames
+
+---
+
+### Real-time Collaboration
+
+- Live Cursor Presence
+- Simultaneous Editing
+- Object Synchronization
+- Presence Indicators
+- Undo / Redo
+- Conflict Resolution
+
+---
+
+### Documents
+
+- Rich Text Editing
+- Nested Pages
+- Collaborative Editing
+- Markdown Support
+
+---
+
+### Task Management
+
+- Kanban Board
+- Task Assignment
+- Labels
+- Due Dates
+- Calendar View
+
+---
+
+### Communication
+
+- Comments
+- Mentions
+- Notifications
+
+---
+
+### File Management
+
+- Image Uploads
+- Documents
+- Asset Library
+
+---
+
+### AI Features (Future)
+
+- AI Diagram Generation
+- AI Board Summary
+- AI Search
+- Meeting Notes
+- Smart Suggestions
+
+---
+
+# Technology Stack
+
+## Frontend
+
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+- shadcn/ui
+
+---
+
+## Backend
+
+- NestJS
+- TypeScript
+
+---
+
+## Database
+
+- PostgreSQL
+- Drizzle ORM
+
+---
+
+## Realtime
+
+- Socket.IO
+- Redis
+
+---
+
+## Storage
+
+- Cloudflare R2
+
+---
+
+## Infrastructure
+
+- TurboRepo
+- Docker
+- PNPM
+
+---
+
+# Project Structure
+
+```text
+workspace-app/
+
+apps/
+├── api/
+└── web/
+
+packages/
+├── auth/
+├── config/
+├── database/
+├── socket/
+├── types/
+├── ui/
+└── utils/
+
+docker/
+
+docs/
+
+scripts/
+
+package.json
+pnpm-workspace.yaml
+turbo.json
 ```
 
-## What's inside?
+---
 
-This Turborepo includes the following packages/apps:
+# High-Level Architecture
 
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
+```text
+                Browser
+                    │
+             Next.js Frontend
+                    │
+             REST API / WebSocket
+                    │
+               NestJS Backend
+                    │
+     ┌──────────────┼──────────────┐
+     │              │              │
+ PostgreSQL       Redis      Cloudflare R2
 ```
 
-Without global `turbo`, use your package manager:
+---
 
-```sh
-cd my-turborepo
-npx turbo build
-pnpm dlx turbo build
-pnpm exec turbo build
+# Development Roadmap
+
+## Phase 1
+
+- [x] Monorepo Setup
+- [x] Next.js Application
+- [x] NestJS API
+- [x] Shared Packages
+- [ ] Docker Infrastructure
+- [ ] PostgreSQL
+- [ ] Redis
+- [ ] Drizzle ORM
+
+---
+
+## Phase 2
+
+- [ ] Authentication
+- [ ] User Profiles
+- [ ] Workspace Management
+
+---
+
+## Phase 3
+
+- [ ] Boards
+- [ ] Canvas Engine
+- [ ] Board Persistence
+
+---
+
+## Phase 4
+
+- [ ] Real-time Collaboration
+- [ ] Live Presence
+- [ ] Live Cursor
+- [ ] Synchronization
+
+---
+
+## Phase 5
+
+- [ ] Documents
+- [ ] Task Management
+- [ ] File Storage
+
+---
+
+## Phase 6
+
+- [ ] AI Features
+- [ ] Search
+- [ ] Notifications
+
+---
+
+# Getting Started
+
+Clone the repository
+
+```bash
+git clone https://github.com/<your-username>/workspace-app.git
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+Enter the project
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo build --filter=docs
+```bash
+cd workspace-app
 ```
 
-Without global `turbo`:
+Install dependencies
 
-```sh
-npx turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+```bash
+pnpm install
 ```
 
-### Develop
+Start development
 
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
+```bash
+pnpm dev
 ```
 
-Without global `turbo`, use your package manager:
+---
 
-```sh
-cd my-turborepo
-npx turbo dev
-pnpm exec turbo dev
-pnpm exec turbo dev
+# Documentation
+
+Project documentation is organized under the `docs/` directory.
+
+```
+docs/
+
+architecture/
+
+database/
+
+api/
+
+roadmap/
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+---
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+# Project Goals
 
-```sh
-turbo dev --filter=web
-```
+This project is being built with the following principles:
 
-Without global `turbo`:
+- Modular Architecture
+- Scalable Monorepo
+- Feature-Based Organization
+- Reusable Packages
+- Clean Code
+- Extensible Design
+- Production-Ready Structure
 
-```sh
-npx turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+---
 
-### Remote Caching
+# Current Status
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+**Active Development**
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+The project is currently in the architecture and infrastructure phase.
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+Upcoming milestone:
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+- Docker Infrastructure
+- PostgreSQL Integration
+- Redis Integration
+- Authentication System
 
-```sh
-cd my-turborepo
-turbo login
-```
+---
 
-Without global `turbo`, use your package manager:
+# Contributing
 
-```sh
-cd my-turborepo
-npx turbo login
-pnpm exec turbo login
-pnpm exec turbo login
-```
+Contributions, suggestions, and discussions are welcome.
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+If you'd like to contribute:
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Open a Pull Request
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+---
 
-```sh
-turbo link
-```
+# License
 
-Without global `turbo`:
-
-```sh
-npx turbo link
-pnpm exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+This project is licensed under the MIT License.

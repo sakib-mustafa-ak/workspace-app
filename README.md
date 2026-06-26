@@ -11,6 +11,7 @@
 <p align="center">
 
 ![Status](https://img.shields.io/badge/status-active%20development-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![NestJS](https://img.shields.io/badge/NestJS-11-red)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
@@ -227,7 +228,7 @@ workspace-app/
 ## Clone the Repository
 
 ```bash
-git clone https://github.com/sakib-mustafa-ak/workspace-app.git
+git clone https://github.com/<your-github-username>/workspace-app.git
 ```
 
 ---
@@ -380,6 +381,12 @@ If you'd like to contribute:
 3. Commit your changes.
 4. Push your branch.
 5. Open a Pull Request.
+
+---
+
+# 📄 License
+
+This project is licensed under the MIT License.
 
 ---
 

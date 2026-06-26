@@ -11,7 +11,6 @@
 <p align="center">
 
 ![Status](https://img.shields.io/badge/status-active%20development-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
 ![Next.js](https://img.shields.io/badge/Next.js-16-black)
 ![NestJS](https://img.shields.io/badge/NestJS-11-red)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)

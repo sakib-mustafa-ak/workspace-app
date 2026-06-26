@@ -1,119 +1,182 @@
-# Collaborative Workspace
+# 🚀 Collaborative Workspace
 
-A modern, real-time collaborative workspace platform built with a scalable monorepo architecture.
-
-The goal of this project is to create an extensible collaboration platform that combines the best features of digital whiteboards, project management tools, collaborative documents, and team workspaces into a single application.
+> A modern, scalable, real-time collaborative workspace platform built with **Next.js**, **NestJS**, **PostgreSQL**, **Redis**, and **TurboRepo**.
 
 ---
 
-## Vision
+<p align="center">
+  <b>Digital Whiteboard • Team Collaboration • Documents • Tasks • AI</b>
+</p>
 
-The platform is designed to support real-time collaboration for teams of any size.
+<p align="center">
 
-Users will be able to:
+![Status](https://img.shields.io/badge/status-active%20development-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Next.js](https://img.shields.io/badge/Next.js-16-black)
+![NestJS](https://img.shields.io/badge/NestJS-11-red)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-336791)
+![Redis](https://img.shields.io/badge/Redis-8-red)
+![TurboRepo](https://img.shields.io/badge/TurboRepo-Latest-purple)
 
-- Create collaborative workspaces
-- Build unlimited whiteboards
-- Draw and edit together in real time
-- Share files and assets
-- Manage projects and tasks
-- Collaborate through comments and discussions
-- Receive live notifications
-- Generate AI-assisted diagrams and summaries
-
----
-
-## Planned Features
-
-### Authentication
-
-- User Registration
-- Login / Logout
-- OAuth (Google, GitHub)
-- Session Management
-- Role-Based Access Control
+</p>
 
 ---
 
-### Workspace Management
+## 📖 Overview
+
+Collaborative Workspace is an open-source collaboration platform inspired by modern productivity tools such as digital whiteboards, collaborative document editors, and project management systems.
+
+The goal is to build a highly scalable platform where teams can brainstorm, plan, communicate, and collaborate in real time.
+
+The application is designed with a modular architecture, making it easy to extend with new features without major refactoring.
+
+---
+
+# ✨ Planned Features
+
+## 🖥️ Workspace Management
 
 - Multiple Workspaces
+- Team Management
 - Member Invitations
-- Workspace Roles
 - Workspace Settings
+- Role-Based Permissions
 
 ---
 
-### Whiteboard
+## 🎨 Infinite Whiteboard
 
 - Infinite Canvas
-- Shapes
 - Freehand Drawing
+- Shapes
 - Text
 - Sticky Notes
 - Images
 - Connectors
 - Frames
+- Zoom & Pan
 
 ---
 
-### Real-time Collaboration
+## ⚡ Real-Time Collaboration
 
 - Live Cursor Presence
 - Simultaneous Editing
-- Object Synchronization
+- Live Board Synchronization
+- Object Locking
 - Presence Indicators
 - Undo / Redo
-- Conflict Resolution
+- Version History
 
 ---
 
-### Documents
+## 📄 Collaborative Documents
 
-- Rich Text Editing
+- Rich Text Editor
 - Nested Pages
-- Collaborative Editing
 - Markdown Support
+- Collaborative Editing
+- Document Sharing
 
 ---
 
-### Task Management
+## ✅ Task Management
 
-- Kanban Board
+- Kanban Boards
 - Task Assignment
-- Labels
 - Due Dates
+- Labels
 - Calendar View
+- Progress Tracking
 
 ---
 
-### Communication
+## 💬 Communication
 
 - Comments
+- Threaded Discussions
 - Mentions
 - Notifications
 
 ---
 
-### File Management
+## 📁 File Storage
 
 - Image Uploads
-- Documents
+- PDF Support
 - Asset Library
+- Cloud Storage
 
 ---
 
-### AI Features (Future)
+## 🤖 AI Features
 
 - AI Diagram Generation
-- AI Board Summary
+- AI Board Summaries
 - AI Search
-- Meeting Notes
 - Smart Suggestions
+- Meeting Notes
 
 ---
 
-# Technology Stack
+# 🏗️ High-Level Architecture
+
+```text
+                    Browser
+                        │
+                Next.js Frontend
+                        │
+────────────────── REST API ──────────────────
+                        │
+                 NestJS Backend
+                        │
+      ┌─────────────────┼─────────────────┐
+      │                 │                 │
+ PostgreSQL          Redis          Cloud Storage
+   Database         Pub/Sub        Cloudflare R2
+```
+
+---
+
+# 📁 Project Structure
+
+```text
+workspace-app/
+
+├── apps/
+│   ├── api/
+│   └── web/
+│
+├── packages/
+│   ├── auth/
+│   ├── config/
+│   ├── database/
+│   ├── socket/
+│   ├── types/
+│   ├── ui/
+│   └── utils/
+│
+├── docker/
+│
+├── docs/
+│   ├── api/
+│   ├── architecture/
+│   ├── database/
+│   ├── images/
+│   └── roadmap/
+│
+├── scripts/
+│
+├── package.json
+├── pnpm-workspace.yaml
+├── turbo.json
+└── README.md
+```
+
+---
+
+# ⚙️ Technology Stack
 
 ## Frontend
 
@@ -160,132 +223,33 @@ Users will be able to:
 
 ---
 
-# Project Structure
+# 🚀 Getting Started
 
-```text
-workspace-app/
-
-apps/
-├── api/
-└── web/
-
-packages/
-├── auth/
-├── config/
-├── database/
-├── socket/
-├── types/
-├── ui/
-└── utils/
-
-docker/
-
-docs/
-
-scripts/
-
-package.json
-pnpm-workspace.yaml
-turbo.json
-```
-
----
-
-# High-Level Architecture
-
-```text
-                Browser
-                    │
-             Next.js Frontend
-                    │
-             REST API / WebSocket
-                    │
-               NestJS Backend
-                    │
-     ┌──────────────┼──────────────┐
-     │              │              │
- PostgreSQL       Redis      Cloudflare R2
-```
-
----
-
-# Development Roadmap
-
-## Phase 1
-
-- [x] Monorepo Setup
-- [x] Next.js Application
-- [x] NestJS API
-- [x] Shared Packages
-- [ ] Docker Infrastructure
-- [ ] PostgreSQL
-- [ ] Redis
-- [ ] Drizzle ORM
-
----
-
-## Phase 2
-
-- [ ] Authentication
-- [ ] User Profiles
-- [ ] Workspace Management
-
----
-
-## Phase 3
-
-- [ ] Boards
-- [ ] Canvas Engine
-- [ ] Board Persistence
-
----
-
-## Phase 4
-
-- [ ] Real-time Collaboration
-- [ ] Live Presence
-- [ ] Live Cursor
-- [ ] Synchronization
-
----
-
-## Phase 5
-
-- [ ] Documents
-- [ ] Task Management
-- [ ] File Storage
-
----
-
-## Phase 6
-
-- [ ] AI Features
-- [ ] Search
-- [ ] Notifications
-
----
-
-# Getting Started
-
-Clone the repository
+## Clone the Repository
 
 ```bash
-git clone https://github.com/<your-username>/workspace-app.git
+git clone https://github.com/<your-github-username>/workspace-app.git
 ```
 
-Enter the project
+---
+
+## Enter the Project
 
 ```bash
 cd workspace-app
 ```
 
-Install dependencies
+---
+
+## Install Dependencies
 
 ```bash
 pnpm install
 ```
 
-Start development
+---
+
+## Start Development
 
 ```bash
 pnpm dev
@@ -293,66 +257,155 @@ pnpm dev
 
 ---
 
-# Documentation
+# 📚 Documentation
 
-Project documentation is organized under the `docs/` directory.
+Detailed documentation is available inside the `docs/` directory.
 
-```
+```text
 docs/
 
-architecture/
-
-database/
-
-api/
-
-roadmap/
+├── architecture/
+│   ├── system-overview.md
+│   ├── frontend.md
+│   ├── backend.md
+│   └── realtime.md
+│
+├── api/
+│   ├── authentication.md
+│   ├── workspaces.md
+│   ├── boards.md
+│   └── socket-events.md
+│
+├── database/
+│   ├── schema.md
+│   └── migrations.md
+│
+└── roadmap/
+    ├── milestones.md
+    └── features.md
 ```
 
 ---
 
-# Project Goals
+# 🗺️ Development Roadmap
 
-This project is being built with the following principles:
+## Phase 1 — Foundation
+
+- [x] TurboRepo Setup
+- [x] Next.js Frontend
+- [x] NestJS Backend
+- [x] Monorepo Architecture
+- [ ] Docker Infrastructure
+- [ ] PostgreSQL
+- [ ] Redis
+- [ ] Drizzle ORM
+
+---
+
+## Phase 2 — Authentication
+
+- [ ] Better Auth
+- [ ] User Registration
+- [ ] Login
+- [ ] Protected Routes
+
+---
+
+## Phase 3 — Workspaces
+
+- [ ] Workspace CRUD
+- [ ] Member Invitations
+- [ ] Roles & Permissions
+
+---
+
+## Phase 4 — Boards
+
+- [ ] Board CRUD
+- [ ] Infinite Canvas
+- [ ] Object Model
+- [ ] Persistence
+
+---
+
+## Phase 5 — Real-Time Collaboration
+
+- [ ] Live Presence
+- [ ] Live Cursor
+- [ ] Object Synchronization
+- [ ] Undo / Redo
+
+---
+
+## Phase 6 — Productivity
+
+- [ ] Documents
+- [ ] Tasks
+- [ ] Comments
+- [ ] Notifications
+- [ ] File Uploads
+
+---
+
+## Phase 7 — AI
+
+- [ ] AI Assistant
+- [ ] Diagram Generation
+- [ ] AI Search
+- [ ] Meeting Summaries
+
+---
+
+# 🎯 Project Goals
+
+This project is built with the following principles:
 
 - Modular Architecture
 - Scalable Monorepo
-- Feature-Based Organization
+- Feature-Based Development
 - Reusable Packages
 - Clean Code
-- Extensible Design
 - Production-Ready Structure
+- Developer-Friendly Experience
 
 ---
 
-# Current Status
+# 🤝 Contributing
 
-**Active Development**
-
-The project is currently in the architecture and infrastructure phase.
-
-Upcoming milestone:
-
-- Docker Infrastructure
-- PostgreSQL Integration
-- Redis Integration
-- Authentication System
-
----
-
-# Contributing
-
-Contributions, suggestions, and discussions are welcome.
+Contributions are welcome.
 
 If you'd like to contribute:
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Open a Pull Request
+1. Fork the repository.
+2. Create a new feature branch.
+3. Commit your changes.
+4. Push your branch.
+5. Open a Pull Request.
 
 ---
 
-# License
+# 📄 License
 
 This project is licensed under the MIT License.
+
+---
+
+# 📌 Current Status
+
+🚧 **Active Development**
+
+Current milestone:
+
+> **Milestone 4 — Infrastructure**
+>
+> - Docker
+> - PostgreSQL
+> - Redis
+> - Drizzle ORM
+> - Environment Configuration
+
+---
+
+<p align="center">
+Built with ❤️ using Next.js, NestJS, PostgreSQL, Redis, TypeScript, and TurboRepo.
+</p>

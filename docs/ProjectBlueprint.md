@@ -10029,6 +10029,7 @@ Technical debt must always be documented.
 | TD-006 | `SessionRepository.listLiveForUser()` + per-row `revoke()` loop is N+1 over sessions. Add `revokeAllForUser()`. | Medium   | Open   |
 | TD-007 | `class-transformer` is a direct API dep but no `@Type(...)` decorators are used; `transform: true` is wasted.   | Low      | Open   |
 | TD-008 | `RecordingMailProvider` retains every sent mail in memory; Phase-1 acceptable but needs a retention cap.        | Medium   | Open   |
+| TD-009 | Logger module reads `process.env.NODE_ENV` directly (only-isProduction picker); intentional infra carve-out. | Low      | Open     |
 
 If shortcuts are introduced, they must be added here.
 

@@ -2,10 +2,18 @@ import { Module } from '@nestjs/common';
 
 import { AuthController } from './controllers/auth.controller';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import {
+  MAIL_PROVIDER,
+  RecordingMailProvider,
+} from './mail/mail.provider';
+import {
+  EmailVerificationTokenRepository,
+} from './repositories/email-verification-token.repository';
 import { IdentityRepository } from './repositories/identity.repository';
 import { SessionRepository } from './repositories/session.repository';
 import { UserRepository } from './repositories/user.repository';
 import { AuthService } from './services/auth.service';
+import { EmailVerificationService } from './services/email-verification.service';
 import { PasswordService } from './services/password.service';
 import { TokenHashService } from './services/token-hash.service';
 import { TokenService } from './services/token.service';
@@ -16,10 +24,13 @@ import { AuthEventBus } from './events/auth.events';
  *
  * Composition (per Part V-A "Authentication Responsibilities"):
  *
- *   Controllers        → AuthController      — wire shape only
- *   Services           → AuthService + 3 helpers  — business workflows
- *   Repositories       → User / Identity / Session  — persistence
- *   Cross-cutting      → JwtAuthGuard + AuthEventBus — DI graph
+ *   Controllers        → AuthController            — wire shape only
+ *   Services           → AuthService + helpers
+ *                        + EmailVerificationService
+ *   Repositories       → User / Identity / Session
+ *                        + EmailVerificationToken
+ *   Provider           → RecordingMailProvider     — Phase 1 mail sink
+ *   Cross-cutting      → JwtAuthGuard + AuthEventBus
  *
  * The module deliberately does NOT register a `JwtAuthGuard` globally.
  * `AppModule` mounts that as `APP_GUARD` so opting out is `@Public()`.
@@ -44,6 +55,7 @@ import { AuthEventBus } from './events/auth.events';
   providers: [
     // Services
     AuthService,
+    EmailVerificationService,
     PasswordService,
     TokenHashService,
     TokenService,
@@ -51,6 +63,13 @@ import { AuthEventBus } from './events/auth.events';
     UserRepository,
     IdentityRepository,
     SessionRepository,
+    EmailVerificationTokenRepository,
+    // Mail provider — abstract (MAIL_PROVIDER), concrete (Recorder)
+    RecordingMailProvider,
+    {
+      provide: MAIL_PROVIDER,
+      useExisting: RecordingMailProvider,
+    },
     // Cross-cutting
     AuthEventBus,
     JwtAuthGuard,

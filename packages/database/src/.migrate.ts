@@ -6,7 +6,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 
 const connectionString =
   process.env.DATABASE_URL ??
-  "postgresql://workspace:workspace123@localhost:5432/workspace";
+  "postgresql://workspace:workspace123@localhost:5433/workspace";
 
 const sql = postgres(connectionString, {
   max: 1,

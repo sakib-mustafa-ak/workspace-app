@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
 
 import { configuration } from './config/index.js';
 import { DatabaseModule } from './infrastructure/database/database.module.js';
@@ -8,7 +7,6 @@ import { RedisModule } from './infrastructure/redis/redis.module.js';
 import { AppLoggerModule } from './infrastructure/logger/logger.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
-import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard.js';
 
 /**
  * Root Nest module.
@@ -24,12 +22,23 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard.js';
  * - Create the module under `apps/api/src/modules/<name>`.
  * - Export its public token from `module.ts`.
  * - Register it below. Do not edit siblings.
+ *
+ * Note on APP_GUARD placement: NestJS resolves APP_GUARD-injected
+ * guards in the module where they are declared; declaring the guard
+ * here would mean TokenService / UserRepository (which live in
+ * AuthModule) become "unknown dependencies". AuthModule registers
+ * APP_GUARD itself so the guard's constructor resolves inside the
+ * auth scope.
  */
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       cache: true,
+      // The single source of truth for environment lives at the
+      // workspace root (.env) — picked up here explicitly because
+      // the API's CWD is apps/api, two levels deep.
+      envFilePath: ['../../.env'],
       load: [configuration],
     }),
 
@@ -39,15 +48,6 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard.js';
 
     HealthModule,
     AuthModule,
-  ],
-  providers: [
-    // Protected-by-default: every route requires a valid JWT unless
-    // explicitly marked `@Public()`. This is wired at the application
-    // level so feature modules can shift without re-registering.
-    {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard,
-    },
   ],
 })
 export class AppModule {}

@@ -14,16 +14,16 @@
 
 # Table of Contents
 
-* Part I — Foundation
-* Part II — Repository & Architecture
-* Part III — Domain Design
-* Part IV — Database Design
-* Part V — Core Features
-* Part VI — Collaboration System
-* Part VII — Platform Services
-* Part VIII — Engineering Standards
-* Part IX — Development Workflow
-* Part X — Progress Tracking & Future Vision
+- Part I — Foundation
+- Part II — Repository & Architecture
+- Part III — Domain Design
+- Part IV — Database Design
+- Part V — Core Features
+- Part VI — Collaboration System
+- Part VII — Platform Services
+- Part VIII — Engineering Standards
+- Part IX — Development Workflow
+- Part X — Progress Tracking & Future Vision
 
 ---
 
@@ -85,20 +85,20 @@ Every major capability should be replaceable without rewriting business logic.
 
 Workspace OS should naturally evolve into a platform capable of supporting:
 
-* Whiteboards
-* Documentation
-* Tasks
-* Kanban
-* Chat
-* Meetings
-* Mind Maps
-* AI Assistants
-* Knowledge Base
-* File Management
-* Analytics
-* Automation
-* Marketplace
-* Enterprise Collaboration
+- Whiteboards
+- Documentation
+- Tasks
+- Kanban
+- Chat
+- Meetings
+- Mind Maps
+- AI Assistants
+- Knowledge Base
+- File Management
+- Analytics
+- Automation
+- Marketplace
+- Enterprise Collaboration
 
 without requiring major architectural rewrites.
 
@@ -110,13 +110,13 @@ Develop a production-grade collaborative platform using modern software engineer
 
 The project prioritizes:
 
-* Maintainability
-* Scalability
-* Extensibility
-* Performance
-* Developer Experience
-* Code Quality
-* Long-Term Evolution
+- Maintainability
+- Scalability
+- Extensibility
+- Performance
+- Developer Experience
+- Code Quality
+- Long-Term Evolution
 
 over rapid feature development.
 
@@ -126,24 +126,24 @@ over rapid feature development.
 
 ## Primary Goals
 
-* Build a production-ready collaborative workspace platform.
-* Maintain a clean and scalable architecture.
-* Follow modern engineering principles.
-* Design every feature with future extensibility in mind.
-* Keep the repository understandable for future contributors.
-* Produce a portfolio-quality project suitable for real-world deployment.
+- Build a production-ready collaborative workspace platform.
+- Maintain a clean and scalable architecture.
+- Follow modern engineering principles.
+- Design every feature with future extensibility in mind.
+- Keep the repository understandable for future contributors.
+- Produce a portfolio-quality project suitable for real-world deployment.
 
 ---
 
 ## Secondary Goals
 
-* Learn enterprise software architecture.
-* Practice Domain Driven Design.
-* Practice Clean Architecture.
-* Practice Event Driven Design.
-* Build reusable modules.
-* Gain production-level backend experience.
-* Gain production-level frontend experience.
+- Learn enterprise software architecture.
+- Practice Domain Driven Design.
+- Practice Clean Architecture.
+- Practice Event Driven Design.
+- Build reusable modules.
+- Gain production-level backend experience.
+- Gain production-level frontend experience.
 
 ---
 
@@ -151,15 +151,15 @@ over rapid feature development.
 
 The following are intentionally excluded from the initial development phases.
 
-* Microservices
-* Kubernetes
-* Multi-region deployments
-* Native mobile applications
-* Desktop applications
-* Marketplace ecosystem
-* Enterprise SAML authentication
-* Billing system
-* Plugin marketplace
+- Microservices
+- Kubernetes
+- Multi-region deployments
+- Native mobile applications
+- Desktop applications
+- Marketplace ecosystem
+- Enterprise SAML authentication
+- Billing system
+- Plugin marketplace
 
 These remain future expansion goals and will not block the MVP.
 
@@ -169,15 +169,15 @@ These remain future expansion goals and will not block the MVP.
 
 Workspace OS is designed for:
 
-* Software Teams
-* Startups
-* Universities
-* Students
-* Product Teams
-* Designers
-* Researchers
-* Project Managers
-* Open Source Communities
+- Software Teams
+- Startups
+- Universities
+- Students
+- Product Teams
+- Designers
+- Researchers
+- Project Managers
+- Open Source Communities
 
 ---
 
@@ -187,16 +187,16 @@ Workspace OS draws inspiration from several modern collaboration platforms.
 
 These products provide inspiration but are **not** implementation targets.
 
-* Miro
-* FigJam
-* Notion
-* Figma Whiteboard
-* Excalidraw
-* ClickUp
-* Linear
-* Slack
-* GitHub Projects
-* Microsoft Loop
+- Miro
+- FigJam
+- Notion
+- Figma Whiteboard
+- Excalidraw
+- ClickUp
+- Linear
+- Slack
+- GitHub Projects
+- Microsoft Loop
 
 The objective is to learn from their strengths while creating a unified collaborative platform.
 
@@ -226,14 +226,14 @@ The project is organized around business domains rather than technical layers.
 
 Examples include:
 
-* Authentication
-* Users
-* Workspaces
-* Boards
-* Canvas
-* Notifications
-* Storage
-* AI
+- Authentication
+- Users
+- Workspaces
+- Boards
+- Canvas
+- Notifications
+- Storage
+- AI
 
 Each domain owns its own business logic.
 
@@ -247,12 +247,12 @@ Frameworks are implementation details.
 
 Business rules must survive changes to:
 
-* NestJS
-* Next.js
-* Drizzle ORM
-* PostgreSQL
-* Redis
-* AI providers
+- NestJS
+- Next.js
+- Drizzle ORM
+- PostgreSQL
+- Redis
+- AI providers
 
 ---
 
@@ -262,9 +262,9 @@ The project follows all SOLID principles.
 
 Particular emphasis is placed on:
 
-* Single Responsibility Principle
-* Open/Closed Principle
-* Dependency Inversion Principle
+- Single Responsibility Principle
+- Open/Closed Principle
+- Dependency Inversion Principle
 
 ---
 
@@ -272,8 +272,8 @@ Particular emphasis is placed on:
 
 The project must remain:
 
-* Open for extension.
-* Closed for modification.
+- Open for extension.
+- Closed for modification.
 
 New functionality should primarily be added by introducing new modules, providers, plugins, handlers, or implementations rather than modifying stable existing code.
 
@@ -333,24 +333,24 @@ Examples include:
 
 Authentication Providers
 
-* Email
-* Google
-* GitHub
-* Microsoft
+- Email
+- Google
+- GitHub
+- Microsoft
 
 Storage Providers
 
-* S3
-* Cloudflare R2
-* MinIO
+- S3
+- Cloudflare R2
+- MinIO
 
 AI Providers
 
-* OpenAI
-* Gemini
-* Claude
-* DeepSeek
-* Local Models
+- OpenAI
+- Gemini
+- Claude
+- DeepSeek
+- Local Models
 
 New providers should be addable with minimal impact on existing business logic.
 
@@ -370,48 +370,48 @@ Architecture should optimize for the next five years rather than the next five w
 
 ## Frontend
 
-* Next.js
-* React
-* TypeScript
-* Tailwind CSS
-* Turborepo
-* PNPM
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+- Turborepo
+- PNPM
 
 ---
 
 ## Backend
 
-* NestJS
-* TypeScript
-* Zod
-* class-validator
-* Pino
-* Swagger
+- NestJS
+- TypeScript
+- Zod
+- class-validator
+- Pino
+- Swagger
 
 ---
 
 ## Database
 
-* PostgreSQL
-* Drizzle ORM
+- PostgreSQL
+- Drizzle ORM
 
 ---
 
 ## Infrastructure
 
-* Docker
-* Redis
-* TurboRepo
+- Docker
+- Redis
+- TurboRepo
 
 ---
 
 ## Development
 
-* Git
-* GitHub
-* VS Code
-* Prettier
-* ESLint
+- Git
+- GitHub
+- VS Code
+- Prettier
+- ESLint
 
 ---
 
@@ -513,18 +513,18 @@ No feature is considered complete until every stage has been completed.
 
 A feature is complete only when all of the following are satisfied.
 
-* Requirements documented
-* Domain model finalized
-* Database schema implemented
-* Repository implemented
-* Service implemented
-* Controller implemented
-* DTOs completed
-* Validation implemented
-* Tests passing
-* Documentation updated
-* Project builds successfully
-* Changes committed
+- Requirements documented
+- Domain model finalized
+- Database schema implemented
+- Repository implemented
+- Service implemented
+- Controller implemented
+- DTOs completed
+- Validation implemented
+- Tests passing
+- Documentation updated
+- Project builds successfully
+- Changes committed
 
 ---
 
@@ -629,8 +629,6 @@ Next
 
 The next section of the handbook (**Part II**) defines the complete repository structure, backend architecture, frontend architecture, package strategy, infrastructure boundaries, coding conventions, and project organization that every future feature must follow.
 
-
-
 # PART II — Repository Architecture & Engineering Standards
 
 ---
@@ -657,15 +655,15 @@ If the project eventually grows large enough, modules can be extracted into inde
 
 The repository architecture should achieve the following goals.
 
-* High maintainability
-* Low coupling
-* High cohesion
-* Fast development
-* Easy onboarding
-* Clear ownership
-* Future scalability
-* Independent module development
-* Reusable shared packages
+- High maintainability
+- Low coupling
+- High cohesion
+- Fast development
+- Easy onboarding
+- Clear ownership
+- Future scalability
+- Independent module development
+- Reusable shared packages
 
 ---
 
@@ -770,13 +768,13 @@ apps/api
 
 Responsibilities
 
-* REST API
-* Authentication
-* Business Logic
-* Validation
-* API Documentation
-* Realtime Gateway
-* Background Jobs
+- REST API
+- Authentication
+- Business Logic
+- Validation
+- API Documentation
+- Realtime Gateway
+- Background Jobs
 
 The API application should never contain reusable business libraries.
 
@@ -792,14 +790,14 @@ apps/web
 
 Responsibilities
 
-* User Interface
-* Routing
-* State Management
-* Authentication UI
-* Whiteboard UI
-* Dashboard
-* Settings
-* Workspace Management
+- User Interface
+- Routing
+- State Management
+- Authentication UI
+- Whiteboard UI
+- Dashboard
+- Settings
+- Workspace Management
 
 ---
 
@@ -821,18 +819,18 @@ packages/database
 
 Responsibilities
 
-* Drizzle Schema
-* Database Client
-* Migrations
-* Seeds
-* Database Utilities
+- Drizzle Schema
+- Database Client
+- Migrations
+- Seeds
+- Database Utilities
 
 Not responsible for:
 
-* Authentication
-* Business Logic
-* Controllers
-* Services
+- Authentication
+- Business Logic
+- Controllers
+- Services
 
 ---
 
@@ -1000,10 +998,10 @@ config/
 
 Responsibilities
 
-* Environment configuration
-* Validation
-* Typed configuration
-* Application settings
+- Environment configuration
+- Validation
+- Typed configuration
+- Application settings
 
 Only this layer is allowed to access
 
@@ -1109,12 +1107,12 @@ Consistency across modules is mandatory.
 
 Each module owns
 
-* Database operations
-* Business rules
-* Validation
-* DTOs
-* Events
-* Tests
+- Database operations
+- Business rules
+- Validation
+- DTOs
+- Events
+- Tests
 
 Other modules interact only through public interfaces.
 
@@ -1126,16 +1124,16 @@ Controllers are thin.
 
 Responsibilities
 
-* Receive request
-* Validate input
-* Call service
-* Return response
+- Receive request
+- Validate input
+- Call service
+- Return response
 
 Controllers must not contain
 
-* SQL
-* Business rules
-* Complex logic
+- SQL
+- Business rules
+- Complex logic
 
 Example
 
@@ -1175,10 +1173,10 @@ Services contain business logic.
 
 Responsibilities
 
-* Execute use cases
-* Validate business rules
-* Coordinate repositories
-* Publish domain events
+- Execute use cases
+- Validate business rules
+- Coordinate repositories
+- Publish domain events
 
 Services should not know about HTTP.
 
@@ -1190,9 +1188,9 @@ Repositories are responsible only for persistence.
 
 Responsibilities
 
-* Database queries
-* Transactions
-* Mapping
+- Database queries
+- Transactions
+- Mapping
 
 Repositories should not implement business decisions.
 
@@ -1256,11 +1254,11 @@ The frontend is feature-oriented.
 
 Every feature owns
 
-* Components
-* Hooks
-* API calls
-* State
-* Types
+- Components
+- Hooks
+- API calls
+- State
+- Types
 
 Example
 
@@ -1562,10 +1560,10 @@ Business logic receives the highest testing priority.
 
 Every commit must satisfy
 
-* Builds successfully
-* Lint passes
-* Type checking passes
-* Tests pass (when applicable)
+- Builds successfully
+- Lint passes
+- Type checking passes
+- Tests pass (when applicable)
 
 Broken commits are never acceptable.
 
@@ -1624,9 +1622,6 @@ Release Standards
 # End of Part II
 
 In **Part III**, we transition from repository structure to the heart of the application: the **Domain Model**. We'll define the bounded contexts, business entities, relationships, ownership rules, module responsibilities, and extension points that every future feature will build upon.
-
-
-
 
 # PART III-A — Domain Model & Bounded Contexts
 
@@ -1736,11 +1731,11 @@ A collaborative environment owned by one or more users.
 
 Contains:
 
-* Boards
-* Members
-* Files
-* Settings
-* AI Configuration
+- Boards
+- Members
+- Files
+- Settings
+- AI Configuration
 
 ---
 
@@ -1772,14 +1767,14 @@ Any object placed on the Canvas.
 
 Examples
 
-* Rectangle
-* Sticky Note
-* Image
-* Text
-* Frame
-* Video
-* Mind Map
-* Widget
+- Rectangle
+- Sticky Note
+- Image
+- Text
+- Frame
+- Video
+- Mind Map
+- Widget
 
 ---
 
@@ -1985,19 +1980,19 @@ Each context owns its own business rules.
 
 Responsible for
 
-* Login
-* Logout
-* Sessions
-* Passwords
-* OAuth
-* MFA
-* Email Verification
+- Login
+- Logout
+- Sessions
+- Passwords
+- OAuth
+- MFA
+- Email Verification
 
 Not responsible for
 
-* User Profiles
-* Permissions
-* Workspace Membership
+- User Profiles
+- Permissions
+- Workspace Membership
 
 ---
 
@@ -2005,12 +2000,12 @@ Not responsible for
 
 Responsible for
 
-* Profile
-* Preferences
-* Avatar
-* Locale
-* Timezone
-* Account Status
+- Profile
+- Preferences
+- Avatar
+- Locale
+- Timezone
+- Account Status
 
 Not responsible for authentication.
 
@@ -2020,11 +2015,11 @@ Not responsible for authentication.
 
 Responsible for
 
-* Workspace lifecycle
-* Membership
-* Roles
-* Invitations
-* Workspace settings
+- Workspace lifecycle
+- Membership
+- Roles
+- Invitations
+- Workspace settings
 
 ---
 
@@ -2032,10 +2027,10 @@ Responsible for
 
 Responsible for
 
-* Board lifecycle
-* Organization
-* Metadata
-* Sharing
+- Board lifecycle
+- Organization
+- Metadata
+- Sharing
 
 ---
 
@@ -2043,12 +2038,12 @@ Responsible for
 
 Responsible for
 
-* Objects
-* Layers
-* Selection
-* Editing
-* Rendering
-* Plugin Objects
+- Objects
+- Layers
+- Selection
+- Editing
+- Rendering
+- Plugin Objects
 
 ---
 
@@ -2056,11 +2051,11 @@ Responsible for
 
 Responsible for
 
-* Presence
-* Cursor
-* Typing
-* Synchronization
-* Live Editing
+- Presence
+- Cursor
+- Typing
+- Synchronization
+- Live Editing
 
 ---
 
@@ -2068,12 +2063,12 @@ Responsible for
 
 Responsible for
 
-* Email
-* Push
-* In-App
-* Webhooks
-* Slack
-* Discord
+- Email
+- Push
+- In-App
+- Webhooks
+- Slack
+- Discord
 
 ---
 
@@ -2081,11 +2076,11 @@ Responsible for
 
 Responsible for
 
-* File Upload
-* Images
-* Videos
-* PDFs
-* Storage Providers
+- File Upload
+- Images
+- Videos
+- PDFs
+- Storage Providers
 
 ---
 
@@ -2093,10 +2088,10 @@ Responsible for
 
 Responsible for
 
-* AI Providers
-* Prompt Execution
-* AI Commands
-* AI Agents
+- AI Providers
+- Prompt Execution
+- AI Commands
+- AI Agents
 
 ---
 
@@ -2104,11 +2099,11 @@ Responsible for
 
 Responsible for
 
-* Plans
-* Seats
-* Usage
-* Payments
-* Invoices
+- Plans
+- Seats
+- Usage
+- Payments
+- Invoices
 
 ---
 
@@ -2429,21 +2424,17 @@ Extension Strategy
 
 The next section (**Part III-B**) defines:
 
-* Domain Events
-* Plugin Architecture
-* Extension Strategy
-* Open/Closed Principle Implementation
-* Provider Pattern
-* Module Extension Rules
-* Future Microservice Extraction Strategy
-* Event Catalog
-* Integration Boundaries
+- Domain Events
+- Plugin Architecture
+- Extension Strategy
+- Open/Closed Principle Implementation
+- Provider Pattern
+- Module Extension Rules
+- Future Microservice Extraction Strategy
+- Event Catalog
+- Integration Boundaries
 
 These rules will ensure Workspace OS can grow for years without major architectural rewrites.
-
-
-
-
 
 # PART III-B — Domain Events, Extension Strategy & Plugin Architecture
 
@@ -2467,8 +2458,8 @@ This aligns with the **Open/Closed Principle (OCP)** and guides every architectu
 
 Software entities should be:
 
-* Open for extension
-* Closed for modification
+- Open for extension
+- Closed for modification
 
 This means adding new functionality should usually involve introducing new modules, providers, plugins, handlers, or implementations rather than rewriting stable code.
 
@@ -2499,14 +2490,12 @@ Authentication remains unchanged.
 ## Bad Example
 
 ```ts
-switch(provider){
+switch (provider) {
+  case "google":
 
-case "google":
+  case "github":
 
-case "github":
-
-case "microsoft":
-
+  case "microsoft":
 }
 ```
 
@@ -2520,12 +2509,12 @@ This violates OCP.
 
 Workspace OS should grow by:
 
-* Adding Modules
-* Adding Providers
-* Adding Plugins
-* Adding Event Handlers
-* Adding Policies
-* Adding Strategies
+- Adding Modules
+- Adding Providers
+- Adding Plugins
+- Adding Event Handlers
+- Adding Policies
+- Adding Strategies
 
 Instead of modifying existing business rules.
 
@@ -2537,14 +2526,14 @@ Every module should be capable of evolving independently.
 
 A module owns:
 
-* Controllers
-* Services
-* DTOs
-* Repositories
-* Events
-* Policies
-* Validation
-* Tests
+- Controllers
+- Services
+- DTOs
+- Repositories
+- Events
+- Policies
+- Validation
+- Tests
 
 Other modules should never access internal implementation details.
 
@@ -3000,10 +2989,10 @@ Modules consume them.
 
 Event handlers should.
 
-* Perform one responsibility.
-* Be idempotent when practical.
-* Avoid business side effects unrelated to the event.
-* Fail independently.
+- Perform one responsibility.
+- Be idempotent when practical.
+- Avoid business side effects unrelated to the event.
+- Fail independently.
 
 ---
 
@@ -3133,9 +3122,9 @@ Repositories abstract persistence.
 
 Responsibilities.
 
-* Query database.
-* Save entities.
-* Execute transactions.
+- Query database.
+- Save entities.
+- Execute transactions.
 
 Repositories never contain HTTP logic.
 
@@ -3233,11 +3222,11 @@ Never embed third-party logic throughout the codebase.
 
 Before adding a feature ask.
 
-* Can this be a plugin?
-* Can this be an event?
-* Can this depend on an interface?
-* Can this avoid modifying existing modules?
-* Does this belong to an existing bounded context?
+- Can this be a plugin?
+- Can this be an event?
+- Can this depend on an interface?
+- Can this avoid modifying existing modules?
+- Does this belong to an existing bounded context?
 
 If the answer is yes, prefer extension over modification.
 
@@ -3369,25 +3358,21 @@ From this point onward, implementation begins with the database.
 
 The next section (**Part IV**) covers the complete **Database Blueprint**, including:
 
-* Database Philosophy
-* Naming Standards
-* UUID Strategy
-* Base Entity Design
-* Soft Deletes
-* Audit Fields
-* Indexing Strategy
-* Schema Organization
-* Entity Design Rules
-* Migration Strategy
-* Repository Conventions
-* Performance Guidelines
-* Multi-Tenant Data Design
+- Database Philosophy
+- Naming Standards
+- UUID Strategy
+- Base Entity Design
+- Soft Deletes
+- Audit Fields
+- Indexing Strategy
+- Schema Organization
+- Entity Design Rules
+- Migration Strategy
+- Repository Conventions
+- Performance Guidelines
+- Multi-Tenant Data Design
 
 This section will serve as the permanent reference for every database table created in the project.
-
-
-
-
 
 # PART IV-A — Database Philosophy, Standards & Conventions
 
@@ -3399,12 +3384,12 @@ The database is the foundation of Workspace OS.
 
 A well-designed database enables:
 
-* Scalability
-* Maintainability
-* Performance
-* Extensibility
-* Data Integrity
-* Future Feature Expansion
+- Scalability
+- Maintainability
+- Performance
+- Extensibility
+- Data Integrity
+- Future Feature Expansion
 
 Poor database decisions become extremely expensive to change later.
 
@@ -3420,10 +3405,10 @@ Workspace OS follows one simple philosophy.
 
 Every table should:
 
-* represent a business concept
-* have a clear owner
-* support future expansion
-* minimize breaking schema changes
+- represent a business concept
+- have a clear owner
+- support future expansion
+- minimize breaking schema changes
 
 ---
 
@@ -3461,13 +3446,13 @@ PostgreSQL
 
 Reason
 
-* Excellent relational capabilities
-* JSON support
-* Full-text search
-* Row-level security support
-* Extensions
-* Performance
-* Mature ecosystem
+- Excellent relational capabilities
+- JSON support
+- Full-text search
+- Row-level security support
+- Extensions
+- Performance
+- Mature ecosystem
 
 Changing the database engine is **not** planned.
 
@@ -3483,12 +3468,12 @@ Drizzle ORM
 
 Reason
 
-* Type-safe
-* SQL-first
-* Lightweight
-* Excellent migration tooling
-* Minimal abstraction
-* Easy to optimize
+- Type-safe
+- SQL-first
+- Lightweight
+- Excellent migration tooling
+- Minimal abstraction
+- Easy to optimize
 
 Business logic must never depend directly on Drizzle.
 
@@ -3667,11 +3652,11 @@ camelCase
 Example
 
 ```ts
-displayName
+displayName;
 
-passwordHash
+passwordHash;
 
-createdAt
+createdAt;
 ```
 
 ---
@@ -3700,11 +3685,11 @@ UUID Version 7
 
 Reason
 
-* Chronologically sortable
-* Better index locality
-* Better write performance
-* Modern PostgreSQL support
-* Globally unique
+- Chronologically sortable
+- Better index locality
+- Better write performance
+- Modern PostgreSQL support
+- Globally unique
 
 Every business entity uses UUIDv7 unless there is a compelling reason not to.
 
@@ -3800,9 +3785,9 @@ allow the system to determine ownership.
 
 Audit fields are especially valuable for:
 
-* Enterprise customers
-* Activity history
-* Security investigations
+- Enterprise customers
+- Activity history
+- Security investigations
 
 ---
 
@@ -3826,9 +3811,9 @@ Never store local time.
 
 Avoid nullable columns unless:
 
-* the value is genuinely optional
-* future updates are expected
-* the business allows missing information
+- the value is genuinely optional
+- future updates are expected
+- the business allows missing information
 
 Prefer explicit defaults where possible.
 
@@ -4004,10 +3989,10 @@ Use transactions whenever multiple business operations must succeed or fail toge
 
 Examples
 
-* Accept Invitation
-* Create Workspace + Owner Membership
-* Delete Workspace
-* Purchase Subscription
+- Accept Invitation
+- Create Workspace + Owner Membership
+- Delete Workspace
+- Purchase Subscription
 
 ---
 
@@ -4079,9 +4064,9 @@ Database
 
 They should never:
 
-* enforce permissions
-* contain business workflows
-* know about HTTP
+- enforce permissions
+- contain business workflows
+- know about HTTP
 
 ---
 
@@ -4206,22 +4191,18 @@ Multi-Tenant Design          ░░░░░░░░░░ 0%
 
 The next section (**Part IV-B**) defines the **core entity blueprint** for the entire system, including:
 
-* Base Entity conventions
-* User entity design
-* Workspace ownership model
-* Membership strategy
-* Board hierarchy
-* Multi-tenant isolation
-* Audit model
-* Entity lifecycle
-* Relationship rules
-* Future schema evolution strategy
+- Base Entity conventions
+- User entity design
+- Workspace ownership model
+- Membership strategy
+- Board hierarchy
+- Multi-tenant isolation
+- Audit model
+- Entity lifecycle
+- Relationship rules
+- Future schema evolution strategy
 
 This section will become the reference used before implementing every Drizzle schema in the project.
-
-
-
-
 
 # PART IV-B — Core Entity Blueprint & Multi-Tenant Data Model
 
@@ -4243,9 +4224,9 @@ This document is the source of truth before writing any database schema.
 
 An entity represents something with:
 
-* Identity
-* Lifecycle
-* Business Meaning
+- Identity
+- Lifecycle
+- Business Meaning
 
 Entities are not database tables.
 
@@ -4417,19 +4398,19 @@ Represents a person using the platform.
 
 ## Responsibilities
 
-* Identity
-* Profile
-* Preferences
-* Account Status
+- Identity
+- Profile
+- Preferences
+- Account Status
 
 ---
 
 ## Does NOT Manage
 
-* Authentication
-* Permissions
-* Billing
-* Workspace Ownership
+- Authentication
+- Permissions
+- Billing
+- Workspace Ownership
 
 ---
 
@@ -4501,11 +4482,11 @@ Represents an isolated collaboration environment.
 
 ## Responsibilities
 
-* Membership
-* Settings
-* Boards
-* Invitations
-* Branding
+- Membership
+- Settings
+- Boards
+- Invitations
+- Branding
 
 ---
 
@@ -4655,11 +4636,11 @@ Represents a collaborative document.
 
 ## Responsibilities
 
-* Metadata
-* Permissions
-* Canvas
-* Sharing
-* Activity
+- Metadata
+- Permissions
+- Canvas
+- Sharing
+- Activity
 
 ---
 
@@ -4703,11 +4684,11 @@ Every board owns exactly one canvas.
 
 Canvas stores:
 
-* Viewport
-* Zoom
-* Layers
-* Grid
-* Background
+- Viewport
+- Zoom
+- Layers
+- Grid
+- Background
 
 Canvas contains Canvas Objects.
 
@@ -4759,14 +4740,14 @@ The platform should never require schema redesign to support new object types.
 
 Comments belong to:
 
-* Board
-* Canvas Object
+- Board
+- Canvas Object
 
 Future support.
 
-* Threads
-* Mentions
-* Reactions
+- Threads
+- Mentions
+- Reactions
 
 ---
 
@@ -5051,9 +5032,9 @@ Removing attributes should be rare.
 
 Breaking changes require:
 
-* Migration
-* ADR
-* Versioned rollout (if applicable)
+- Migration
+- ADR
+- Versioned rollout (if applicable)
 
 ---
 
@@ -5134,14 +5115,14 @@ Future Evolution             ██████████ 100%
 
 The following topics are intentionally postponed until their respective implementation phases:
 
-* Organization hierarchy (Organizations, Departments, Teams)
-* Cross-workspace resource sharing
-* Cross-workspace search
-* Enterprise RBAC inheritance
-* Data residency by region
-* PostgreSQL Row-Level Security (RLS)
-* Multi-database sharding
-* Workspace quotas and storage limits
+- Organization hierarchy (Organizations, Departments, Teams)
+- Cross-workspace resource sharing
+- Cross-workspace search
+- Enterprise RBAC inheritance
+- Data residency by region
+- PostgreSQL Row-Level Security (RLS)
+- Multi-database sharding
+- Workspace quotas and storage limits
 
 These decisions are deferred to avoid unnecessary complexity during the MVP while preserving clear extension paths.
 
@@ -5151,23 +5132,18 @@ These decisions are deferred to avoid unnecessary complexity during the MVP whil
 
 The next section (**Part IV-C**) completes the database blueprint with:
 
-* Drizzle schema conventions
-* Repository architecture
-* Migration workflow
-* Indexing strategy
-* Query standards
-* Transaction guidelines
-* Performance optimization
-* Seed strategy
-* Testing strategy for the data layer
-* Database Definition of Done
+- Drizzle schema conventions
+- Repository architecture
+- Migration workflow
+- Indexing strategy
+- Query standards
+- Transaction guidelines
+- Performance optimization
+- Seed strategy
+- Testing strategy for the data layer
+- Database Definition of Done
 
 After Part IV, the database architecture will be fully frozen, and we'll begin implementing the actual schema with confidence and minimal future redesign.
-
-
-
-
-
 
 # PART V-A — Authentication & Identity Blueprint
 
@@ -5195,12 +5171,12 @@ These concerns remain separate throughout the project.
 
 Workspace OS follows modern authentication principles.
 
-* Stateless access tokens
-* Stateful refresh sessions
-* Provider abstraction
-* Multi-device support
-* Future MFA support
-* Enterprise-ready identity architecture
+- Stateless access tokens
+- Stateful refresh sessions
+- Provider abstraction
+- Multi-device support
+- Future MFA support
+- Enterprise-ready identity architecture
 
 Authentication must remain independent from business modules.
 
@@ -5210,16 +5186,16 @@ Authentication must remain independent from business modules.
 
 The Authentication module owns:
 
-* Login
-* Logout
-* Registration
-* Password Hashing
-* Email Verification
-* Password Reset
-* Refresh Tokens
-* Sessions
-* OAuth Providers
-* MFA (Future)
+- Login
+- Logout
+- Registration
+- Password Hashing
+- Email Verification
+- Password Reset
+- Refresh Tokens
+- Sessions
+- OAuth Providers
+- MFA (Future)
 
 ---
 
@@ -5227,12 +5203,12 @@ The Authentication module owns:
 
 Authentication does **not** manage:
 
-* User Profile
-* Workspace Membership
-* Permissions
-* Roles
-* Billing
-* Notifications
+- User Profile
+- Workspace Membership
+- Permissions
+- Roles
+- Billing
+- Notifications
 
 These belong to their respective domains.
 
@@ -5406,10 +5382,10 @@ API Authentication
 
 Characteristics.
 
-* Short-lived
-* Stateless
-* Contains claims
-* Never stored permanently
+- Short-lived
+- Stateless
+- Contains claims
+- Never stored permanently
 
 ---
 
@@ -5423,10 +5399,10 @@ Session Continuity
 
 Characteristics.
 
-* Long-lived
-* Stored securely
-* Rotated
-* Revocable
+- Long-lived
+- Stored securely
+- Rotated
+- Revocable
 
 ---
 
@@ -5508,10 +5484,10 @@ Minimum length.
 
 Requirements.
 
-* Uppercase
-* Lowercase
-* Number
-* Special character
+- Uppercase
+- Lowercase
+- Number
+- Special character
 
 Validation occurs both client-side and server-side.
 
@@ -5615,9 +5591,9 @@ Deferred until Phase 3.
 
 Possible methods.
 
-* TOTP
-* Email OTP
-* Security Keys (WebAuthn)
+- TOTP
+- Email OTP
+- Security Keys (WebAuthn)
 
 Architecture should not require redesign.
 
@@ -5721,17 +5697,17 @@ Never mix these responsibilities.
 
 The following are intentionally postponed.
 
-* Google OAuth
-* GitHub OAuth
-* Microsoft OAuth
-* Apple Sign-In
-* SAML
-* LDAP
-* MFA
-* Passwordless Login
-* WebAuthn
-* Device Trust
-* Login History UI
+- Google OAuth
+- GitHub OAuth
+- Microsoft OAuth
+- Apple Sign-In
+- SAML
+- LDAP
+- MFA
+- Passwordless Login
+- WebAuthn
+- Device Trust
+- Login History UI
 
 These features are supported by the architecture but are not part of the MVP.
 
@@ -5771,22 +5747,17 @@ The next section (**Part V-B**) will define the **Users, Workspaces, Memberships
 
 This is where the collaboration model of Workspace OS is established, including:
 
-* User profile architecture
-* Workspace lifecycle
-* Membership model
-* Invitation workflow
-* Role hierarchy
-* Permission system
-* Policy-based authorization
-* Audit ownership
-* Future enterprise RBAC strategy
+- User profile architecture
+- Workspace lifecycle
+- Membership model
+- Invitation workflow
+- Role hierarchy
+- Permission system
+- Policy-based authorization
+- Audit ownership
+- Future enterprise RBAC strategy
 
 This blueprint will directly drive the implementation of the first real feature modules in the project.
-
-
-
-
-
 
 # PART V-B — Users, Workspaces, Memberships & Authorization Blueprint
 
@@ -5846,21 +5817,21 @@ The Users module manages the personal identity of a person.
 
 It owns:
 
-* Profile
-* Avatar
-* Preferences
-* Language
-* Timezone
-* Theme
-* Account Status
+- Profile
+- Avatar
+- Preferences
+- Language
+- Timezone
+- Theme
+- Account Status
 
 It does **not** own:
 
-* Authentication
-* Permissions
-* Workspaces
-* Sessions
-* Billing
+- Authentication
+- Permissions
+- Workspaces
+- Sessions
+- Billing
 
 ---
 
@@ -5900,12 +5871,12 @@ Future preferences belong here.
 
 Examples:
 
-* Theme
-* Language
-* Timezone
-* Notification Preferences
-* Accessibility
-* Editor Preferences
+- Theme
+- Language
+- Timezone
+- Notification Preferences
+- Accessibility
+- Editor Preferences
 
 These should not be stored inside Authentication.
 
@@ -5923,19 +5894,19 @@ Everything collaborative exists inside one workspace.
 
 Owns:
 
-* Members
-* Boards
-* Settings
-* Invitations
-* Branding
-* Workspace Policies
+- Members
+- Boards
+- Settings
+- Invitations
+- Branding
+- Workspace Policies
 
 Does not own:
 
-* Authentication
-* AI
-* Billing
-* Notifications
+- Authentication
+- AI
+- Billing
+- Notifications
 
 ---
 
@@ -5993,13 +5964,13 @@ Membership is its own domain object.
 
 It is **not**
 
-* a User
+- a User
 
 and
 
 It is **not**
 
-* a Workspace.
+- a Workspace.
 
 It represents:
 
@@ -6113,15 +6084,15 @@ Revoked
 
 An invitation belongs to:
 
-* One Workspace
+- One Workspace
 
 Targets:
 
-* One Email
+- One Email
 
 Creates:
 
-* One Membership
+- One Membership
 
 after acceptance.
 
@@ -6397,10 +6368,10 @@ Future plan.
 
 Workspace may define:
 
-* Maximum Members
-* Maximum Boards
-* Storage Limit
-* AI Usage Limit
+- Maximum Members
+- Maximum Boards
+- Storage Limit
+- AI Usage Limit
 
 These belong to Billing later.
 
@@ -6576,18 +6547,18 @@ Not implemented in MVP.
 
 The following are intentionally postponed.
 
-* Guest Users
-* Public Boards
-* Shared Links
-* Workspace Templates
-* Organization Hierarchy
-* Department Structure
-* Teams
-* Cross-Workspace Permissions
-* ABAC
-* Enterprise RBAC
-* Workspace Domains
-* SCIM Provisioning
+- Guest Users
+- Public Boards
+- Shared Links
+- Workspace Templates
+- Organization Hierarchy
+- Department Structure
+- Teams
+- Cross-Workspace Permissions
+- ABAC
+- Enterprise RBAC
+- Workspace Domains
+- SCIM Provisioning
 
 These features are planned but intentionally excluded from the initial implementation.
 
@@ -6676,20 +6647,20 @@ No feature should bypass or reverse this hierarchy.
 
 The Users and Workspace domains are considered complete only when all of the following are implemented:
 
-* Domain model
-* Database schema
-* Repositories
-* Services
-* Controllers
-* DTOs
-* Validation
-* Policies
-* Unit tests
-* Integration tests
-* API documentation
-* Domain events
-* Documentation updated
-* Build passing
+- Domain model
+- Database schema
+- Repositories
+- Services
+- Controllers
+- DTOs
+- Validation
+- Policies
+- Unit tests
+- Integration tests
+- API documentation
+- Domain events
+- Documentation updated
+- Build passing
 
 ---
 
@@ -6699,24 +6670,18 @@ The next section (**Part V-C**) covers the **Boards, Canvas, Whiteboard Objects,
 
 This will define the core collaborative editing experience, including:
 
-* Board lifecycle
-* Canvas architecture
-* Canvas object system
-* Layer model
-* Selection model
-* Presence
-* Live cursors
-* Operational synchronization strategy
-* Plugin-based canvas objects
-* Future CRDT/OT evolution
+- Board lifecycle
+- Canvas architecture
+- Canvas object system
+- Layer model
+- Selection model
+- Presence
+- Live cursors
+- Operational synchronization strategy
+- Plugin-based canvas objects
+- Future CRDT/OT evolution
 
 This section forms the heart of Workspace OS and will guide the implementation of the application's flagship collaborative features.
-
-
-
-
-
-
 
 # PART V-C — Boards, Canvas, Collaboration & Realtime Blueprint
 
@@ -6732,13 +6697,13 @@ Every collaborative feature in the platform ultimately revolves around the Board
 
 This blueprint defines:
 
-* Board architecture
-* Canvas architecture
-* Object system
-* Collaboration model
-* Realtime synchronization
-* Plugin architecture
-* Future expansion
+- Board architecture
+- Canvas architecture
+- Object system
+- Collaboration model
+- Realtime synchronization
+- Plugin architecture
+- Future expansion
 
 ---
 
@@ -6780,14 +6745,14 @@ A Board represents a collaborative workspace dedicated to one topic.
 
 Examples:
 
-* Sprint Planning
-* System Design
-* UML Diagram
-* Brainstorming
-* Product Roadmap
-* Whiteboard Notes
-* Database Design
-* Flowcharts
+- Sprint Planning
+- System Design
+- UML Diagram
+- Brainstorming
+- Product Roadmap
+- Whiteboard Notes
+- Database Design
+- Flowcharts
 
 A Board is **not** just a drawing.
 
@@ -6799,20 +6764,20 @@ It is a collaboration container.
 
 Owns:
 
-* Canvas
-* Metadata
-* Permissions
-* Activity
-* Comments
-* Attachments
-* Version History
+- Canvas
+- Metadata
+- Permissions
+- Activity
+- Comments
+- Attachments
+- Version History
 
 Does not own:
 
-* Workspace
-* Authentication
-* Notifications
-* Billing
+- Workspace
+- Authentication
+- Notifications
+- Billing
 
 ---
 
@@ -6874,15 +6839,15 @@ Every board maintains metadata.
 
 Examples
 
-* Title
-* Description
-* Thumbnail
-* Created By
-* Updated By
-* Last Edited
-* Favorite
-* Archived
-* Template
+- Title
+- Description
+- Thumbnail
+- Created By
+- Updated By
+- Last Edited
+- Favorite
+- Archived
+- Template
 
 ---
 
@@ -6900,13 +6865,13 @@ Business logic belongs elsewhere.
 
 Owns
 
-* Viewport
-* Zoom
-* Pan
-* Background
-* Grid
-* Layers
-* Object Ordering
+- Viewport
+- Zoom
+- Pan
+- Background
+- Grid
+- Layers
+- Object Ordering
 
 ---
 
@@ -7154,10 +7119,10 @@ Selection exists independently of objects.
 
 Selection supports.
 
-* Single
-* Multi
-* Group
-* Future nested selection
+- Single
+- Multi
+- Group
+- Future nested selection
 
 ---
 
@@ -7207,9 +7172,9 @@ Objects may be locked.
 
 Locked objects.
 
-* Cannot move
-* Cannot resize
-* Cannot edit
+- Cannot move
+- Cannot resize
+- Cannot edit
 
 Unless permitted.
 
@@ -7283,11 +7248,11 @@ Who is online?
 
 Future information.
 
-* User
-* Cursor
-* Selection
-* Active Tool
-* Viewport
+- User
+- Cursor
+- Selection
+- Active Tool
+- Viewport
 
 ---
 
@@ -7321,9 +7286,9 @@ Future.
 
 Users should see.
 
-* Selected Objects
-* Selected Frames
-* Editing Text
+- Selected Objects
+- Selected Frames
+- Editing Text
 
 ---
 
@@ -7493,12 +7458,12 @@ Deferred.
 
 Future examples.
 
-* Sprint Board
-* UML
-* Flowchart
-* Brainstorm
-* Roadmap
-* User Journey
+- Sprint Board
+- UML
+- Flowchart
+- Brainstorm
+- Roadmap
+- User Journey
 
 Templates should initialize boards without modifying Board logic.
 
@@ -7508,10 +7473,10 @@ Templates should initialize boards without modifying Board logic.
 
 Only authorized members may.
 
-* Join board
-* Edit board
-* Delete objects
-* View private boards
+- Join board
+- Edit board
+- Delete objects
+- View private boards
 
 Authorization occurs before synchronization.
 
@@ -7521,18 +7486,18 @@ Authorization occurs before synchronization.
 
 The following are intentionally postponed.
 
-* Live Voice Chat
-* Video Collaboration
-* Whiteboard Recording
-* Multiplayer Playback
-* Offline Editing
-* CRDT
-* Shared Mouse Trails
-* Laser Pointer
-* Screen Sharing
-* Embedded Apps
-* Board Branching
-* Time Travel Editing
+- Live Voice Chat
+- Video Collaboration
+- Whiteboard Recording
+- Multiplayer Playback
+- Offline Editing
+- CRDT
+- Shared Mouse Trails
+- Laser Pointer
+- Screen Sharing
+- Embedded Apps
+- Board Branching
+- Time Travel Editing
 
 Architecture supports them but MVP does not implement them.
 
@@ -7618,24 +7583,24 @@ Import/Export Ready          ☑
 
 The Boards and Canvas domains are complete only when they include:
 
-* Board domain model
-* Canvas domain model
-* Object architecture
-* Database schema
-* Repositories
-* Services
-* Controllers
-* DTOs
-* Validation
-* Policies
-* WebSocket integration
-* Version history foundation
-* Unit tests
-* Integration tests
-* API documentation
-* Frontend implementation
-* Documentation updated
-* Build passing
+- Board domain model
+- Canvas domain model
+- Object architecture
+- Database schema
+- Repositories
+- Services
+- Controllers
+- DTOs
+- Validation
+- Policies
+- WebSocket integration
+- Version history foundation
+- Unit tests
+- Integration tests
+- API documentation
+- Frontend implementation
+- Documentation updated
+- Build passing
 
 ---
 
@@ -7644,12 +7609,6 @@ The Boards and Canvas domains are complete only when they include:
 The next section (**Part VI-A**) will define the **Notifications, File Storage, AI Architecture, Background Jobs, Search, and Platform Services**.
 
 This shifts the blueprint from the collaborative core into the supporting platform capabilities that make Workspace OS production-ready and extensible for future enterprise features.
-
-
-
-
-
-
 
 # PART VI-A — Platform Services, Storage, Notifications & AI Blueprint
 
@@ -7665,13 +7624,13 @@ They provide functionality to business modules without owning business logic the
 
 Examples:
 
-* Notifications
-* Storage
-* AI
-* Search
-* Background Jobs
-* Audit Logging
-* Analytics
+- Notifications
+- Storage
+- AI
+- Search
+- Background Jobs
+- Audit Logging
+- Analytics
 
 These services should remain reusable, replaceable, and independently extensible.
 
@@ -7935,17 +7894,17 @@ Business modules never know where files are stored.
 
 Owns.
 
-* Upload
-* Download
-* Delete
-* Metadata
-* File Validation
+- Upload
+- Download
+- Delete
+- Metadata
+- File Validation
 
 Does not own.
 
-* Business permissions
-* Workspace ownership
-* Authentication
+- Business permissions
+- Workspace ownership
+- Authentication
 
 ---
 
@@ -8045,11 +8004,11 @@ Actual file bytes remain outside the database.
 
 Uploads should support.
 
-* MIME validation
-* File size limits
-* Virus scanning (future)
-* Signed URLs
-* Temporary download links
+- MIME validation
+- File size limits
+- Virus scanning (future)
+- Signed URLs
+- Temporary download links
 
 ---
 
@@ -8087,18 +8046,18 @@ It never owns business data.
 
 Owns.
 
-* Prompt execution
-* Provider routing
-* Conversation history
-* Tool orchestration
-* AI configuration
+- Prompt execution
+- Provider routing
+- Conversation history
+- Tool orchestration
+- AI configuration
 
 Does not own.
 
-* Workspace
-* Authentication
-* Canvas
-* Notifications
+- Workspace
+- Authentication
+- Canvas
+- Notifications
 
 ---
 
@@ -8156,14 +8115,14 @@ This provides contextual assistance.
 
 Examples.
 
-* Generate diagrams
-* Summarize boards
-* Explain architecture
-* Generate tasks
-* Create documentation
-* Improve writing
-* Answer questions
-* Suggest layouts
+- Generate diagrams
+- Summarize boards
+- Explain architecture
+- Generate tasks
+- Create documentation
+- Improve writing
+- Answer questions
+- Suggest layouts
 
 ---
 
@@ -8497,21 +8456,21 @@ Every new platform capability should.
 
 The following are intentionally postponed.
 
-* Push Notifications
-* SMS
-* Discord Bot
-* Slack Bot
-* Virus Scanning
-* OCR
-* Video Transcoding
-* AI Agents
-* Vector Search
-* Semantic Search
-* AI Memory
-* Workflow Automation
-* Webhooks
-* Zapier Integration
-* Marketplace Integrations
+- Push Notifications
+- SMS
+- Discord Bot
+- Slack Bot
+- Virus Scanning
+- OCR
+- Video Transcoding
+- AI Agents
+- Vector Search
+- Semantic Search
+- AI Memory
+- Workflow Automation
+- Webhooks
+- Zapier Integration
+- Marketplace Integrations
 
 Architecture supports them without requiring redesign.
 
@@ -8569,17 +8528,17 @@ Implementation            ░░░░░░░░░░ 0%
 
 A platform service is complete only when it includes:
 
-* Domain blueprint
-* Provider abstraction
-* Database schema (if applicable)
-* Interfaces
-* Service implementation
-* Event handlers
-* Tests
-* Documentation
-* Integration tests
-* Configuration
-* Build passing
+- Domain blueprint
+- Provider abstraction
+- Database schema (if applicable)
+- Interfaces
+- Service implementation
+- Event handlers
+- Tests
+- Documentation
+- Integration tests
+- Configuration
+- Build passing
 
 ---
 
@@ -8611,23 +8570,20 @@ Integrations                ⚪ Planned
 
 The next section (**Part VI-B**) will define the **Engineering Standards & Development Workflow**, including:
 
-* Coding standards
-* Folder conventions
-* Naming conventions
-* Git workflow
-* Branch strategy
-* Commit conventions
-* Pull request checklist
-* Testing strategy
-* CI/CD pipeline
-* Definition of Done
-* Technical debt management
-* Release workflow
+- Coding standards
+- Folder conventions
+- Naming conventions
+- Git workflow
+- Branch strategy
+- Commit conventions
+- Pull request checklist
+- Testing strategy
+- CI/CD pipeline
+- Definition of Done
+- Technical debt management
+- Release workflow
 
 This section becomes the permanent engineering guide that every future contribution to Workspace OS must follow.
-
-
-
 
 # PART VI-B — Engineering Standards & Development Workflow
 
@@ -8655,11 +8611,11 @@ Workspace OS is built using one simple philosophy.
 
 The code should optimize for:
 
-* Readability
-* Maintainability
-* Predictability
-* Testability
-* Extensibility
+- Readability
+- Maintainability
+- Predictability
+- Testability
+- Extensibility
 
 rather than cleverness.
 
@@ -8979,17 +8935,17 @@ Avoid functions that require scrolling multiple screens.
 
 Controllers should only.
 
-* Receive request.
-* Validate input.
-* Call service.
-* Return response.
+- Receive request.
+- Validate input.
+- Call service.
+- Return response.
 
 Controllers must never contain.
 
-* SQL
-* Business logic
-* Complex calculations
-* Permission decisions
+- SQL
+- Business logic
+- Complex calculations
+- Permission decisions
 
 ---
 
@@ -8999,10 +8955,10 @@ Services own business rules.
 
 Responsibilities.
 
-* Execute use cases.
-* Validate business constraints.
-* Coordinate repositories.
-* Publish events.
+- Execute use cases.
+- Validate business constraints.
+- Coordinate repositories.
+- Publish events.
 
 Services should not know about HTTP.
 
@@ -9014,16 +8970,16 @@ Repositories own persistence.
 
 Responsibilities.
 
-* Database queries.
-* Transactions.
-* Mapping.
+- Database queries.
+- Transactions.
+- Mapping.
 
 Repositories should never.
 
-* Send emails.
-* Check permissions.
-* Publish notifications.
-* Parse HTTP requests.
+- Send emails.
+- Check permissions.
+- Publish notifications.
+- Parse HTTP requests.
 
 ---
 
@@ -9076,17 +9032,17 @@ No hidden configuration.
 Never use.
 
 ```ts
-console.log()
+console.log();
 ```
 
 Use the centralized logger.
 
 Logs should include.
 
-* Context
-* Action
-* Result
-* Duration (when applicable)
+- Context
+- Action
+- Result
+- Duration (when applicable)
 
 Sensitive information must never appear in logs.
 
@@ -9098,15 +9054,15 @@ Errors should be predictable.
 
 Expected errors.
 
-* Validation
-* Permission
-* Business Rules
+- Validation
+- Permission
+- Business Rules
 
 Unexpected errors.
 
-* Network
-* Database
-* Infrastructure
+- Network
+- Database
+- Infrastructure
 
 Unexpected errors should be logged.
 
@@ -9269,13 +9225,13 @@ Avoid combining unrelated changes.
 
 Before merging.
 
-* Build passes.
-* Tests pass.
-* Documentation updated.
-* Blueprint updated.
-* No debugging code.
-* No commented-out code.
-* No TODOs without issue references.
+- Build passes.
+- Tests pass.
+- Documentation updated.
+- Blueprint updated.
+- No debugging code.
+- No commented-out code.
+- No TODOs without issue references.
 
 ---
 
@@ -9283,13 +9239,13 @@ Before merging.
 
 Review should focus on.
 
-* Correctness
-* Simplicity
-* Maintainability
-* Readability
-* Architecture
-* Security
-* Performance (when relevant)
+- Correctness
+- Simplicity
+- Maintainability
+- Readability
+- Architecture
+- Security
+- Performance (when relevant)
 
 Not personal coding preferences.
 
@@ -9305,9 +9261,9 @@ PROJECT_BLUEPRINT.md
 
 Every new module includes.
 
-* Purpose
-* Responsibilities
-* Dependencies
+- Purpose
+- Responsibilities
+- Dependencies
 
 Documentation is part of the feature.
 
@@ -9349,10 +9305,10 @@ A feature is complete only when.
 
 Technical debt is acceptable only when.
 
-* Documented.
-* Intentional.
-* Prioritized.
-* Tracked.
+- Documented.
+- Intentional.
+- Prioritized.
+- Tracked.
 
 Never leave undocumented shortcuts.
 
@@ -9362,11 +9318,11 @@ Never leave undocumented shortcuts.
 
 After every milestone ask.
 
-* Can this module be simpler?
-* Can coupling be reduced?
-* Can naming improve?
-* Can duplication be removed?
-* Can documentation improve?
+- Can this module be simpler?
+- Can coupling be reduced?
+- Can naming improve?
+- Can duplication be removed?
+- Can documentation improve?
 
 Refactor only when it provides measurable value.
 
@@ -9477,21 +9433,18 @@ These are the permanent rules of Workspace OS.
 
 The next section (**Part VII**) begins the **Project Management & Execution Handbook**, including:
 
-* Master roadmap
-* Milestone tracker
-* Feature dependency graph
-* Progress dashboard
-* Deferred feature register
-* Technical debt register
-* ADR index
-* Risk register
-* Release planning
-* Long-term vision (v1.0 → v5.0)
+- Master roadmap
+- Milestone tracker
+- Feature dependency graph
+- Progress dashboard
+- Deferred feature register
+- Technical debt register
+- ADR index
+- Risk register
+- Release planning
+- Long-term vision (v1.0 → v5.0)
 
 This final section transforms the blueprint from an architecture document into a complete project management handbook that can guide the project from its current state all the way to production.
-
-
-
 
 # PART VII — Project Roadmap, Milestones & Execution Handbook
 
@@ -9503,9 +9456,9 @@ This section converts the architecture into an executable development plan.
 
 The previous chapters answered:
 
-* What are we building?
-* Why are we building it?
-* How should it be designed?
+- What are we building?
+- Why are we building it?
+- How should it be designed?
 
 This chapter answers:
 
@@ -9571,14 +9524,14 @@ Every milestone must be completed before starting the next.
 
 Each milestone includes:
 
-* Design
-* Database
-* Backend
-* Frontend
-* Testing
-* Documentation
-* Build
-* Commit
+- Design
+- Database
+- Backend
+- Frontend
+- Testing
+- Documentation
+- Build
+- Commit
 
 ---
 
@@ -9592,15 +9545,15 @@ Current Status
 
 Includes
 
-* Monorepo
-* Turborepo
-* PNPM Workspace
-* Folder Structure
-* Shared Packages
-* Documentation
-* Logger
-* Configuration
-* Infrastructure Skeleton
+- Monorepo
+- Turborepo
+- PNPM Workspace
+- Folder Structure
+- Shared Packages
+- Documentation
+- Logger
+- Configuration
+- Infrastructure Skeleton
 
 ---
 
@@ -9612,15 +9565,15 @@ Status
 
 Deliverables
 
-* User Registration
-* Login
-* JWT
-* Refresh Tokens
-* Sessions
-* Password Hashing
-* Email Verification
-* Password Reset
-* Authentication Guards
+- User Registration
+- Login
+- JWT
+- Refresh Tokens
+- Sessions
+- Password Hashing
+- Email Verification
+- Password Reset
+- Authentication Guards
 
 Dependencies
 
@@ -9636,13 +9589,13 @@ Status
 
 Deliverables
 
-* User Profile
-* Avatar
-* Preferences
-* Theme
-* Language
-* Timezone
-* Profile API
+- User Profile
+- Avatar
+- Preferences
+- Theme
+- Language
+- Timezone
+- Profile API
 
 Depends on
 
@@ -9658,12 +9611,12 @@ Status
 
 Deliverables
 
-* Workspace CRUD
-* Membership
-* Invitations
-* Roles
-* Workspace Settings
-* Workspace Switcher
+- Workspace CRUD
+- Membership
+- Invitations
+- Roles
+- Workspace Settings
+- Workspace Switcher
 
 Depends on
 
@@ -9681,11 +9634,11 @@ Status
 
 Deliverables
 
-* Board CRUD
-* Metadata
-* Favorites
-* Archive
-* Templates Foundation
+- Board CRUD
+- Metadata
+- Favorites
+- Archive
+- Templates Foundation
 
 Depends on
 
@@ -9701,12 +9654,12 @@ Status
 
 Deliverables
 
-* Infinite Canvas
-* Object System
-* Layers
-* Selection
-* Transform
-* Basic Drawing
+- Infinite Canvas
+- Object System
+- Layers
+- Selection
+- Transform
+- Basic Drawing
 
 Depends on
 
@@ -9722,11 +9675,11 @@ Status
 
 Deliverables
 
-* WebSockets
-* Presence
-* Live Cursor
-* Live Selection
-* Editing State
+- WebSockets
+- Presence
+- Live Cursor
+- Live Selection
+- Editing State
 
 Depends on
 
@@ -9742,10 +9695,10 @@ Status
 
 Deliverables
 
-* Threads
-* Mentions
-* Replies
-* Comment Notifications
+- Threads
+- Mentions
+- Replies
+- Comment Notifications
 
 Depends on
 
@@ -9761,9 +9714,9 @@ Status
 
 Deliverables
 
-* In-App Notifications
-* Email Notifications
-* Preferences
+- In-App Notifications
+- Email Notifications
+- Preferences
 
 Depends on
 
@@ -9781,10 +9734,10 @@ Status
 
 Deliverables
 
-* Upload API
-* Images
-* Attachments
-* Provider Abstraction
+- Upload API
+- Images
+- Attachments
+- Provider Abstraction
 
 Depends on
 
@@ -9802,11 +9755,11 @@ Status
 
 Deliverables
 
-* AI Providers
-* AI Chat
-* AI Commands
-* AI Assistant
-* Board Summary
+- AI Providers
+- AI Chat
+- AI Commands
+- AI Assistant
+- Board Summary
 
 Depends on
 
@@ -9822,10 +9775,10 @@ Status
 
 Deliverables
 
-* Global Search
-* Board Search
-* User Search
-* Workspace Search
+- Global Search
+- Board Search
+- User Search
+- Workspace Search
 
 ---
 
@@ -9837,13 +9790,13 @@ Status
 
 Deliverables
 
-* Docker
-* CI/CD
-* Monitoring
-* Backups
-* Rate Limiting
-* Security Audit
-* Performance Optimization
+- Docker
+- CI/CD
+- Monitoring
+- Backups
+- Rate Limiting
+- Security Audit
+- Performance Optimization
 
 ---
 
@@ -9937,7 +9890,7 @@ Every feature must complete all items.
 
 # Progress Dashboard
 
-```text
+````text
 Phase 0 Platform Foundation ██████████ 100%
 
 Phase 1 Authentication      █████████░ 90%   ← backend shipped 2026-06-27
@@ -10001,7 +9954,7 @@ Search
       │
       ▼
 Production
-```
+````
 
 This dependency chain is frozen.
 
@@ -10013,52 +9966,52 @@ The following features are intentionally excluded from MVP.
 
 ## Collaboration
 
-* Voice Chat
-* Video Chat
-* Screen Sharing
-* Laser Pointer
-* Multiplayer Replay
+- Voice Chat
+- Video Chat
+- Screen Sharing
+- Laser Pointer
+- Multiplayer Replay
 
 ---
 
 ## Canvas
 
-* Mind Maps
-* UML Generator
-* Gantt Charts
-* Whiteboard Recording
-* Offline Editing
-* Plugin Marketplace
+- Mind Maps
+- UML Generator
+- Gantt Charts
+- Whiteboard Recording
+- Offline Editing
+- Plugin Marketplace
 
 ---
 
 ## AI
 
-* Multi-Agent AI
-* AI Memory
-* Autonomous Agents
-* AI Workflows
+- Multi-Agent AI
+- AI Memory
+- Autonomous Agents
+- AI Workflows
 
 ---
 
 ## Enterprise
 
-* SAML
-* SCIM
-* Organization Hierarchy
-* Departments
-* Teams
-* Enterprise Billing
+- SAML
+- SCIM
+- Organization Hierarchy
+- Departments
+- Teams
+- Enterprise Billing
 
 ---
 
 ## Infrastructure
 
-* Kubernetes
-* Multi-Region
-* Sharding
-* Event Streaming
-* Multi-Database
+- Kubernetes
+- Multi-Region
+- Sharding
+- Event Streaming
+- Multi-Database
 
 ---
 
@@ -10066,16 +10019,16 @@ The following features are intentionally excluded from MVP.
 
 Technical debt must always be documented.
 
-| ID     | Description                                                                                              | Priority | Status   |
-| ------ | -------------------------------------------------------------------------------------------------------- | -------- | -------- |
-| TD-001 | Auth tests missing — Definition-of-Done "tests passing" is unmet; Phase-1 closure gate                       | High     | Open     |
-| TD-002 | Spec companions (`password.service.spec.ts`, `token-hash.service.spec.ts`) exist but contain no asserts      | Medium   | Open     |
-| TD-003 | `console.log` in `main.ts` bootstrap line. Acceptable but breaks logging purity; one-line fix to Pino log.  | Low      | Open     |
-| TD-004 | Token-status codes (400 vs 401) intentionally deviate from common "401 for bad token" convention — document.  | Low      | Open     |
-| TD-005 | `sql\`lower(...)\`` raw-fragment used for case-insensitive email lookup; replace with typed `eq()` for clarity. | Low      | Open     |
-| TD-006 | `SessionRepository.listLiveForUser()` + per-row `revoke()` loop is N+1 over sessions. Add `revokeAllForUser()`. | Medium   | Open     |
-| TD-007 | `class-transformer` is a direct API dep but no `@Type(...)` decorators are used; `transform: true` is wasted.    | Low      | Open     |
-| TD-008 | `RecordingMailProvider` retains every sent mail in memory; Phase-1 acceptable but needs a retention cap.        | Medium   | Open     |
+| ID     | Description                                                                                                     | Priority | Status |
+| ------ | --------------------------------------------------------------------------------------------------------------- | -------- | ------ |
+| TD-001 | Auth tests missing — Definition-of-Done "tests passing" is unmet; Phase-1 closure gate                          | High     | Open   |
+| TD-002 | Spec companions (`password.service.spec.ts`, `token-hash.service.spec.ts`) exist but contain no asserts         | Medium   | Open   |
+| TD-003 | `console.log` in `main.ts` bootstrap line. Acceptable but breaks logging purity; one-line fix to Pino log.      | Low      | Open   |
+| TD-004 | Token-status codes (400 vs 401) intentionally deviate from common "401 for bad token" convention — document.    | Low      | Open   |
+| TD-005 | `sql\`lower(...)\``raw-fragment used for case-insensitive email lookup; replace with typed`eq()` for clarity.   | Low      | Open   |
+| TD-006 | `SessionRepository.listLiveForUser()` + per-row `revoke()` loop is N+1 over sessions. Add `revokeAllForUser()`. | Medium   | Open   |
+| TD-007 | `class-transformer` is a direct API dep but no `@Type(...)` decorators are used; `transform: true` is wasted.   | Low      | Open   |
+| TD-008 | `RecordingMailProvider` retains every sent mail in memory; Phase-1 acceptable but needs a retention cap.        | Medium   | Open   |
 
 If shortcuts are introduced, they must be added here.
 
@@ -10167,31 +10120,31 @@ Continue incrementally.
 
 ## Version 2
 
-* Plugin Marketplace
-* AI Agents
-* Workflow Automation
-* Whiteboard Templates
-* Search Engine
+- Plugin Marketplace
+- AI Agents
+- Workflow Automation
+- Whiteboard Templates
+- Search Engine
 
 ---
 
 ## Version 3
 
-* Organizations
-* Enterprise RBAC
-* Billing
-* Marketplace
-* Integrations
+- Organizations
+- Enterprise RBAC
+- Billing
+- Marketplace
+- Integrations
 
 ---
 
 ## Version 4
 
-* Mobile Apps
-* Desktop Client
-* Offline Mode
-* Board Replay
-* Collaborative AI
+- Mobile Apps
+- Desktop Client
+- Offline Mode
+- Board Replay
+- Collaborative AI
 
 ---
 
@@ -10201,13 +10154,13 @@ Workspace OS becomes a complete collaborative operating system.
 
 Supporting
 
-* Design
-* Development
-* Documentation
-* AI
-* Knowledge Management
-* Project Planning
-* Enterprise Collaboration
+- Design
+- Development
+- Documentation
+- AI
+- Knowledge Management
+- Project Planning
+- Enterprise Collaboration
 
 within a single platform.
 
@@ -10217,12 +10170,12 @@ within a single platform.
 
 The project is considered successful when:
 
-* Clean architecture remains intact.
-* New features require extension, not redesign.
-* The codebase remains understandable after years of growth.
-* Documentation stays synchronized with implementation.
-* Every module is independently maintainable.
-* The platform is suitable as a production-quality portfolio project.
+- Clean architecture remains intact.
+- New features require extension, not redesign.
+- The codebase remains understandable after years of growth.
+- Documentation stays synchronized with implementation.
+- Every module is independently maintainable.
+- The platform is suitable as a production-quality portfolio project.
 
 ---
 
@@ -10289,8 +10242,6 @@ If the answer to any of these is **no**, the change should be revised before mer
 This concludes the **Workspace OS Blueprint v1.0**.
 
 From this point forward, the blueprint becomes the governing document for implementation. Each milestone should be built in the order defined here, with the blueprint updated only through deliberate architectural decisions. The goal is to evolve the project through disciplined execution rather than repeated redesigns, keeping the architecture stable while allowing the functionality to grow.
-
-
 
 # PART VIII — Implementation Playbook
 
@@ -10607,10 +10558,10 @@ A feature is complete when:
 
 Refactoring is encouraged only when it improves:
 
-* Readability
-* Maintainability
-* Simplicity
-* Extensibility
+- Readability
+- Maintainability
+- Simplicity
+- Extensibility
 
 Never refactor merely to satisfy personal preferences.
 
@@ -10620,9 +10571,9 @@ Never refactor merely to satisfy personal preferences.
 
 Technical debt may be introduced only if:
 
-* Documented
-* Temporary
-* Assigned a follow-up task
+- Documented
+- Temporary
+- Assigned a follow-up task
 
 Undocumented technical debt is considered a bug.
 
@@ -10632,12 +10583,12 @@ Undocumented technical debt is considered a bug.
 
 The following must not change casually.
 
-* Folder structure
-* Module boundaries
-* Repository layout
-* Package layout
-* Dependency direction
-* Naming conventions
+- Folder structure
+- Module boundaries
+- Repository layout
+- Package layout
+- Dependency direction
+- Naming conventions
 
 Changes require an ADR.
 
@@ -10681,10 +10632,10 @@ No exceptions.
 
 Every significant implementation updates:
 
-* Blueprint
-* ADR (if needed)
-* API documentation
-* Database documentation
+- Blueprint
+- ADR (if needed)
+- API documentation
+- Database documentation
 
 Documentation is part of the implementation.
 
@@ -10694,12 +10645,12 @@ Documentation is part of the implementation.
 
 Before merging ask.
 
-* Is the module cohesive?
-* Are dependencies correct?
-* Is naming consistent?
-* Does this follow the blueprint?
-* Can it be extended later?
-* Does it increase coupling?
+- Is the module cohesive?
+- Are dependencies correct?
+- Is naming consistent?
+- Does this follow the blueprint?
+- Can it be extended later?
+- Does it increase coupling?
 
 If unsure, redesign before merging.
 
@@ -10709,11 +10660,11 @@ If unsure, redesign before merging.
 
 At the end of every milestone perform:
 
-* Architecture Review
-* Dependency Review
-* Documentation Review
-* Technical Debt Review
-* Performance Review
+- Architecture Review
+- Dependency Review
+- Documentation Review
+- Technical Debt Review
+- Performance Review
 
 Only then begin the next milestone.
 
@@ -10794,8 +10745,6 @@ This playbook is the operational handbook for the project. From the next milesto
 
 The next section (**Part IX**) will define the API standards that every REST endpoint, DTO, error response, pagination model, filtering strategy, and versioning policy must follow, ensuring the API remains consistent as the project grows.
 
-
-
 # PART IX — API Standards & Contracts
 
 ---
@@ -10806,11 +10755,11 @@ The API is the contract between the frontend and the backend.
 
 It must remain:
 
-* Predictable
-* Consistent
-* Versioned
-* Well documented
-* Backward compatible whenever possible
+- Predictable
+- Consistent
+- Versioned
+- Well documented
+- Backward compatible whenever possible
 
 Every endpoint in Workspace OS follows the standards defined in this section.
 
@@ -11171,12 +11120,12 @@ Binary content belongs in multipart files.
 
 Every endpoint must include.
 
-* Summary
-* Description
-* Request DTO
-* Response DTO
-* Status Codes
-* Authentication Requirements
+- Summary
+- Description
+- Request DTO
+- Response DTO
+- Status Codes
+- Authentication Requirements
 
 Swagger documentation is mandatory.
 
@@ -11204,9 +11153,9 @@ Once released.
 
 Avoid removing.
 
-* Fields
-* Endpoints
-* Response properties
+- Fields
+- Endpoints
+- Response properties
 
 Deprecate first.
 
@@ -11252,12 +11201,12 @@ Rules.
 
 Every endpoint should answer.
 
-* Is naming consistent?
-* Does response follow the standard?
-* Are errors standardized?
-* Is validation documented?
-* Does it require authentication?
-* Is pagination supported when appropriate?
+- Is naming consistent?
+- Does response follow the standard?
+- Are errors standardized?
+- Is validation documented?
+- Does it require authentication?
+- Is pagination supported when appropriate?
 
 ---
 
@@ -11283,16 +11232,16 @@ is preferable to inventing awkward REST semantics.
 
 An endpoint is complete only when it has:
 
-* Route
-* DTOs
-* Validation
-* Service
-* Tests
-* Swagger documentation
-* Error handling
-* Authorization
-* Consistent responses
-* Logging
+- Route
+- DTOs
+- Validation
+- Service
+- Tests
+- Swagger documentation
+- Error handling
+- Authorization
+- Consistent responses
+- Logging
 
 ---
 
@@ -11326,16 +11275,16 @@ Consistency               ☑
 
 Planned but deferred.
 
-* GraphQL Gateway
-* Webhooks
-* SSE (Server-Sent Events)
-* Public API Keys
-* SDK Generation
-* OpenAPI Client Generation
-* API Analytics
-* API Gateway
-* Request Replay
-* HATEOAS (unlikely unless required)
+- GraphQL Gateway
+- Webhooks
+- SSE (Server-Sent Events)
+- Public API Keys
+- SDK Generation
+- OpenAPI Client Generation
+- API Analytics
+- API Gateway
+- Request Replay
+- HATEOAS (unlikely unless required)
 
 These features can be added without changing the existing API conventions.
 
@@ -11345,20 +11294,17 @@ These features can be added without changing the existing API conventions.
 
 The next and final section (**Part X**) will define the long-term governance of Workspace OS, including:
 
-* Architecture governance
-* ADR workflow
-* Deprecation policy
-* Module maturity levels
-* Project quality metrics
-* Coding culture
-* Long-term maintenance strategy
-* Five-year evolution roadmap
-* Final engineering manifesto
+- Architecture governance
+- ADR workflow
+- Deprecation policy
+- Module maturity levels
+- Project quality metrics
+- Coding culture
+- Long-term maintenance strategy
+- Five-year evolution roadmap
+- Final engineering manifesto
 
 This concludes the implementation standards and transitions the blueprint into a long-term governance document.
-
-
-
 
 # PART X — Architecture Governance, Quality Standards & Long-Term Evolution
 
@@ -11472,11 +11418,11 @@ Every significant architectural change requires an ADR.
 
 Examples.
 
-* Changing ORM
-* Replacing Redis
-* Moving to Microservices
-* Changing Authentication Strategy
-* Changing Storage Provider Model
+- Changing ORM
+- Replacing Redis
+- Moving to Microservices
+- Changing Authentication Strategy
+- Changing Storage Provider Model
 
 Small implementation details do not require ADRs.
 
@@ -11595,13 +11541,13 @@ Scalable, extensible, audited.
 
 Code should be evaluated using these dimensions.
 
-* Correctness
-* Readability
-* Maintainability
-* Testability
-* Performance
-* Security
-* Extensibility
+- Correctness
+- Readability
+- Maintainability
+- Testability
+- Performance
+- Security
+- Extensibility
 
 Performance is important.
 
@@ -11617,10 +11563,10 @@ Whenever implementation changes:
 
 Update
 
-* Blueprint
-* ADR
-* API Docs
-* Database Docs
+- Blueprint
+- ADR
+- API Docs
+- Database Docs
 
 Documentation should never lag behind implementation.
 
@@ -11632,11 +11578,11 @@ Technical debt is tracked explicitly.
 
 Every item includes.
 
-* Description
-* Reason
-* Owner
-* Priority
-* Planned Resolution
+- Description
+- Reason
+- Owner
+- Priority
+- Planned Resolution
 
 No undocumented shortcuts.
 
@@ -11646,10 +11592,10 @@ No undocumented shortcuts.
 
 Refactoring is encouraged when it improves.
 
-* Simplicity
-* Maintainability
-* Reusability
-* Testability
+- Simplicity
+- Maintainability
+- Reusability
+- Testability
 
 Refactoring should not change business behavior.
 
@@ -11661,13 +11607,13 @@ Security is continuous.
 
 Every new feature should consider.
 
-* Authentication
-* Authorization
-* Validation
-* Rate Limiting
-* Logging
-* Sensitive Data
-* Least Privilege
+- Authentication
+- Authorization
+- Validation
+- Rate Limiting
+- Logging
+- Sensitive Data
+- Least Privilege
 
 Security reviews become part of milestone completion.
 
@@ -11805,13 +11751,13 @@ Build Passing
 
 The project should track.
 
-* Test Coverage
-* Build Success Rate
-* Documentation Completion
-* Technical Debt Items
-* Open ADRs
-* Module Maturity
-* Performance Benchmarks
+- Test Coverage
+- Build Success Rate
+- Documentation Completion
+- Technical Debt Items
+- Open ADRs
+- Module Maturity
+- Performance Benchmarks
 
 These metrics help guide engineering decisions over time.
 
@@ -11829,11 +11775,11 @@ Focus on completing the collaborative workspace platform.
 
 Introduce:
 
-* Plugin Marketplace
-* AI Enhancements
-* Advanced Templates
-* Workflow Automation
-* Rich Integrations
+- Plugin Marketplace
+- AI Enhancements
+- Advanced Templates
+- Workflow Automation
+- Rich Integrations
 
 ---
 
@@ -11841,11 +11787,11 @@ Introduce:
 
 Introduce enterprise capabilities.
 
-* Organizations
-* Departments
-* Advanced RBAC
-* Billing
-* Compliance
+- Organizations
+- Departments
+- Advanced RBAC
+- Billing
+- Compliance
 
 ---
 
@@ -11853,11 +11799,11 @@ Introduce enterprise capabilities.
 
 Expand platform reach.
 
-* Desktop Applications
-* Mobile Applications
-* Offline Collaboration
-* Board Replay
-* Cross-Workspace Search
+- Desktop Applications
+- Mobile Applications
+- Offline Collaboration
+- Board Replay
+- Cross-Workspace Search
 
 ---
 
@@ -11891,13 +11837,13 @@ Avoid rewriting stable systems.
 
 Workspace OS is built with the following culture.
 
-* Favor clarity over cleverness.
-* Keep modules independent.
-* Leave code better than you found it.
-* Respect architectural boundaries.
-* Document important decisions.
-* Review before optimizing.
-* Think in years, not weeks.
+- Favor clarity over cleverness.
+- Keep modules independent.
+- Leave code better than you found it.
+- Respect architectural boundaries.
+- Document important decisions.
+- Review before optimizing.
+- Think in years, not weeks.
 
 ---
 
@@ -11984,10 +11930,3 @@ The blueprint should evolve only through deliberate architectural decisions, ens
 **Current Milestone:** **Authentication Domain (Phase 1)**
 
 From this point onward, every line of code should trace back to the principles, patterns, and workflows defined in this blueprint.
-
-
-
-
-
-
-

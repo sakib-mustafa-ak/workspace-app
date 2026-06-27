@@ -1,5 +1,5 @@
 {
-  "id": "8c0fcc41-dc94-4098-9c8b-dc57807e1f99",
+  "id": "fe93619f-5c17-430d-a544-c94727dd19d0",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -939,7 +939,7 @@
         },
         "workspaces_slug_bounds": {
           "name": "workspaces_slug_bounds",
-          "value": "char_length(\"workspaces\".\"slug\") <= 32 AND \"workspaces\".\"slug\" ~ ^[a-z0-9](?:[a-z0-9-]{0,30}[a-z0-9])?$"
+          "value": "char_length(\"workspaces\".\"slug\") <= 32 AND \"workspaces\".\"slug\" ~ '^[a-z0-9](?:[a-z0-9-]{0,30}[a-z0-9])?$'"
         },
         "workspaces_archived_at_consistency": {
           "name": "workspaces_archived_at_consistency",

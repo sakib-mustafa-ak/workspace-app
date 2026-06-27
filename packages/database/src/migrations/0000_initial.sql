@@ -90,7 +90,7 @@ CREATE TABLE "workspaces" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"deleted_at" timestamp with time zone,
 	CONSTRAINT "workspaces_name_bounds" CHECK (char_length("workspaces"."name") BETWEEN 2 AND 60),
-	CONSTRAINT "workspaces_slug_bounds" CHECK (char_length("workspaces"."slug") <= 32 AND "workspaces"."slug" ~ ^[a-z0-9](?:[a-z0-9-]{0,30}[a-z0-9])?$),
+	CONSTRAINT "workspaces_slug_bounds" CHECK (char_length("workspaces"."slug") <= 32 AND "workspaces"."slug" ~ '^[a-z0-9](?:[a-z0-9-]{0,30}[a-z0-9])?$'),
 	CONSTRAINT "workspaces_archived_at_consistency" CHECK (("workspaces"."archived_at" IS NULL) OR ("workspaces"."status" IN ('ARCHIVED', 'DELETED')))
 );
 --> statement-breakpoint

@@ -85,7 +85,11 @@ export const workspaces = pgTable(
     ),
     workspacesSlugBounds: check(
       'workspaces_slug_bounds',
-      sql`char_length(${table.slug}) <= ${sql.raw(String(WORKSPACE_SLUG_MAX_LENGTH))} AND ${table.slug} ~ ${sql.raw(WORKSPACE_SLUG_PATTERN.source)}`,
+      // Postgres' regex operator requires a string quoting its regex.
+      // Drizzle's `sql.raw` interpolates the pattern verbatim; we wrap
+      // it in single quotes so the resulting CHECK constraint is
+      // syntactically valid.
+      sql`char_length(${table.slug}) <= ${sql.raw(String(WORKSPACE_SLUG_MAX_LENGTH))} AND ${table.slug} ~ ${sql.raw(`'${WORKSPACE_SLUG_PATTERN.source}'`)}`,
     ),
     workspacesArchivedAtConsistency: check(
       'workspaces_archived_at_consistency',

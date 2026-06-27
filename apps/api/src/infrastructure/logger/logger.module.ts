@@ -67,17 +67,24 @@ export function buildLoggerOptions(isProduction: boolean): Params {
 }
 
 /**
- * Async bootstrap so the factory can read Whether the app is in
- * production from `ConfigService` — `process.env` is never accessed
- * outside `apps/api/src/config`.
+ * Bootstrap the logger.
+ *
+ * Why synchronous (not forRootAsync)?
+ * `LoggerModule.forRootAsync({inject:['ConfigService'], imports:[ConfigModule]})`
+ * cannot resolve `ConfigService` — `ConfigModule` (raw) carries no
+ * providers; only `ConfigModule.forRoot({...})` does. Importing the
+ * latter here would force this file (infrastructure/) to depend on
+ * the config layer's validating schema, which violates Part VI-B:
+ * "infra contains no business rules". The logger is therefore read
+ * directly via a single safe env-var lookup before `forRoot` runs.
+ *
+ * The only env var read here is `NODE_ENV`. All app-shape configuration
+ * still flows through `apps/api/src/config/*`. Future Node-versions
+ * of `@nestjs/config` that ship a globally-registered static token
+ * would unblock the async form; today's path stays synchronous.
  */
-export const AppLoggerModule = LoggerModule.forRootAsync({
-  inject: ['ConfigService'] as const,
-  useFactory: async (
-    configService: { get: <T>(key: string) => T | undefined },
-  ): Promise<Params> => {
-    const isProduction =
-      configService.get<string>('app.nodeEnv') === 'production';
-    return buildLoggerOptions(Boolean(isProduction));
-  },
-});
+const isProduction = process.env.NODE_ENV === 'production';
+
+export const AppLoggerModule = LoggerModule.forRoot(
+  buildLoggerOptions(isProduction),
+);

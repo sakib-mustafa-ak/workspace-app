@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 
 import { AuthController } from './controllers/auth.controller';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -79,6 +80,15 @@ import { AuthEventBus } from './events/auth.events';
     // Cross-cutting
     AuthEventBus,
     JwtAuthGuard,
+    // Global guard registration. NestJS resolves APP_GUARD in the
+    // scope where it is declared, so the guard's constructor can
+    // find TokenService + UserRepository + JwtAuthGuard (all in this
+    // module). Protected-by-default end up across the application;
+    // opt-out is `@Public()`.
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
   ],
   exports: [AuthService, JwtAuthGuard, AuthEventBus],
 })

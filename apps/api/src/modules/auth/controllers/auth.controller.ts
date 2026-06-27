@@ -9,9 +9,11 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiAcceptedResponse,
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiForbiddenResponse,
+  ApiGoneResponse,
   ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
@@ -30,7 +32,10 @@ import {
 import { LoginDto } from '../dto/login.dto';
 import { RefreshDto } from '../dto/refresh.dto';
 import { RegisterDto } from '../dto/register.dto';
+import { RequestVerificationDto } from '../dto/request-verification.dto';
+import { VerifyEmailDto } from '../dto/verify-email.dto';
 import { AuthService } from '../services/auth.service';
+import { EmailVerificationService } from '../services/email-verification.service';
 
 /**
  * Transport-layer controller for the Authentication bounded context.
@@ -51,7 +56,10 @@ import { AuthService } from '../services/auth.service';
   version: '1',
 })
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly emailVerification: EmailVerificationService,
+  ) {}
 
   /**
    * Begin a brand-new account, identity and first session in one go.
@@ -155,6 +163,63 @@ export class AuthController {
   @ApiNoContentResponse({ description: 'Logout acknowledged.' })
   public async logout(@Body() body: RefreshDto): Promise<void> {
     await this.auth.logout({ refreshToken: body.refreshToken });
+  }
+
+  /**
+   * Issue a fresh verification email for the supplied address.
+   *
+   * Returns 202 in every legitimate case to avoid leaking whether an
+   * account exists (Part IX-API Standards). The mail is dispatched
+   * through the configured `MailProvider`. The flow deliberately
+   * accepts the email in the body rather than reading from the JWT
+   * since the link is for the address the user typed in — Part V-A
+   * "Email Verification" flow step 1.
+   */
+  @Public()
+  @Post('request-verification')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOperation({
+    summary: 'Request an email verification link',
+  })
+  @ApiAcceptedResponse({ description: 'Request accepted.' })
+  public async requestVerification(
+    @Body() body: RequestVerificationDto,
+  ): Promise<void> {
+    await this.emailVerification.requestVerificationForEmail(body.email);
+  }
+
+  /**
+   * Resolve a verification token (selector.verifier) into the matching
+   * user and mark their email verified. The flow is public so a click
+   * straight from the email link works without an existing session.
+   */
+  @Public()
+  @Post('verify-email')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify an email address from a token link' })
+  @ApiOkResponse({
+    description: 'Email verified.',
+    schema: {
+      type: 'object',
+      properties: {
+        userId: { type: 'string', format: 'uuid' },
+        email: { type: 'string', format: 'email' },
+      },
+    },
+  })
+  @ApiGoneResponse({
+    description: 'Token expired or already consumed.',
+  })
+  @ApiConflictResponse({
+    description: 'Verification could not be completed.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Verification token is malformed or unknown.',
+  })
+  public async verifyEmail(
+    @Body() body: VerifyEmailDto,
+  ): Promise<{ userId: string; email: string }> {
+    return this.emailVerification.verify({ token: body.token });
   }
 
   /**

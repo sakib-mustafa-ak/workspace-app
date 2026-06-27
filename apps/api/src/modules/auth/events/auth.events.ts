@@ -26,11 +26,31 @@ export type UserLoggedInPayload = { userId: string; identityId: string };
 export type UserLoggedOutPayload = { userId: string; sessionId: string };
 export type RefreshTokenRotatedPayload = { userId: string; sessionId: string };
 
+/**
+ * Dispatched when a user requests a verification email, *after* the
+ * message has been handed to the mail provider. Failures of the
+ * provider itself are NOT published — they bubble through the
+ * service's normal error envelope so callers can react.
+ */
+export type EmailVerificationRequestedPayload = {
+  userId: string;
+  email: string;
+};
+
+/**
+ * Dispatched once the verifier matches and `users.email_verified_at`
+ * has been written. Downstream notifications, audit, etc. subscribe
+ * here (Part V-A "Authentication Events").
+ */
+export type EmailVerifiedPayload = { userId: string; email: string };
+
 export const AUTH_EVENTS = {
   userRegistered: 'UserRegistered',
   userLoggedIn: 'UserLoggedIn',
   userLoggedOut: 'UserLoggedOut',
   refreshTokenRotated: 'RefreshTokenRotated',
+  emailVerificationRequested: 'EmailVerificationRequested',
+  emailVerified: 'EmailVerified',
 } as const;
 
 export type AuthEventName =
@@ -76,6 +96,20 @@ export class AuthEventBus {
     } satisfies RefreshTokenRotatedPayload);
   }
 
+  publishEmailVerificationRequested(userId: string, email: string): void {
+    this.emit(AUTH_EVENTS.emailVerificationRequested, {
+      userId,
+      email,
+    } satisfies EmailVerificationRequestedPayload);
+  }
+
+  publishEmailVerified(userId: string, email: string): void {
+    this.emit(AUTH_EVENTS.emailVerified, {
+      userId,
+      email,
+    } satisfies EmailVerifiedPayload);
+  }
+
   // ─────────────────────────────────────────────────────────────────────
   // Subscribers — typed so future handlers (audit, analytics, mail)
   // compile against the same payload shape publishers emit.
@@ -103,6 +137,18 @@ export class AuthEventBus {
     listener: (payload: RefreshTokenRotatedPayload) => void,
   ): void {
     this.emitter.on(AUTH_EVENTS.refreshTokenRotated, listener);
+  }
+
+  onEmailVerificationRequested(
+    listener: (payload: EmailVerificationRequestedPayload) => void,
+  ): void {
+    this.emitter.on(AUTH_EVENTS.emailVerificationRequested, listener);
+  }
+
+  onEmailVerified(
+    listener: (payload: EmailVerifiedPayload) => void,
+  ): void {
+    this.emitter.on(AUTH_EVENTS.emailVerified, listener);
   }
 
   private emit(name: AuthEventName, payload: unknown): void {

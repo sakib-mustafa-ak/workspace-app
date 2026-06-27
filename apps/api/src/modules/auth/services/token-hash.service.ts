@@ -14,6 +14,11 @@ import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
  *      hashed values byte-by-byte. The constant-time compare matters
  *      because hashes are case-sensitive: a naive `===` leaks byte
  *      differences in nanoseconds.
+ *
+ * The same building blocks are reused elsewhere in the auth module —
+ * `generateSelectorAndVerifier` produces the canonical "selector :
+ * verifier" pair for one-time-use links (email verification, password
+ * reset, invitations).
  */
 @Injectable()
 export class TokenHashService {
@@ -21,6 +26,24 @@ export class TokenHashService {
   public generateRefreshToken(): { plain: string; hash: string } {
     const plain = randomBytes(32).toString('base64url');
     return { plain, hash: this.hash(plain) };
+  }
+
+  /**
+   * Generate an independent selector + verifier pair for single-use
+   * links (email verification, password reset, invitations).
+   *
+   * The two random pools are independent on purpose: even if a future
+   * hashing algorithm becomes weak, a leaked verifier never reveals
+   * the selector (and vice-versa).
+   */
+  public generateSelectorAndVerifier(): {
+    selector: string;
+    verifier: string;
+  } {
+    return {
+      selector: randomBytes(16).toString('base64url'),
+      verifier: randomBytes(32).toString('base64url'),
+    };
   }
 
   /** Deterministic SHA-256 over the plaintext token. */

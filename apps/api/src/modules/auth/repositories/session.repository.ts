@@ -87,4 +87,25 @@ export class SessionRepository {
         isNull(sessions.revokedAt),
       ));
   }
+
+  /**
+   * List every still-live session for a user. Used by the password
+   * reset workflow so the `PasswordChanged` event can carry the
+   * session-id family it revoked. "Live" = future `expiresAt`,
+   * `revokedAt` is null.
+   *
+   * Lives here (rather than in the requesting service) because the
+   * row-mutation contract is a Session concept, not a Reset concept.
+   */
+  public async listLiveForUser(userId: string): Promise<SessionRow[]> {
+    return this.db
+      .select()
+      .from(sessions)
+      .where(
+        and(
+          eq(sessions.userId, userId),
+          isNull(sessions.revokedAt),
+        ),
+      );
+  }
 }

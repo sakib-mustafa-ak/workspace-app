@@ -10,10 +10,14 @@ import {
   EmailVerificationTokenRepository,
 } from './repositories/email-verification-token.repository';
 import { IdentityRepository } from './repositories/identity.repository';
+import {
+  PasswordResetTokenRepository,
+} from './repositories/password-reset-token.repository';
 import { SessionRepository } from './repositories/session.repository';
 import { UserRepository } from './repositories/user.repository';
 import { AuthService } from './services/auth.service';
 import { EmailVerificationService } from './services/email-verification.service';
+import { PasswordResetService } from './services/password-reset.service';
 import { PasswordService } from './services/password.service';
 import { TokenHashService } from './services/token-hash.service';
 import { TokenService } from './services/token.service';
@@ -56,6 +60,7 @@ import { AuthEventBus } from './events/auth.events';
     // Services
     AuthService,
     EmailVerificationService,
+    PasswordResetService,
     PasswordService,
     TokenHashService,
     TokenService,
@@ -64,6 +69,7 @@ import { AuthEventBus } from './events/auth.events';
     IdentityRepository,
     SessionRepository,
     EmailVerificationTokenRepository,
+    PasswordResetTokenRepository,
     // Mail provider — abstract (MAIL_PROVIDER), concrete (Recorder)
     RecordingMailProvider,
     {

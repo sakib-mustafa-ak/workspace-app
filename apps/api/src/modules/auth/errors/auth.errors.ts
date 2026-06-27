@@ -22,6 +22,10 @@ export const AuthErrorCode = {
   VERIFICATION_TOKEN_EXPIRED: 'AUTH.VERIFICATION_TOKEN_EXPIRED',
   VERIFICATION_TOKEN_CONSUMED: 'AUTH.VERIFICATION_TOKEN_CONSUMED',
   EMAIL_ALREADY_VERIFIED: 'AUTH.EMAIL_ALREADY_VERIFIED',
+  // ── Password reset (Part V-A) ───────────────────────────────────
+  INVALID_RESET_TOKEN: 'AUTH.INVALID_RESET_TOKEN',
+  RESET_TOKEN_EXPIRED: 'AUTH.RESET_TOKEN_EXPIRED',
+  RESET_TOKEN_CONSUMED: 'AUTH.RESET_TOKEN_CONSUMED',
 } as const;
 
 export type AuthErrorCode =
@@ -45,6 +49,11 @@ const STATUS_BY_CODE: Readonly<Record<AuthErrorCode, number>> = {
   [AuthErrorCode.VERIFICATION_TOKEN_EXPIRED]: 410,
   [AuthErrorCode.VERIFICATION_TOKEN_CONSUMED]: 410,
   [AuthErrorCode.EMAIL_ALREADY_VERIFIED]: 409,
+  // Same status taxonomy for password reset — public endpoint,
+  // token-mismatch is 400, consumption/expiry is 410.
+  [AuthErrorCode.INVALID_RESET_TOKEN]: 400,
+  [AuthErrorCode.RESET_TOKEN_EXPIRED]: 410,
+  [AuthErrorCode.RESET_TOKEN_CONSUMED]: 410,
 };
 
 /**

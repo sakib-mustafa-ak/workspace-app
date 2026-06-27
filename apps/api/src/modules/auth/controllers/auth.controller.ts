@@ -8,8 +8,9 @@ import {
   Req,
 } from '@nestjs/common';
 import {
-  ApiBearerAuth,
   ApiAcceptedResponse,
+  ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiForbiddenResponse,
@@ -32,10 +33,15 @@ import {
 import { LoginDto } from '../dto/login.dto';
 import { RefreshDto } from '../dto/refresh.dto';
 import { RegisterDto } from '../dto/register.dto';
+import {
+  RequestPasswordResetDto,
+} from '../dto/request-password-reset.dto';
 import { RequestVerificationDto } from '../dto/request-verification.dto';
+import { ResetPasswordDto } from '../dto/reset-password.dto';
 import { VerifyEmailDto } from '../dto/verify-email.dto';
 import { AuthService } from '../services/auth.service';
 import { EmailVerificationService } from '../services/email-verification.service';
+import { PasswordResetService } from '../services/password-reset.service';
 
 /**
  * Transport-layer controller for the Authentication bounded context.
@@ -59,6 +65,7 @@ export class AuthController {
   constructor(
     private readonly auth: AuthService,
     private readonly emailVerification: EmailVerificationService,
+    private readonly passwordReset: PasswordResetService,
   ) {}
 
   /**
@@ -220,6 +227,76 @@ export class AuthController {
     @Body() body: VerifyEmailDto,
   ): Promise<{ userId: string; email: string }> {
     return this.emailVerification.verify({ token: body.token });
+  }
+
+  /**
+   * Issue a fresh password-reset email for the supplied address.
+   *
+   * Always 202; per Part IX-API Standards the API never reveals
+   * whether the address actually maps to a user. No authentication
+   * required (Part V-A "Password Reset").
+   */
+  @Public()
+  @Post('request-password-reset')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOperation({
+    summary: 'Request a password-reset link',
+  })
+  @ApiAcceptedResponse({ description: 'Request accepted.' })
+  public async requestPasswordReset(
+    @Body() body: RequestPasswordResetDto,
+    @Req() request: Request,
+  ): Promise<void> {
+    const meta = clientMetaFrom(request);
+    await this.passwordReset.requestResetForEmail({
+      email: body.email,
+      ip: meta.ip,
+      userAgent: meta.userAgent,
+    });
+  }
+
+  /**
+   * Consume the reset token, rotate the password hash, and revoke
+   * every live session for the user. Public because the security
+   * model intentionally allows the link recipient to land on this
+   * endpoint without a current session (Part V-A "Password Reset").
+   */
+  @Public()
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Reset the password using a token',
+  })
+  @ApiOkResponse({
+    description: 'Password changed. All sessions revoked.',
+    schema: {
+      type: 'object',
+      properties: {
+        userId: { type: 'string', format: 'uuid' },
+        revokedSessionIds: {
+          type: 'array',
+          items: { type: 'string', format: 'uuid' },
+        },
+      },
+    },
+  })
+  @ApiGoneResponse({
+    description: 'Token expired or already consumed.',
+  })
+  @ApiBadRequestResponse({
+    description: 'Token malformed or password too weak.',
+  })
+  public async resetPassword(
+    @Body() body: ResetPasswordDto,
+    @Req() request: Request,
+  ): Promise<{ userId: string; revokedSessionIds: readonly string[] }> {
+    const meta = clientMetaFrom(request);
+    return this.passwordReset.consumeReset({
+      token: body.token,
+      newPassword: body.newPassword,
+      ip: meta.ip,
+      userAgent: meta.userAgent,
+    });
   }
 
   /**

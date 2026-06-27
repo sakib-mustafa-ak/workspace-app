@@ -44,6 +44,31 @@ export type EmailVerificationRequestedPayload = {
  */
 export type EmailVerifiedPayload = { userId: string; email: string };
 
+/**
+ * Dispatched when a user requests a password-reset email *after* the
+ * token row has been written and the mail handed off.
+ *
+ * Per blueprint: "Forgot Password → Email Token". Requesting never
+ * reveals whether an account exists.
+ */
+export type PasswordResetRequestedPayload = {
+  userId: string;
+  email: string;
+};
+
+/**
+ * Dispatched when the verifier matches and the password story has
+ * been finalized: new hash committed, sessions revoked.
+ *
+ * Per blueprint: "Invalidate Existing Sessions" happens before this
+ * event, so audit + analytics can correlate the "session family was
+ * signed out" trail that follows.
+ */
+export type PasswordChangedPayload = {
+  userId: string;
+  revokedSessionIds: readonly string[];
+};
+
 export const AUTH_EVENTS = {
   userRegistered: 'UserRegistered',
   userLoggedIn: 'UserLoggedIn',
@@ -51,6 +76,8 @@ export const AUTH_EVENTS = {
   refreshTokenRotated: 'RefreshTokenRotated',
   emailVerificationRequested: 'EmailVerificationRequested',
   emailVerified: 'EmailVerified',
+  passwordResetRequested: 'PasswordResetRequested',
+  passwordChanged: 'PasswordChanged',
 } as const;
 
 export type AuthEventName =
@@ -110,6 +137,23 @@ export class AuthEventBus {
     } satisfies EmailVerifiedPayload);
   }
 
+  publishPasswordResetRequested(userId: string, email: string): void {
+    this.emit(AUTH_EVENTS.passwordResetRequested, {
+      userId,
+      email,
+    } satisfies PasswordResetRequestedPayload);
+  }
+
+  publishPasswordChanged(
+    userId: string,
+    revokedSessionIds: readonly string[],
+  ): void {
+    this.emit(AUTH_EVENTS.passwordChanged, {
+      userId,
+      revokedSessionIds,
+    } satisfies PasswordChangedPayload);
+  }
+
   // ─────────────────────────────────────────────────────────────────────
   // Subscribers — typed so future handlers (audit, analytics, mail)
   // compile against the same payload shape publishers emit.
@@ -149,6 +193,18 @@ export class AuthEventBus {
     listener: (payload: EmailVerifiedPayload) => void,
   ): void {
     this.emitter.on(AUTH_EVENTS.emailVerified, listener);
+  }
+
+  onPasswordResetRequested(
+    listener: (payload: PasswordResetRequestedPayload) => void,
+  ): void {
+    this.emitter.on(AUTH_EVENTS.passwordResetRequested, listener);
+  }
+
+  onPasswordChanged(
+    listener: (payload: PasswordChangedPayload) => void,
+  ): void {
+    this.emitter.on(AUTH_EVENTS.passwordChanged, listener);
   }
 
   private emit(name: AuthEventName, payload: unknown): void {

@@ -5752,7 +5752,15 @@ Password Policy            ██████████ 100%
 
 OAuth Roadmap              ██████████ 100%
 
-Implementation             ░░░░░░░░░░ 0%
+Implementation (backend)   █████████░ 90%   ← register/login/refresh/logout,
+                                            email-verification flow,
+                                            password-reset flow, JWT guard,
+                                            Argon2id, MailProvider pattern,
+                                            AuthEventBus. Pending: tests.
+
+Frontend                   ░░░░░░░░░░  0%
+
+OAuth (Phase 1.5)          ░░░░░░░░░░  0%   (Google/GitHub deferred)
 ```
 
 ---
@@ -9930,32 +9938,29 @@ Every feature must complete all items.
 # Progress Dashboard
 
 ```text
-Platform Foundation      ██████████ 100%
+Phase 0 Platform Foundation ██████████ 100%
 
-Authentication           ░░░░░░░░░░ 0%
+Phase 1 Authentication      █████████░ 90%   ← backend shipped 2026-06-27
+                                              Pending: tests, frontend.
 
-Users                    ░░░░░░░░░░ 0%
+Users                       ░░░░░░░░░░ 0%
 
-Workspace                ░░░░░░░░░░ 0%
+Workspace                   ░░░░░░░░░░ 0%
 
-Boards                   ░░░░░░░░░░ 0%
+Boards                      ░░░░░░░░░░ 0%
 
-Canvas                   ░░░░░░░░░░ 0%
+Canvas                      ░░░░░░░░░░ 0%
 
-Realtime                 ░░░░░░░░░░ 0%
+Realtime                    ░░░░░░░░░░ 0%
 
-Comments                 ░░░░░░░░░░ 0%
+Comments                    ░░░░░░░░░░ 0%
 
-Notifications            ░░░░░░░░░░ 0%
+Notifications               ░░░░░░░░░░ 0%
 
-Storage                  ░░░░░░░░░░ 0%
+Storage                     ░░░░░░░░░░ 0%
 
-AI                       ░░░░░░░░░░ 0%
+AI                          ░░░░░░░░░░ 0%
 
-Search                   ░░░░░░░░░░ 0%
-
-Production               ░░░░░░░░░░ 0%
-```
 
 ---
 
@@ -10061,9 +10066,16 @@ The following features are intentionally excluded from MVP.
 
 Technical debt must always be documented.
 
-| ID     | Description | Priority | Status |
-| ------ | ----------- | -------- | ------ |
-| TD-001 | None        | —        | Open   |
+| ID     | Description                                                                                              | Priority | Status   |
+| ------ | -------------------------------------------------------------------------------------------------------- | -------- | -------- |
+| TD-001 | Auth tests missing — Definition-of-Done "tests passing" is unmet; Phase-1 closure gate                       | High     | Open     |
+| TD-002 | Spec companions (`password.service.spec.ts`, `token-hash.service.spec.ts`) exist but contain no asserts      | Medium   | Open     |
+| TD-003 | `console.log` in `main.ts` bootstrap line. Acceptable but breaks logging purity; one-line fix to Pino log.  | Low      | Open     |
+| TD-004 | Token-status codes (400 vs 401) intentionally deviate from common "401 for bad token" convention — document.  | Low      | Open     |
+| TD-005 | `sql\`lower(...)\`` raw-fragment used for case-insensitive email lookup; replace with typed `eq()` for clarity. | Low      | Open     |
+| TD-006 | `SessionRepository.listLiveForUser()` + per-row `revoke()` loop is N+1 over sessions. Add `revokeAllForUser()`. | Medium   | Open     |
+| TD-007 | `class-transformer` is a direct API dep but no `@Type(...)` decorators are used; `transform: true` is wasted.    | Low      | Open     |
+| TD-008 | `RecordingMailProvider` retains every sent mail in memory; Phase-1 acceptable but needs a retention cap.        | Medium   | Open     |
 
 If shortcuts are introduced, they must be added here.
 
@@ -11948,7 +11960,7 @@ Project Roadmap              ██████████ 100%
 
 Platform Foundation          ██████████ 100%
 
-Implementation               ░░░░░░░░░░   0%
+Phase 1 Authentication       █████████░  90% (backend shipped 2026-06-27)
 ```
 
 ---

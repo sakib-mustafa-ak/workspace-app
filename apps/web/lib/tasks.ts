@@ -18,15 +18,36 @@ export type Task = {
   updatedAt: string;
 };
 
+export type CreateTaskData = {
+  title: string;
+  description?: string;
+  priority?: string;
+  assigneeId?: string;
+  position?: number;
+};
+
+export type UpdateTaskData = {
+  title?: string;
+  description?: string | null;
+  status?: string;
+  priority?: string;
+  assigneeId?: string | null;
+  position?: number;
+};
+
 export const tasksApi = {
   listByBoard: (workspaceId: string, boardId: string) =>
     api.get<Task[]>(`/workspaces/${workspaceId}/boards/${boardId}/tasks`),
   listByColumn: (workspaceId: string, boardId: string, columnId: string) =>
-    api.get<Task[]>(
-      `/workspaces/${workspaceId}/boards/${boardId}/tasks/columns/${columnId}`,
-    ),
+    api.get<Task[]>(`/workspaces/${workspaceId}/boards/${boardId}/tasks/columns/${columnId}`),
   getById: (workspaceId: string, boardId: string, taskId: string) =>
-    api.get<Task>(
-      `/workspaces/${workspaceId}/boards/${boardId}/tasks/${taskId}`,
-    ),
+    api.get<Task>(`/workspaces/${workspaceId}/boards/${boardId}/tasks/${taskId}`),
+  create: (workspaceId: string, boardId: string, columnId: string, data: CreateTaskData) =>
+    api.post<Task>(`/workspaces/${workspaceId}/boards/${boardId}/tasks/columns/${columnId}`, data),
+  update: (workspaceId: string, boardId: string, taskId: string, data: UpdateTaskData) =>
+    api.patch<Task>(`/workspaces/${workspaceId}/boards/${boardId}/tasks/${taskId}`, data),
+  move: (workspaceId: string, boardId: string, taskId: string, data: { columnId: string; position?: number }) =>
+    api.patch<Task>(`/workspaces/${workspaceId}/boards/${boardId}/tasks/${taskId}/move`, data),
+  delete: (workspaceId: string, boardId: string, taskId: string) =>
+    api.delete<void>(`/workspaces/${workspaceId}/boards/${boardId}/tasks/${taskId}`),
 };

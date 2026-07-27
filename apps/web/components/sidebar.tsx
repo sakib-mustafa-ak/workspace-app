@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/auth-context';
 import {
   LayoutDashboard,
   Settings,
+  Bell,
   LogOut,
   ChevronRight,
 } from 'lucide-react';
@@ -13,6 +14,7 @@ import { NotificationsDropdown } from '@/components/notifications-dropdown';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/notifications', label: 'Notifications', icon: Bell },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 

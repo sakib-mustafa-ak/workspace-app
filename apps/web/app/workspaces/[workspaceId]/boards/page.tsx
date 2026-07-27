@@ -46,13 +46,13 @@ export default function BoardsPage() {
   return (
     <div className="p-8">
       <div className="mb-8">
-        <Link
-          href="/dashboard"
-          className="mb-4 inline-flex items-center gap-1.5 text-sm text-surface-400 hover:text-white"
-        >
-          <ArrowLeft size={14} />
-          Dashboard
-        </Link>
+          <Link
+            href={`/workspaces/${workspaceId}`}
+            className="mb-4 inline-flex items-center gap-1.5 text-sm text-surface-400 hover:text-white"
+          >
+            <ArrowLeft size={14} />
+            {workspace?.name || 'Workspace'}
+          </Link>
         <div className="mt-2 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">

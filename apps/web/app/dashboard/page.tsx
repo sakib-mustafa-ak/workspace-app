@@ -117,7 +117,7 @@ export default function DashboardPage() {
           {workspaces.map((ws) => (
             <Link
               key={ws.id}
-              href={`/workspaces/${ws.id}/boards`}
+              href={`/workspaces/${ws.id}`}
               className="group rounded-xl border border-surface-800 bg-surface-900 p-5 transition-colors hover:border-surface-700"
             >
               <div className="flex items-start justify-between">

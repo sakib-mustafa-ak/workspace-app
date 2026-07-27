@@ -61,7 +61,12 @@ export async function getMe(): Promise<User> {
 export function getStoredUser(): User | null {
   if (typeof window === 'undefined') return null;
   const raw = localStorage.getItem('user');
-  return raw ? JSON.parse(raw) : null;
+  if (!raw || raw === 'undefined') return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
 }
 
 export function storeUser(user: User): void {

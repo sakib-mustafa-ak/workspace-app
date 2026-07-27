@@ -295,40 +295,74 @@ docs/
 - [x] Next.js Frontend
 - [x] NestJS Backend
 - [x] Monorepo Architecture
+- [x] Drizzle ORM
+- [x] PostgreSQL Schema Design
 - [ ] Docker Infrastructure
-- [ ] PostgreSQL
 - [ ] Redis
-- [ ] Drizzle ORM
 
 ---
 
 ## Phase 2 — Authentication
 
-- [ ] Better Auth
-- [ ] User Registration
-- [ ] Login
-- [ ] Protected Routes
+- [x] JWT Auth (Access + Refresh Tokens)
+- [x] User Registration
+- [x] Login / Logout
+- [x] Protected Routes
+- [x] Email Verification
+- [x] Password Reset
+- [ ] OAuth / SSO
 
 ---
 
 ## Phase 3 — Workspaces
 
-- [ ] Workspace CRUD
-- [ ] Member Invitations
-- [ ] Roles & Permissions
+- [x] Workspace CRUD
+- [x] Member Management
+- [x] Member Invitations
+- [x] Roles & Permissions (Owner, Admin, Member)
 
 ---
 
 ## Phase 4 — Boards
 
-- [ ] Board CRUD
-- [ ] Infinite Canvas
-- [ ] Object Model
-- [ ] Persistence
+- [x] Board CRUD
+- [x] Board Columns
+- [x] Archive / Unarchive
+- [x] Frontend Kanban View
+
+
 
 ---
 
-## Phase 5 — Real-Time Collaboration
+## Phase 5 — Tasks
+
+- [x] Task CRUD
+- [x] Status Lifecycle (Todo → In Progress → Done)
+- [x] Priority Levels
+- [x] Assignee & Due Dates
+- [x] Move Between Columns
+- [x] Frontend Task Cards with Priority Badges
+
+---
+
+## Phase 6 — Comments
+
+- [x] Threaded Comments
+- [x] Edit / Delete Policy
+- [x] Comment on Boards
+
+---
+
+## Phase 7 — Notifications
+
+- [x] In-App Notifications
+- [x] Notification Lifecycle (Created → Queued → Delivered → Read → Archived)
+- [x] Unread Count
+- [x] Mark All as Read
+
+---
+
+## Phase 8 — Real-Time Collaboration
 
 - [ ] Live Presence
 - [ ] Live Cursor
@@ -337,17 +371,14 @@ docs/
 
 ---
 
-## Phase 6 — Productivity
+## Phase 9 — Productivity
 
 - [ ] Documents
-- [ ] Tasks
-- [ ] Comments
-- [ ] Notifications
 - [ ] File Uploads
 
 ---
 
-## Phase 7 — AI
+## Phase 10 — AI
 
 - [ ] AI Assistant
 - [ ] Diagram Generation
@@ -392,17 +423,25 @@ This project is licensed under the MIT License.
 
 # 📌 Current Status
 
-🚧 **Active Development**
+✅ **Active Development — Phases 1–7 Complete**
 
 Current milestone:
 
-> **Milestone 4 — Infrastructure**
+> **Milestone 5 — Frontend Integration & Real-Time**
 >
-> - Docker
-> - PostgreSQL
-> - Redis
-> - Drizzle ORM
-> - Environment Configuration
+> Connecting the frontend to all backend modules with live collaboration features.
+
+| Module       | Backend | Frontend | Tests |
+|-------------|---------|----------|-------|
+| Auth        | ✅      | ✅       | ✅    |
+| Users       | ✅      | —        | ✅    |
+| Workspaces  | ✅      | ✅       | ✅    |
+| Boards      | ✅      | ✅       | 27    |
+| Tasks       | ✅      | ✅       | 23    |
+| Comments    | ✅      | —        | 17    |
+| Notifications| ✅     | —        | 17    |
+
+**182 tests passing** across 23 suites.
 
 ---
 

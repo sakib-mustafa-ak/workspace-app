@@ -10,10 +10,7 @@ import {
 } from '@repo/database';
 
 import { AuthEventBus } from '../events/auth.events';
-import {
-  AuthException,
-  AuthErrorCode,
-} from '../errors/auth.errors';
+import { AuthException, AuthErrorCode } from '../errors/auth.errors';
 import { IdentityRepository } from '../repositories/identity.repository';
 import { SessionRepository } from '../repositories/session.repository';
 import { UserRepository } from '../repositories/user.repository';
@@ -221,9 +218,20 @@ export class AuthService {
 
       // Rotate: mint the new pair FIRST, then revoke the previous session
       // and replace its hash atomically.
-      const fresh = await this.sessionTokensFor(user, session.id, this.sessionExpiresAtIn(session));
-      await this.sessions.replaceRefreshToken(session.id, this.tokenHash.hash(fresh.refreshToken));
-      await this.sessions.touch(session.id, input.meta.ip, input.meta.userAgent);
+      const fresh = await this.sessionTokensFor(
+        user,
+        session.id,
+        this.sessionExpiresAtIn(session),
+      );
+      await this.sessions.replaceRefreshToken(
+        session.id,
+        this.tokenHash.hash(fresh.refreshToken),
+      );
+      await this.sessions.touch(
+        session.id,
+        input.meta.ip,
+        input.meta.userAgent,
+      );
       this.events.publishRefreshTokenRotated(user.id, session.id);
       return {
         user,
@@ -245,14 +253,12 @@ export class AuthService {
    * either the plain text or the hash — only opaque-token APIs SHOULD
    * ever see the plain one, but we guard against misuse.
    */
-  public async logout(input: {
-    refreshToken: string;
-  }): Promise<void> {
+  public async logout(input: { refreshToken: string }): Promise<void> {
     let sessionId: string | null = null;
     try {
       const verified = await this.tokens.verifyRefreshToken(input.refreshToken);
       sessionId = verified.sid;
-    } catch (err) {
+    } catch {
       // We swallow JWT failures: logout is best-effort. But if the token
       // produces nothing verifiable we still scrub the bucket by hash.
       const storedHash = this.tokenHash.hash(input.refreshToken);
@@ -320,11 +326,7 @@ export class AuthService {
         throw new Error('Failed to insert session.');
       }
 
-      const tokens = await this.sessionTokensFor(
-        user,
-        persisted.id,
-        expiresAt,
-      );
+      const tokens = await this.sessionTokensFor(user, persisted.id, expiresAt);
 
       await tx
         .update(sessions)
@@ -333,7 +335,7 @@ export class AuthService {
           // `drizzle-orm` operators are re-exported through
           // `@repo/database` to keep a single TypeScript resolution
           // path active across the workspace.
-          // eslint-disable-next-line @typescript-eslint/no-require-imports
+
           eq(sessions.id, persisted.id),
         );
 
@@ -368,7 +370,8 @@ export class AuthService {
     };
   }
 
-  private sessionExpiresAtIn(_session: SessionRow): Date {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private sessionExpiresAtIn(session: SessionRow): Date {
     return new Date(Date.now() + 60 * 60 * 8);
   }
 }

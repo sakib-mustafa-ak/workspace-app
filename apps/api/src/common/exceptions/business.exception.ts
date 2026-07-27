@@ -15,11 +15,7 @@ import { HttpException } from '@nestjs/common';
 export abstract class BusinessException extends HttpException {
   public readonly code: string;
 
-  protected constructor(
-    code: string,
-    message: string,
-    status: number,
-  ) {
+  protected constructor(code: string, message: string, status: number) {
     super({ code, message }, status);
     this.code = code;
   }

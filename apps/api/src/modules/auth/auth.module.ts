@@ -3,17 +3,10 @@ import { APP_GUARD } from '@nestjs/core';
 
 import { AuthController } from './controllers/auth.controller';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import {
-  MAIL_PROVIDER,
-  RecordingMailProvider,
-} from './mail/mail.provider';
-import {
-  EmailVerificationTokenRepository,
-} from './repositories/email-verification-token.repository';
+import { MAIL_PROVIDER, RecordingMailProvider } from './mail/mail.provider';
+import { EmailVerificationTokenRepository } from './repositories/email-verification-token.repository';
 import { IdentityRepository } from './repositories/identity.repository';
-import {
-  PasswordResetTokenRepository,
-} from './repositories/password-reset-token.repository';
+import { PasswordResetTokenRepository } from './repositories/password-reset-token.repository';
 import { SessionRepository } from './repositories/session.repository';
 import { UserRepository } from './repositories/user.repository';
 import { AuthService } from './services/auth.service';

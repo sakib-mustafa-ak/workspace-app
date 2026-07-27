@@ -10,10 +10,7 @@ import {
 } from '@repo/database';
 
 import { EMAIL_VERIFICATION_TTL_SECONDS } from '../auth.constants';
-import {
-  AuthException,
-  AuthErrorCode,
-} from '../errors/auth.errors';
+import { AuthException, AuthErrorCode } from '../errors/auth.errors';
 import { AuthEventBus } from '../events/auth.events';
 import {
   MAIL_PROVIDER,
@@ -21,9 +18,7 @@ import {
   type MailMessage,
 } from '../mail/mail.provider';
 import { renderVerificationMail } from '../mail/verification.template';
-import {
-  EmailVerificationTokenRepository,
-} from '../repositories/email-verification-token.repository';
+import { EmailVerificationTokenRepository } from '../repositories/email-verification-token.repository';
 
 import { TokenHashService } from './token-hash.service';
 
@@ -103,8 +98,7 @@ export class EmailVerificationService {
     const expires = new Date(
       Date.now() + EMAIL_VERIFICATION_TTL_SECONDS * 1000,
     );
-    const { selector, verifier } =
-      this.tokenHash.generateSelectorAndVerifier();
+    const { selector, verifier } = this.tokenHash.generateSelectorAndVerifier();
     const verifierHash = this.tokenHash.hash(verifier);
     const ttlMinutes = Math.round(EMAIL_VERIFICATION_TTL_SECONDS / 60);
 
@@ -119,9 +113,9 @@ export class EmailVerificationService {
     const appBaseUrl =
       this.configService.get<string>('app.publicBaseUrl') ??
       'http://localhost:3000';
-    const verifyPath = this.configService.get<string>(
-      'auth.verifyEmailPath',
-    ) ?? 'auth/verify-email';
+    const verifyPath =
+      this.configService.get<string>('auth.verifyEmailPath') ??
+      'auth/verify-email';
 
     const rendered = renderVerificationMail({
       appBaseUrl,
@@ -156,7 +150,9 @@ export class EmailVerificationService {
    *
    * All four are constant-time on the verifier (Part V-A "Security Rules").
    */
-  public async verify(input: { token: string }): Promise<{ userId: string; email: string }> {
+  public async verify(input: {
+    token: string;
+  }): Promise<{ userId: string; email: string }> {
     const split = this.splitToken(input.token);
     if (!split) {
       throw new AuthException(
@@ -221,7 +217,9 @@ export class EmailVerificationService {
    * here — the repository's unique index handles malformed input
    * gracefully (just no match).
    */
-  private splitToken(token: string): { selector: string; verifier: string } | null {
+  private splitToken(
+    token: string,
+  ): { selector: string; verifier: string } | null {
     const dotIndex = token.indexOf('.');
     if (dotIndex <= 0 || dotIndex === token.length - 1) {
       return null;

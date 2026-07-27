@@ -26,7 +26,8 @@ export function buildLoggerOptions(isProduction: boolean): Params {
       return 'info';
     },
     genReqId: (req: IncomingMessage) => {
-      const headerId = (req.headers['x-request-id'] as string | undefined) ?? '';
+      const headerId =
+        (req.headers['x-request-id'] as string | undefined) ?? '';
       return (
         headerId ||
         `req_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`

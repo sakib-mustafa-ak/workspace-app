@@ -1,11 +1,8 @@
-import {
-  Controller,
-  Get,
-} from "@nestjs/common";
-import { ApiOperation, ApiTags } from "@nestjs/swagger";
+import { Controller, Get } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
-import { Public } from "../auth/decorators/public.decorator";
-import { HealthService } from "./health.service";
+import { Public } from '../auth/decorators/public.decorator';
+import { HealthService } from './health.service';
 
 /**
  * Liveness probe.
@@ -17,8 +14,8 @@ import { HealthService } from "./health.service";
  */
 @ApiTags('Health')
 @Controller({
-  path: "health",
-  version: "1",
+  path: 'health',
+  version: '1',
 })
 export class HealthController {
   constructor(private readonly healthService: HealthService) {}

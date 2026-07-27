@@ -46,11 +46,7 @@ export class UserRepository {
     const where = opts.includeDeleted
       ? eq(users.id, id)
       : sql`${users.id} = ${id} AND ${users.deletedAt} IS NULL`;
-    const [row] = await this.db
-      .select()
-      .from(users)
-      .where(where)
-      .limit(1);
+    const [row] = await this.db.select().from(users).where(where).limit(1);
     return row;
   }
 
@@ -60,7 +56,9 @@ export class UserRepository {
     const [row] = await this.db
       .select()
       .from(users)
-      .where(sql`lower(${users.email}) = lower(${email}) AND ${users.deletedAt} IS NULL`)
+      .where(
+        sql`lower(${users.email}) = lower(${email}) AND ${users.deletedAt} IS NULL`,
+      )
       .limit(1);
     return row;
   }

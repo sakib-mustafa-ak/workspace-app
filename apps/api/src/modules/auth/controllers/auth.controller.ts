@@ -26,16 +26,11 @@ import type { Request } from 'express';
 import { CurrentUser } from '../decorators/current-user.decorator';
 import { Public } from '../decorators/public.decorator';
 import type { CurrentUser as CurrentUserModel } from '../interfaces/current-user.interface';
-import {
-  AuthResponseDto,
-  UserProfileDto,
-} from '../dto/auth-response.dto';
+import { AuthResponseDto, UserProfileDto } from '../dto/auth-response.dto';
 import { LoginDto } from '../dto/login.dto';
 import { RefreshDto } from '../dto/refresh.dto';
 import { RegisterDto } from '../dto/register.dto';
-import {
-  RequestPasswordResetDto,
-} from '../dto/request-password-reset.dto';
+import { RequestPasswordResetDto } from '../dto/request-password-reset.dto';
 import { RequestVerificationDto } from '../dto/request-verification.dto';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
 import { VerifyEmailDto } from '../dto/verify-email.dto';
@@ -349,14 +344,14 @@ export class AuthController {
  * be wired up. Until then the leftmost `X-Forwarded-For` is the
  * safest signal that survives one proxy hop.
  */
-function clientMetaFrom(
-  request: Request,
-): { ip: string | null; userAgent: string | null } {
+function clientMetaFrom(request: Request): {
+  ip: string | null;
+  userAgent: string | null;
+} {
   const ipHeader = request.headers['x-forwarded-for'];
   const rawSocketIp = request.socket?.remoteAddress ?? null;
-  const ip = typeof ipHeader === 'string'
-    ? ipHeader.split(',')[0]!.trim()
-    : rawSocketIp;
+  const ip =
+    typeof ipHeader === 'string' ? ipHeader.split(',')[0].trim() : rawSocketIp;
   const uaHeader = request.headers['user-agent'];
   const userAgent = typeof uaHeader === 'string' ? uaHeader : null;
   return { ip: ip ?? null, userAgent };
@@ -383,11 +378,9 @@ function toAuthResponse(
     },
     tokens: {
       accessToken: result.tokens.accessToken,
-      accessTokenExpiresInSeconds:
-        result.tokens.accessTokenExpiresInSeconds,
+      accessTokenExpiresInSeconds: result.tokens.accessTokenExpiresInSeconds,
       refreshToken: result.tokens.refreshToken,
-      refreshTokenExpiresInSeconds:
-        result.tokens.refreshTokenExpiresInSeconds,
+      refreshTokenExpiresInSeconds: result.tokens.refreshTokenExpiresInSeconds,
     },
   };
 }

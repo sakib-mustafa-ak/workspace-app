@@ -64,12 +64,12 @@ export class RecordingMailProvider {
    * Real providers translate `MailMessage` to their SDK shape and
    * return the upstream's `messageId`; here we mint one locally.
    */
+  // eslint-disable-next-line @typescript-eslint/require-await
   public async send(message: MailMessage): Promise<MailSendResult> {
     this.outbox.push(message);
-    const messageId =
-      `mail_local_${Date.now().toString(36)}_${Math.random()
-        .toString(36)
-        .slice(2, 10)}`;
+    const messageId = `mail_local_${Date.now().toString(36)}_${Math.random()
+      .toString(36)
+      .slice(2, 10)}`;
     return {
       messageId,
       acceptedAt: new Date(),

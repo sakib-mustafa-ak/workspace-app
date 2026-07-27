@@ -85,6 +85,9 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^@repo/database$": "<rootDir>/__mocks__/@repo/database"
+    }
   }
 }

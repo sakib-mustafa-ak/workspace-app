@@ -53,7 +53,8 @@ export class TokenHashService {
 
   /** Constant-time comparison. Tested for length-mismatch safety. */
   public equals(aHash: string, plainText: string): boolean {
-    if (typeof aHash !== 'string' || typeof plainText !== 'string') return false;
+    if (typeof aHash !== 'string' || typeof plainText !== 'string')
+      return false;
     const candidate = Buffer.from(this.hash(plainText), 'hex');
     const stored = Buffer.from(aHash, 'hex');
     if (stored.length !== candidate.length) return false;

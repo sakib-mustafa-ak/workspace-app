@@ -9,7 +9,10 @@ import helmet from 'helmet';
 import { AppModule } from './app.module.js';
 import { BusinessExceptionFilter } from './common/filters/business-exception.filter.js';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor.js';
-import { API_DEFAULT_VERSION, API_PREFIX } from './common/constants/api.constants.js';
+import {
+  API_DEFAULT_VERSION,
+  API_PREFIX,
+} from './common/constants/api.constants.js';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
@@ -53,7 +56,6 @@ async function bootstrap(): Promise<void> {
 
   await app.listen(port);
 
-  // eslint-disable-next-line no-console
   console.log(`🚀 API running at http://localhost:${port}/api/v1`);
 }
 

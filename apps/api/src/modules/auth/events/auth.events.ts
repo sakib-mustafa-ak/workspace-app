@@ -80,8 +80,7 @@ export const AUTH_EVENTS = {
   passwordChanged: 'PasswordChanged',
 } as const;
 
-export type AuthEventName =
-  (typeof AUTH_EVENTS)[keyof typeof AUTH_EVENTS];
+export type AuthEventName = (typeof AUTH_EVENTS)[keyof typeof AUTH_EVENTS];
 
 @Injectable()
 export class AuthEventBus {
@@ -99,7 +98,9 @@ export class AuthEventBus {
   // ─────────────────────────────────────────────────────────────────────
 
   publishUserRegistered(userId: string): void {
-    this.emit(AUTH_EVENTS.userRegistered, { userId } satisfies UserRegisteredPayload);
+    this.emit(AUTH_EVENTS.userRegistered, {
+      userId,
+    } satisfies UserRegisteredPayload);
   }
 
   publishUserLoggedIn(userId: string, identityId: string): void {
@@ -159,21 +160,15 @@ export class AuthEventBus {
   // compile against the same payload shape publishers emit.
   // ─────────────────────────────────────────────────────────────────────
 
-  onUserRegistered(
-    listener: (payload: UserRegisteredPayload) => void,
-  ): void {
+  onUserRegistered(listener: (payload: UserRegisteredPayload) => void): void {
     this.emitter.on(AUTH_EVENTS.userRegistered, listener);
   }
 
-  onUserLoggedIn(
-    listener: (payload: UserLoggedInPayload) => void,
-  ): void {
+  onUserLoggedIn(listener: (payload: UserLoggedInPayload) => void): void {
     this.emitter.on(AUTH_EVENTS.userLoggedIn, listener);
   }
 
-  onUserLoggedOut(
-    listener: (payload: UserLoggedOutPayload) => void,
-  ): void {
+  onUserLoggedOut(listener: (payload: UserLoggedOutPayload) => void): void {
     this.emitter.on(AUTH_EVENTS.userLoggedOut, listener);
   }
 
@@ -189,9 +184,7 @@ export class AuthEventBus {
     this.emitter.on(AUTH_EVENTS.emailVerificationRequested, listener);
   }
 
-  onEmailVerified(
-    listener: (payload: EmailVerifiedPayload) => void,
-  ): void {
+  onEmailVerified(listener: (payload: EmailVerifiedPayload) => void): void {
     this.emitter.on(AUTH_EVENTS.emailVerified, listener);
   }
 
@@ -201,9 +194,7 @@ export class AuthEventBus {
     this.emitter.on(AUTH_EVENTS.passwordResetRequested, listener);
   }
 
-  onPasswordChanged(
-    listener: (payload: PasswordChangedPayload) => void,
-  ): void {
+  onPasswordChanged(listener: (payload: PasswordChangedPayload) => void): void {
     this.emitter.on(AUTH_EVENTS.passwordChanged, listener);
   }
 

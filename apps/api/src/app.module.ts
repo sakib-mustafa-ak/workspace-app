@@ -7,6 +7,8 @@ import { RedisModule } from './infrastructure/redis/redis.module.js';
 import { AppLoggerModule } from './infrastructure/logger/logger.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
+import { UsersModule } from './modules/users/users.module.js';
+import { WorkspacesModule } from './modules/workspaces/workspaces.module.js';
 
 /**
  * Root Nest module.
@@ -48,6 +50,8 @@ import { AuthModule } from './modules/auth/auth.module.js';
 
     HealthModule,
     AuthModule,
+    UsersModule,
+    WorkspacesModule,
   ],
 })
 export class AppModule {}

@@ -69,8 +69,7 @@ export class AuthResponseDto {
   user!: UserProfileDto;
 
   @ApiProperty({
-    description:
-      'Token bundle — both must be persisted by the client.',
+    description: 'Token bundle — both must be persisted by the client.',
   })
   tokens!: AuthTokensDto;
 }

@@ -63,9 +63,7 @@ export class JwtAuthGuard implements CanActivate {
       // TokenService.verifyAccessToken returns AccessTokenPayload,
       // which guarantees a string `sub`. The cast keeps older
       // refactors safe without changing the asserted invariant.
-      const verified = await this.tokenService.verifyAccessToken(
-        match[1]!,
-      );
+      const verified = await this.tokenService.verifyAccessToken(match[1]);
       payload = { sub: verified.sub };
     } catch (err) {
       // Verification failures are auth issues, never engineering bugs.

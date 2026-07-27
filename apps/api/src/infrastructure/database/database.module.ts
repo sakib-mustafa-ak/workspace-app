@@ -1,5 +1,5 @@
 import { Global, Module } from '@nestjs/common';
-import { DATABASE, db, type Db } from '@repo/database';
+import { DATABASE, db } from '@repo/database';
 
 /**
  * Provides the singleton Drizzle-backed database connection as a global
@@ -21,7 +21,7 @@ import { DATABASE, db, type Db } from '@repo/database';
   providers: [
     {
       provide: DATABASE,
-      useValue: db as Db,
+      useValue: db,
     },
   ],
   exports: [DATABASE],

@@ -22,10 +22,7 @@ export class SessionRepository {
   constructor(@Inject(DATABASE) private readonly db: Db) {}
 
   public async create(row: NewSessionRow): Promise<SessionRow> {
-    const [created] = await this.db
-      .insert(sessions)
-      .values(row)
-      .returning();
+    const [created] = await this.db.insert(sessions).values(row).returning();
     if (!created) {
       throw new Error('Failed to insert session.');
     }
@@ -57,7 +54,11 @@ export class SessionRepository {
     return row;
   }
 
-  public async touch(sessionId: string, ip: string | null, ua: string | null): Promise<void> {
+  public async touch(
+    sessionId: string,
+    ip: string | null,
+    ua: string | null,
+  ): Promise<void> {
     await this.db
       .update(sessions)
       .set({
@@ -82,10 +83,7 @@ export class SessionRepository {
     await this.db
       .update(sessions)
       .set({ revokedAt: new Date() })
-      .where(and(
-        eq(sessions.id, sessionId),
-        isNull(sessions.revokedAt),
-      ));
+      .where(and(eq(sessions.id, sessionId), isNull(sessions.revokedAt)));
   }
 
   /**
@@ -101,11 +99,6 @@ export class SessionRepository {
     return this.db
       .select()
       .from(sessions)
-      .where(
-        and(
-          eq(sessions.userId, userId),
-          isNull(sessions.revokedAt),
-        ),
-      );
+      .where(and(eq(sessions.userId, userId), isNull(sessions.revokedAt)));
   }
 }

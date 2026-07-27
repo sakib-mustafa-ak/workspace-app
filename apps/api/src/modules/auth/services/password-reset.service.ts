@@ -13,19 +13,14 @@ import {
 } from '@repo/database';
 
 import { PASSWORD_RESET_TTL_SECONDS } from '../auth.constants';
-import {
-  AuthException,
-  AuthErrorCode,
-} from '../errors/auth.errors';
+import { AuthException, AuthErrorCode } from '../errors/auth.errors';
 import { AuthEventBus } from '../events/auth.events';
 import {
   MAIL_PROVIDER,
   RecordingMailProvider,
   type MailMessage,
 } from '../mail/mail.provider';
-import {
-  renderPasswordResetMail,
-} from '../mail/password-reset.template';
+import { renderPasswordResetMail } from '../mail/password-reset.template';
 import { PasswordResetTokenRepository } from '../repositories/password-reset-token.repository';
 import { PasswordService } from './password.service';
 import { SessionRepository } from '../repositories/session.repository';
@@ -215,11 +210,8 @@ export class PasswordResetService {
     ip: string | null,
     userAgent: string | null,
   ): Promise<void> {
-    const expiresAt = new Date(
-      Date.now() + PASSWORD_RESET_TTL_SECONDS * 1000,
-    );
-    const { selector, verifier } =
-      this.tokenHash.generateSelectorAndVerifier();
+    const expiresAt = new Date(Date.now() + PASSWORD_RESET_TTL_SECONDS * 1000);
+    const { selector, verifier } = this.tokenHash.generateSelectorAndVerifier();
 
     await this.repository.mintForUser({
       userId,
@@ -256,7 +248,9 @@ export class PasswordResetService {
     this.eventBus.publishPasswordResetRequested(userId, email);
   }
 
-  private splitToken(token: string): { selector: string; verifier: string } | null {
+  private splitToken(
+    token: string,
+  ): { selector: string; verifier: string } | null {
     const dotIndex = token.indexOf('.');
     if (dotIndex <= 0 || dotIndex === token.length - 1) {
       return null;

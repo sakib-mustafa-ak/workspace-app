@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { jwtVerify, SignJWT } from 'jose';
 
@@ -91,9 +91,13 @@ export class TokenService {
   }
 
   public async verifyAccessToken(token: string): Promise<AccessTokenPayload> {
-    const { payload } = await jwtVerify<AccessTokenPayload>(token, this.accessSecret, {
-      algorithms: ['HS256'],
-    });
+    const { payload } = await jwtVerify<AccessTokenPayload>(
+      token,
+      this.accessSecret,
+      {
+        algorithms: ['HS256'],
+      },
+    );
     if (payload.v !== JWT_ACCESS_PAYLOAD_VERSION) {
       throw new Error(`Unsupported access token version: ${String(payload.v)}`);
     }
@@ -104,11 +108,17 @@ export class TokenService {
   }
 
   public async verifyRefreshToken(token: string): Promise<RefreshTokenPayload> {
-    const { payload } = await jwtVerify<RefreshTokenPayload>(token, this.refreshSecret, {
-      algorithms: ['HS256'],
-    });
+    const { payload } = await jwtVerify<RefreshTokenPayload>(
+      token,
+      this.refreshSecret,
+      {
+        algorithms: ['HS256'],
+      },
+    );
     if (payload.v !== JWT_ACCESS_PAYLOAD_VERSION) {
-      throw new Error(`Unsupported refresh token version: ${String(payload.v)}`);
+      throw new Error(
+        `Unsupported refresh token version: ${String(payload.v)}`,
+      );
     }
     if (typeof payload.sub !== 'string' || typeof payload.sid !== 'string') {
       throw new Error('Refresh token malformed.');

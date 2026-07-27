@@ -28,8 +28,7 @@ export const AuthErrorCode = {
   RESET_TOKEN_CONSUMED: 'AUTH.RESET_TOKEN_CONSUMED',
 } as const;
 
-export type AuthErrorCode =
-  (typeof AuthErrorCode)[keyof typeof AuthErrorCode];
+export type AuthErrorCode = (typeof AuthErrorCode)[keyof typeof AuthErrorCode];
 
 const STATUS_BY_CODE: Readonly<Record<AuthErrorCode, number>> = {
   [AuthErrorCode.EMAIL_ALREADY_EXISTS]: 409,

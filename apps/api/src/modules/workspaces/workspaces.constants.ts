@@ -1,0 +1,2 @@
+export const INVITATION_AUTH_TTL_SECONDS = 60 * 60 * 24 * 7;
+export const INVITATION_TOKEN_BYTES = 32;

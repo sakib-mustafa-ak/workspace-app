@@ -1,0 +1,296 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
+
+import { Public } from '../../auth/decorators/public.decorator';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import type { CurrentUser as CurrentUserModel } from '../../auth/interfaces/current-user.interface';
+
+import { WorkspacesService } from '../services/workspaces.service';
+import { CreateWorkspaceDto } from '../dto/create-workspace.dto';
+import { UpdateWorkspaceDto } from '../dto/update-workspace.dto';
+import { CreateInvitationDto } from '../dto/create-invitation.dto';
+import { ChangeRoleDto } from '../dto/change-role.dto';
+import { AcceptInvitationDto } from '../dto/accept-invitation.dto';
+import {
+  WorkspaceResponseDto,
+  WorkspaceMemberResponseDto,
+  InvitationResponseDto,
+  InvitationCreatedResponseDto,
+  AcceptedInvitationResponseDto,
+} from '../dto/workspace-response.dto';
+
+@ApiTags('Workspaces')
+@ApiBearerAuth()
+@Controller({ path: 'workspaces', version: '1' })
+export class WorkspacesController {
+  constructor(private readonly workspaces: WorkspacesService) {}
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Create a workspace' })
+  @ApiCreatedResponse({ type: WorkspaceResponseDto })
+  public async create(
+    @CurrentUser() user: CurrentUserModel,
+    @Body() body: CreateWorkspaceDto,
+  ): Promise<WorkspaceResponseDto> {
+    const ws = await this.workspaces.create(user.id, body);
+    return toWorkspaceResponse(ws);
+  }
+
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'List my workspaces' })
+  @ApiOkResponse({ type: [WorkspaceResponseDto] })
+  public async listMyWorkspaces(
+    @CurrentUser() user: CurrentUserModel,
+  ): Promise<WorkspaceResponseDto[]> {
+    const list = await this.workspaces.listByUser(user.id);
+    return list.map(toWorkspaceResponse);
+  }
+
+  @Get(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get workspace by ID' })
+  @ApiOkResponse({ type: WorkspaceResponseDto })
+  @ApiNotFoundResponse()
+  public async getById(@Param('id') id: string): Promise<WorkspaceResponseDto> {
+    const ws = await this.workspaces.getById(id);
+    return toWorkspaceResponse(ws);
+  }
+
+  @Patch(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Update workspace' })
+  @ApiOkResponse({ type: WorkspaceResponseDto })
+  public async update(
+    @CurrentUser() user: CurrentUserModel,
+    @Param('id') id: string,
+    @Body() body: UpdateWorkspaceDto,
+  ): Promise<WorkspaceResponseDto> {
+    const ws = await this.workspaces.update(id, user.id, body);
+    return toWorkspaceResponse(ws);
+  }
+
+  @Post(':id/archive')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Archive workspace' })
+  public async archive(
+    @CurrentUser() user: CurrentUserModel,
+    @Param('id') id: string,
+  ): Promise<void> {
+    await this.workspaces.archive(id, user.id);
+  }
+
+  @Post(':id/unarchive')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Unarchive workspace' })
+  public async unarchive(
+    @CurrentUser() user: CurrentUserModel,
+    @Param('id') id: string,
+  ): Promise<void> {
+    await this.workspaces.unarchive(id, user.id);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Soft-delete workspace (owner only)' })
+  public async delete(
+    @CurrentUser() user: CurrentUserModel,
+    @Param('id') id: string,
+  ): Promise<void> {
+    await this.workspaces.delete(id, user.id);
+  }
+
+  @Get(':id/members')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'List workspace members' })
+  @ApiOkResponse({ type: [WorkspaceMemberResponseDto] })
+  public async getMembers(
+    @Param('id') id: string,
+  ): Promise<WorkspaceMemberResponseDto[]> {
+    const members = await this.workspaces.getMembers(id);
+    return members.map(toMemberResponse);
+  }
+
+  @Patch(':id/members/:userId/role')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Change member role' })
+  @ApiOkResponse({ type: WorkspaceMemberResponseDto })
+  public async changeRole(
+    @CurrentUser() user: CurrentUserModel,
+    @Param('id') id: string,
+    @Param('userId') targetUserId: string,
+    @Body() body: ChangeRoleDto,
+  ): Promise<WorkspaceMemberResponseDto> {
+    const member = await this.workspaces.changeMemberRole(
+      id,
+      user.id,
+      targetUserId,
+      body.role,
+    );
+    return toMemberResponse(member);
+  }
+
+  @Delete(':id/members/:userId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Remove member from workspace' })
+  public async removeMember(
+    @CurrentUser() user: CurrentUserModel,
+    @Param('id') id: string,
+    @Param('userId') targetUserId: string,
+  ): Promise<void> {
+    await this.workspaces.removeMember(id, user.id, targetUserId);
+  }
+
+  @Post(':id/invitations')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Create invitation' })
+  @ApiCreatedResponse({ type: InvitationCreatedResponseDto })
+  public async createInvitation(
+    @CurrentUser() user: CurrentUserModel,
+    @Param('id') id: string,
+    @Body() body: CreateInvitationDto,
+  ): Promise<InvitationCreatedResponseDto> {
+    const result = await this.workspaces.createInvitation(id, user.id, body);
+    return {
+      token: `${result.selector}:${result.verifier}`,
+      selector: result.selector,
+    };
+  }
+
+  @Get(':id/invitations')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'List workspace invitations' })
+  @ApiOkResponse({ type: [InvitationResponseDto] })
+  public async getInvitations(
+    @CurrentUser() user: CurrentUserModel,
+    @Param('id') id: string,
+  ): Promise<InvitationResponseDto[]> {
+    const list = await this.workspaces.getInvitations(id, user.id);
+    return list.map(toInvitationResponse);
+  }
+
+  @Delete(':id/invitations/:invitationId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Revoke invitation' })
+  public async revokeInvitation(
+    @CurrentUser() user: CurrentUserModel,
+    @Param('id') id: string,
+    @Param('invitationId') invitationId: string,
+  ): Promise<void> {
+    await this.workspaces.revokeInvitation(id, invitationId, user.id);
+  }
+
+  @Public()
+  @Post('invitations/accept')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Accept invitation (public, auth required)' })
+  @ApiOkResponse({ type: AcceptedInvitationResponseDto })
+  public async acceptInvitation(
+    @CurrentUser() user: CurrentUserModel,
+    @Body() body: AcceptInvitationDto,
+  ): Promise<AcceptedInvitationResponseDto> {
+    const result = await this.workspaces.acceptInvitation(
+      body.selector,
+      body.verifier,
+      user.id,
+    );
+    return {
+      workspaceId: result.workspaceId,
+      message: 'Invitation accepted. You are now a member.',
+    };
+  }
+}
+
+function toWorkspaceResponse(ws: {
+  id: string;
+  name: string;
+  slug: string;
+  ownerId: string;
+  status: unknown;
+  description: string | null;
+  logoUrl: string | null;
+  website: string | null;
+  archivedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}): WorkspaceResponseDto {
+  return {
+    id: ws.id,
+    name: ws.name,
+    slug: ws.slug,
+    ownerId: ws.ownerId,
+    status: ws.status as WorkspaceResponseDto['status'],
+    description: ws.description,
+    logoUrl: ws.logoUrl,
+    website: ws.website,
+    archivedAt: ws.archivedAt,
+    createdAt: ws.createdAt,
+    updatedAt: ws.updatedAt,
+  };
+}
+
+function toMemberResponse(m: {
+  id: string;
+  workspaceId: string;
+  userId: string;
+  role: unknown;
+  status: unknown;
+  joinedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}): WorkspaceMemberResponseDto {
+  return {
+    id: m.id,
+    workspaceId: m.workspaceId,
+    userId: m.userId,
+    role: m.role as WorkspaceMemberResponseDto['role'],
+    status: m.status as WorkspaceMemberResponseDto['status'],
+    joinedAt: m.joinedAt,
+    createdAt: m.createdAt,
+    updatedAt: m.updatedAt,
+  };
+}
+
+function toInvitationResponse(inv: {
+  id: string;
+  workspaceId: string;
+  email: string;
+  role: unknown;
+  status: string;
+  invitedById: string;
+  acceptedById: string | null;
+  acceptedAt: Date | null;
+  expiresAt: Date;
+  createdAt: Date;
+}): InvitationResponseDto {
+  return {
+    id: inv.id,
+    workspaceId: inv.workspaceId,
+    email: inv.email,
+    role: inv.role as InvitationResponseDto['role'],
+    status: inv.status,
+    invitedById: inv.invitedById,
+    acceptedById: inv.acceptedById,
+    acceptedAt: inv.acceptedAt,
+    expiresAt: inv.expiresAt,
+    createdAt: inv.createdAt,
+  };
+}

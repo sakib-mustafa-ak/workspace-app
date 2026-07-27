@@ -10,7 +10,9 @@ describe('PasswordService', () => {
   it('hashes a password into a verifiable argon2id string', async () => {
     const hash = await service.hash('correct-horse-battery-staple');
     expect(hash.startsWith('$argon2id$')).toBe(true);
-    await expect(service.verify(hash, 'correct-horse-battery-staple')).resolves.toBe(true);
+    await expect(
+      service.verify(hash, 'correct-horse-battery-staple'),
+    ).resolves.toBe(true);
   });
 
   it('rejects a wrong plaintext', async () => {
@@ -24,6 +26,8 @@ describe('PasswordService', () => {
   });
 
   it('returns false when the stored hash is malformed', async () => {
-    await expect(service.verify('not-an-argon-hash', 'whatever')).resolves.toBe(false);
+    await expect(service.verify('not-an-argon-hash', 'whatever')).resolves.toBe(
+      false,
+    );
   });
 });

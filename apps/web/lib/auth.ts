@@ -1,0 +1,75 @@
+import { api } from './api';
+
+export type User = {
+  id: string;
+  email: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  status: string;
+  createdAt: string;
+};
+
+export type AuthResponse = {
+  accessToken: string;
+  refreshToken: string;
+  user: User;
+};
+
+export async function login(
+  email: string,
+  password: string,
+): Promise<AuthResponse> {
+  const data = await api.post<AuthResponse>('/auth/login', {
+    email,
+    password,
+  });
+  localStorage.setItem('accessToken', data.accessToken);
+  localStorage.setItem('refreshToken', data.refreshToken);
+  return data;
+}
+
+export async function register(
+  email: string,
+  password: string,
+  displayName: string,
+): Promise<AuthResponse> {
+  const data = await api.post<AuthResponse>('/auth/register', {
+    email,
+    password,
+    displayName,
+  });
+  localStorage.setItem('accessToken', data.accessToken);
+  localStorage.setItem('refreshToken', data.refreshToken);
+  return data;
+}
+
+export async function logout(): Promise<void> {
+  try {
+    await api.post('/auth/logout');
+  } catch {
+    // handled
+  } finally {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+  }
+}
+
+export async function getMe(): Promise<User> {
+  return api.get<User>('/auth/me');
+}
+
+export function getStoredUser(): User | null {
+  if (typeof window === 'undefined') return null;
+  const raw = localStorage.getItem('user');
+  return raw ? JSON.parse(raw) : null;
+}
+
+export function storeUser(user: User): void {
+  localStorage.setItem('user', JSON.stringify(user));
+}
+
+export function clearSession(): void {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('user');
+}

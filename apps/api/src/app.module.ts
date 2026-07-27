@@ -9,6 +9,10 @@ import { HealthModule } from './modules/health/health.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module.js';
+import { BoardsModule } from './modules/boards/boards.module.js';
+import { TasksModule } from './modules/tasks/tasks.module.js';
+import { CommentsModule } from './modules/comments/comments.module.js';
+import { NotificationsModule } from './modules/notifications/notifications.module.js';
 
 /**
  * Root Nest module.
@@ -52,6 +56,10 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module.js';
     AuthModule,
     UsersModule,
     WorkspacesModule,
+    BoardsModule,
+    TasksModule,
+    CommentsModule,
+    NotificationsModule,
   ],
 })
 export class AppModule {}

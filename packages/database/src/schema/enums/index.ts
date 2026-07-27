@@ -1,4 +1,7 @@
 export * from './auth.enums.js';
+export * from './board.enums.js';
 export * from './identity.enums.js';
+export * from './notification.enums.js';
+export * from './task.enums.js';
 export * from './workspace.enums.js';
 export * from './invitation.enums.js';

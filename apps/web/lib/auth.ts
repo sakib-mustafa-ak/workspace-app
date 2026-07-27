@@ -78,3 +78,25 @@ export function clearSession(): void {
   localStorage.removeItem('refreshToken');
   localStorage.removeItem('user');
 }
+
+export async function requestVerification(email: string): Promise<void> {
+  await api.post('/auth/request-verification', { email });
+}
+
+export async function verifyEmail(token: string): Promise<{ userId: string; email: string }> {
+  return api.post<{ userId: string; email: string }>('/auth/verify-email', { token });
+}
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  await api.post('/auth/request-password-reset', { email });
+}
+
+export async function resetPassword(
+  token: string,
+  newPassword: string,
+): Promise<{ userId: string; revokedSessionIds: string[] }> {
+  return api.post<{ userId: string; revokedSessionIds: string[] }>(
+    '/auth/reset-password',
+    { token, newPassword },
+  );
+}

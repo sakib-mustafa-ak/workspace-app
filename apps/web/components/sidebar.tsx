@@ -9,10 +9,11 @@ import {
   LogOut,
   ChevronRight,
 } from 'lucide-react';
+import { NotificationsDropdown } from '@/components/notifications-dropdown';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/dashboard/settings', label: 'Settings', icon: Settings },
+  { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
 export function Sidebar() {
@@ -21,11 +22,14 @@ export function Sidebar() {
 
   return (
     <aside className="flex w-60 flex-col border-r border-surface-800 bg-surface-900">
-      <div className="flex h-14 items-center gap-2 border-b border-surface-800 px-4">
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary-600 text-xs font-bold text-white">
-          W
+      <div className="flex h-14 items-center justify-between border-b border-surface-800 px-4">
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary-600 text-xs font-bold text-white">
+            W
+          </div>
+          <span className="text-sm font-semibold">Workspace OS</span>
         </div>
-        <span className="text-sm font-semibold">Workspace OS</span>
+        <NotificationsDropdown />
       </div>
 
       <nav className="flex-1 space-y-1 p-3">

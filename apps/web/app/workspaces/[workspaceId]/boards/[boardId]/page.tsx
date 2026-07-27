@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, Plus, MessageSquare } from 'lucide-react';
 import { workspacesApi } from '@/lib/workspaces';
 import { boardsApi, type Board, type BoardColumn } from '@/lib/boards';
 import { tasksApi, type Task } from '@/lib/tasks';
+import { CommentsPanel } from '@/components/comments-panel';
 
 export default function BoardDetailPage() {
   const params = useParams();
@@ -18,6 +19,7 @@ export default function BoardDetailPage() {
   const [columns, setColumns] = useState<BoardColumn[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showComments, setShowComments] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -49,22 +51,36 @@ export default function BoardDetailPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex items-center gap-3 border-b border-surface-800 px-8 py-4">
-        <Link
-          href={`/workspaces/${workspaceId}/boards`}
-          className="text-surface-400 hover:text-white"
-        >
-          <ArrowLeft size={18} />
-        </Link>
-        <div>
-          <h1 className="text-lg font-bold">{board.name}</h1>
-          <p className="text-xs text-surface-500">
-            {board.description || 'No description'}
-          </p>
+      <header className="flex items-center justify-between border-b border-surface-800 px-8 py-4">
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/workspaces/${workspaceId}/boards`}
+            className="text-surface-400 hover:text-white"
+          >
+            <ArrowLeft size={18} />
+          </Link>
+          <div>
+            <h1 className="text-lg font-bold">{board.name}</h1>
+            <p className="text-xs text-surface-500">
+              {board.description || 'No description'}
+            </p>
+          </div>
         </div>
+        <button
+          onClick={() => setShowComments(!showComments)}
+          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs transition-colors ${
+            showComments
+              ? 'bg-primary-600/20 text-primary-400'
+              : 'text-surface-400 hover:bg-surface-800 hover:text-surface-200'
+          }`}
+        >
+          <MessageSquare size={14} />
+          Comments
+        </button>
       </header>
 
-      <div className="flex flex-1 gap-4 overflow-x-auto p-6">
+      <div className="flex flex-1">
+        <div className="flex flex-1 gap-4 overflow-x-auto p-6">
         {sortedColumns.map((col) => {
           const colTasks = tasks
             .filter((t) => t.columnId === col.id)
@@ -124,6 +140,12 @@ export default function BoardDetailPage() {
             </div>
           );
         })}
+      </div>
+        {showComments && (
+          <div className="w-80 shrink-0">
+            <CommentsPanel boardId={boardId} />
+          </div>
+        )}
       </div>
     </div>
   );

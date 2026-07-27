@@ -76,6 +76,20 @@ export default function LoginPage() {
           </button>
         </form>
 
+        <div className="mt-4 flex justify-between text-sm">
+          <Link
+            href="/auth/request-password-reset"
+            className="text-surface-400 hover:text-primary-300"
+          >
+            Forgot password?
+          </Link>
+          <Link
+            href="/auth/request-verification"
+            className="text-surface-400 hover:text-primary-300"
+          >
+            Verify email
+          </Link>
+        </div>
         <p className="mt-6 text-center text-sm text-surface-400">
           Don&apos;t have an account?{' '}
           <Link

@@ -1,17 +1,9 @@
 'use client';
 
-import { AuthProvider } from '@/contexts/auth-context';
-import { Sidebar } from '@/components/sidebar';
+import { AuthenticatedLayout } from '@/components/authenticated-layout';
 
 export default function NotificationsLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <AuthProvider>
-      <div className="flex h-screen">
-        <Sidebar />
-        <main className="flex-1 overflow-auto">{children}</main>
-      </div>
-    </AuthProvider>
-  );
+  return <AuthenticatedLayout>{children}</AuthenticatedLayout>;
 }

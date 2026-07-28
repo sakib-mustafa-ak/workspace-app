@@ -6,6 +6,7 @@ export type User = {
   displayName: string | null;
   avatarUrl: string | null;
   status: string;
+  emailVerifiedAt: string | null;
   createdAt: string;
 };
 

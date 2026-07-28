@@ -14,18 +14,24 @@ export default function NotificationsPage() {
   }, []);
 
   async function handleMarkRead(id: string) {
-    await notificationsApi.markAsRead(id);
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, readAt: n.readAt || new Date().toISOString() } : n)));
+    try {
+      await notificationsApi.markAsRead(id);
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, readAt: n.readAt || new Date().toISOString() } : n)));
+    } catch { /* handled */ }
   }
 
   async function handleMarkAllRead() {
-    await notificationsApi.markAllAsRead();
-    setNotifications((prev) => prev.map((n) => ({ ...n, readAt: n.readAt || new Date().toISOString() })));
+    try {
+      await notificationsApi.markAllAsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, readAt: n.readAt || new Date().toISOString() })));
+    } catch { /* handled */ }
   }
 
   async function handleArchive(id: string) {
-    await notificationsApi.archive(id);
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    try {
+      await notificationsApi.archive(id);
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+    } catch { /* handled */ }
   }
 
   return (

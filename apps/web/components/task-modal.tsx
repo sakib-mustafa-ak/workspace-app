@@ -33,7 +33,6 @@ export function TaskModal({
   const [description, setDescription] = useState(task?.description || '');
   const [priority, setPriority] = useState(task?.priority || 'MEDIUM');
   const [assigneeId, setAssigneeId] = useState(task?.assigneeId || '');
-  const [dueDate, setDueDate] = useState(task?.dueDate?.split('T')[0] || '');
   const [columnId, setColumnId] = useState(initialColumnId || task?.columnId || '');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -179,18 +178,6 @@ export function TaskModal({
                   </button>
                 ))}
               </div>
-            </div>
-          )}
-
-          {mode === 'edit' && dueDate !== undefined && (
-            <div>
-              <label className="block text-xs font-medium mb-1 text-surface-400">Due date</label>
-              <input
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="w-full rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm outline-none focus:border-primary-500"
-              />
             </div>
           )}
 

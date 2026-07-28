@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
+import { LogIn } from 'lucide-react';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -25,76 +26,81 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <h1 className="text-2xl font-bold mb-1">Welcome back</h1>
-        <p className="text-surface-400 mb-8 text-sm">
-          Sign in to your workspace
-        </p>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-surface-950 px-4">
+      <div className="pointer-events-none absolute -left-40 -top-40 h-[500px] w-[500px] rounded-full bg-primary-600/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-40 -right-40 h-[500px] w-[500px] rounded-full bg-primary-500/5 blur-3xl" />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-2 text-sm text-red-400">
-              {error}
+      <div className="relative w-full max-w-sm">
+        <div className="rounded-2xl border border-surface-800/50 bg-gradient-to-br from-surface-900 to-surface-900/60 p-8 shadow-xl shadow-black/20 backdrop-blur-xl">
+          <div className="mb-8 text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-600/20 to-primary-600/10 shadow-sm shadow-primary-600/10">
+              <LogIn size={20} className="text-primary-400" />
             </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium mb-1.5 text-surface-300">
-              Email
-            </label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-surface-700 bg-surface-800 px-3.5 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-              placeholder="you@example.com"
-            />
+            <h1 className="text-xl font-bold">Welcome back</h1>
+            <p className="mt-1 text-sm text-surface-400">
+              Sign in to your workspace
+            </p>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1.5 text-surface-300">
-              Password
-            </label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-surface-700 bg-surface-800 px-3.5 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-              placeholder="••••••••"
-            />
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-sm text-red-400">
+                {error}
+              </div>
+            )}
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-surface-300">
+                Email
+              </label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-lg border border-surface-700 bg-surface-950/50 px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-surface-500 focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50"
+                placeholder="you@example.com"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-surface-300">
+                Password
+              </label>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-lg border border-surface-700 bg-surface-950/50 px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-surface-500 focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50"
+                placeholder="••••••••"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-500 hover:shadow-primary-500/30 active:scale-[0.98] disabled:opacity-50 disabled:shadow-none"
+            >
+              {submitting ? 'Signing in…' : 'Sign in'}
+            </button>
+          </form>
+
+          <div className="mt-4 text-center text-sm">
+            <Link
+              href="/auth/request-password-reset"
+              className="text-surface-400 transition-colors hover:text-primary-300"
+            >
+              Forgot password?
+            </Link>
           </div>
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-500 disabled:opacity-50"
-          >
-            {submitting ? 'Signing in…' : 'Sign in'}
-          </button>
-        </form>
-
-        <div className="mt-4 flex justify-between text-sm">
-          <Link
-            href="/auth/request-password-reset"
-            className="text-surface-400 hover:text-primary-300"
-          >
-            Forgot password?
-          </Link>
-          <Link
-            href="/auth/request-verification"
-            className="text-surface-400 hover:text-primary-300"
-          >
-            Verify email
-          </Link>
         </div>
-        <p className="mt-6 text-center text-sm text-surface-400">
+
+        <p className="mt-6 text-center text-sm text-surface-500">
           Don&apos;t have an account?{' '}
           <Link
             href="/auth/register"
-            className="text-primary-400 hover:text-primary-300"
+            className="font-medium text-primary-400 transition-colors hover:text-primary-300"
           >
             Create one
           </Link>

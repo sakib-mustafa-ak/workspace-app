@@ -41,6 +41,8 @@ export default function WorkspaceDetailPage() {
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('MEMBER');
   const [inviteResult, setInviteResult] = useState('');
+  const [inviteToken, setInviteToken] = useState('');
+  const [copied, setCopied] = useState(false);
 
   function loadWorkspace() {
     setLoading(true);
@@ -125,9 +127,10 @@ export default function WorkspaceDetailPage() {
     e.preventDefault();
     if (!inviteEmail.trim()) return;
     try {
-      await workspacesApi.createInvitation(workspaceId, { email: inviteEmail.trim(), role: inviteRole });
+      const res = await workspacesApi.createInvitation(workspaceId, { email: inviteEmail.trim(), role: inviteRole });
+      setInviteToken(res.token);
       setInviteEmail('');
-      setInviteResult('Invitation sent!');
+      setInviteResult('Invitation created!');
       setTimeout(() => setInviteResult(''), 3000);
       loadInvitations();
     } catch { setInviteResult('Failed to send invitation'); }
@@ -274,7 +277,7 @@ export default function WorkspaceDetailPage() {
         {tab === 'invitations' && (
           <div className="p-6">
             <h2 className="mb-4 text-sm font-semibold">Invitations</h2>
-            <form onSubmit={handleCreateInvitation} className="mb-6 flex items-end gap-3">
+            <form onSubmit={handleCreateInvitation} className="mb-4 flex items-end gap-3">
               <div className="flex-1">
                 <label className="block text-xs font-medium mb-1 text-surface-400">Email</label>
                 <input
@@ -306,7 +309,27 @@ export default function WorkspaceDetailPage() {
               </button>
             </form>
             {inviteResult && (
-              <p className="mb-3 text-xs text-emerald-400">{inviteResult}</p>
+              <p className="mb-2 text-xs text-emerald-400">{inviteResult}</p>
+            )}
+            {inviteToken && (
+              <div className="mb-4 rounded-lg border border-primary-500/20 bg-primary-500/10 px-4 py-3">
+                <p className="text-xs font-medium text-primary-300">Invitation link</p>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <code className="flex-1 truncate rounded bg-surface-900 px-2 py-1 text-xs text-surface-300">
+                    {`${window.location.origin}/workspaces/invitations/accept?token=${inviteToken}`}
+                  </code>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/workspaces/invitations/accept?token=${inviteToken}`);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    className="shrink-0 rounded bg-primary-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-primary-500"
+                  >
+                    {copied ? 'Copied!' : 'Copy'}
+                  </button>
+                </div>
+              </div>
             )}
             <div className="space-y-2">
               {invitations.length === 0 ? (

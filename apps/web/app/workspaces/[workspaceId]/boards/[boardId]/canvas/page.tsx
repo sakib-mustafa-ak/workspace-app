@@ -3,15 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, Trash2 } from 'lucide-react';
+import { ArrowLeft, ImageIcon, Loader2, Trash2 } from 'lucide-react';
 import { canvasApi, type Canvas, type CanvasObject, type CanvasObjectType } from '@/lib/canvas';
+import { uploadsApi } from '@/lib/uploads';
 import { useCanvasSocket, type PresenceUser } from './use-canvas-socket';
 
-const OBJECT_TYPES: { type: CanvasObjectType; label: string; color: string }[] = [
-  { type: 'RECTANGLE', label: 'Rectangle', color: '#3b82f6' },
-  { type: 'ELLIPSE', label: 'Ellipse', color: '#8b5cf6' },
-  { type: 'STICKY_NOTE', label: 'Note', color: '#fbbf24' },
-  { type: 'TEXT', label: 'Text', color: '#fff' },
+const OBJECT_TOOLS: CanvasObjectType[] = [
+  'RECTANGLE', 'ELLIPSE', 'LINE', 'ARROW', 'TEXT', 'STICKY_NOTE',
 ];
 
 export default function CanvasPage() {
@@ -35,6 +33,7 @@ export default function CanvasPage() {
 
   const [onlineUsers, setOnlineUsers] = useState<PresenceUser[]>([]);
   const [remoteCursors, setRemoteCursors] = useState<Map<string, { x: number; y: number }>>(new Map());
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const lastCursorEmit = useRef(0);
 
   const handleObjectFromSocket = useCallback((obj: CanvasObject) => {
@@ -122,7 +121,7 @@ export default function CanvasPage() {
       const obj = await canvasApi.createObject(boardId, {
         type: selectedTool,
         x, y, width: w, height: h,
-        fill: selectedTool === 'STICKY_NOTE' ? '#fbbf24' : selectedTool === 'RECTANGLE' ? '#3b82f640' : 'transparent',
+        fill: selectedTool === 'STICKY_NOTE' ? '#fbbf24' : selectedTool === 'RECTANGLE' ? '#3b82f640' : selectedTool === 'ELLIPSE' ? '#8b5cf640' : 'transparent',
         stroke: '#fff',
         strokeWidth: 1,
       });
@@ -183,6 +182,22 @@ export default function CanvasPage() {
     } catch { /* handled */ }
   }
 
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const uploaded = await uploadsApi.upload(workspaceId, file, boardId);
+      const obj = await canvasApi.createObject(boardId, {
+        type: 'IMAGE',
+        x: 100, y: 100,
+        width: 300, height: 200,
+        data: { url: uploaded.url, originalName: uploaded.originalName },
+      });
+      setCanvas((prev) => prev ? { ...prev, objects: [...prev.objects, obj] } : prev);
+    } catch { /* handled */ }
+    e.target.value = '';
+  }
+
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -226,19 +241,34 @@ export default function CanvasPage() {
           </div>
         </div>
         <div className="flex items-center gap-1.5">
-          {OBJECT_TYPES.map((t) => (
+          {OBJECT_TOOLS.map((type) => (
             <button
-              key={t.type}
-              onClick={() => { setSelectedTool(t.type); setSelectedId(null); }}
+              key={type}
+              onClick={() => { setSelectedTool(type); setSelectedId(null); }}
               className={`rounded-lg px-3 py-1.5 text-xs transition-colors ${
-                selectedTool === t.type
+                selectedTool === type
                   ? 'bg-primary-600 text-white'
                   : 'text-surface-400 hover:bg-surface-800 hover:text-surface-200'
               }`}
             >
-              {t.label}
+              {type === 'RECTANGLE' ? 'Rect' : type === 'ELLIPSE' ? 'Ellipse' : type === 'LINE' ? 'Line' : type === 'ARROW' ? 'Arrow' : type === 'TEXT' ? 'Text' : 'Note'}
             </button>
           ))}
+          <div className="mx-1 h-5 w-px bg-surface-700" />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs text-surface-400 hover:bg-surface-800 hover:text-surface-200"
+            title="Insert Image"
+          >
+            <ImageIcon size={12} />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleImageUpload}
+          />
           <div className="mx-2 h-5 w-px bg-surface-700" />
           {selectedId && (
             <button
@@ -304,6 +334,22 @@ export default function CanvasPage() {
             {obj.type === 'STICKY_NOTE' && (
               <div className="flex h-full items-center justify-center px-2 text-center text-xs font-medium text-amber-950">
                 {(obj.data?.text as string) || 'Note'}
+              </div>
+            )}
+            {obj.type === 'IMAGE' && (obj.data?.url as string | undefined) && (
+              <img
+                src={obj.data?.url as string}
+                alt=""
+                className="h-full w-full rounded-lg object-cover"
+                draggable={false}
+              />
+            )}
+            {obj.type === 'LINE' && (
+              <div className="absolute left-0 top-1/2 h-0 -translate-y-1/2 border-t" style={{ width: obj.width, borderColor: obj.stroke || '#fff' }} />
+            )}
+            {obj.type === 'ARROW' && (
+              <div className="absolute left-0 top-1/2 h-0 -translate-y-1/2 border-t" style={{ width: obj.width, borderColor: obj.stroke || '#fff' }}>
+                <div className="absolute -right-1.5 -top-1.5 h-0 w-0 border-[5px] border-transparent border-l-white" />
               </div>
             )}
           </div>

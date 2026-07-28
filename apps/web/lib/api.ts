@@ -46,10 +46,45 @@ async function request<T>(
   return res.json();
 }
 
+async function requestFormData<T>(
+  path: string,
+  formData: FormData,
+): Promise<T> {
+  const token =
+    typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+
+  const headers: Record<string, string> = {};
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new ApiError(
+      res.status,
+      body.code || 'UNKNOWN',
+      body.message || 'An error occurred',
+    );
+  }
+
+  if (res.status === 204) return undefined as T;
+
+  return res.json();
+}
+
 export const api = {
   get: <T>(path: string) => request<T>(path),
   post: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: 'POST', body: body ? JSON.stringify(body) : undefined }),
+  postFormData: <T>(path: string, formData: FormData) =>
+    requestFormData<T>(path, formData),
   patch: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: 'PATCH', body: body ? JSON.stringify(body) : undefined }),
   delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),

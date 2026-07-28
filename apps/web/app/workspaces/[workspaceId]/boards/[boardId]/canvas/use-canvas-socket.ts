@@ -24,6 +24,8 @@ export function useCanvasSocket(
   callbacks: CanvasSocketCallbacks,
 ) {
   const socketRef = useRef<ReturnType<typeof createCanvasSocket> | null>(null);
+  const callbacksRef = useRef(callbacks);
+  callbacksRef.current = callbacks;
 
   useEffect(() => {
     if (!boardId) return;
@@ -32,23 +34,23 @@ export function useCanvasSocket(
     socketRef.current = socket;
 
     socket.on('object:created', (obj: CanvasObject) => {
-      callbacks.onObjectCreated(obj);
+      callbacksRef.current.onObjectCreated(obj);
     });
 
     socket.on('object:updated', (obj: CanvasObject) => {
-      callbacks.onObjectUpdated(obj);
+      callbacksRef.current.onObjectUpdated(obj);
     });
 
     socket.on('object:deleted', (objectId: string) => {
-      callbacks.onObjectDeleted(objectId);
+      callbacksRef.current.onObjectDeleted(objectId);
     });
 
     socket.on('presence:update', (users: PresenceUser[]) => {
-      callbacks.onPresenceUpdate(users);
+      callbacksRef.current.onPresenceUpdate(users);
     });
 
     socket.on('cursor:moved', (data: { userId: string; cursor: { x: number; y: number } }) => {
-      callbacks.onCursorMoved(data);
+      callbacksRef.current.onCursorMoved(data);
     });
 
     return () => {

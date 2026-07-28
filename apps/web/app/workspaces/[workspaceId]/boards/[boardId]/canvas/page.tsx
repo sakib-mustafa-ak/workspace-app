@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, ImageIcon, Loader2, Trash2 } from 'lucide-react';
 import { canvasApi, type Canvas, type CanvasObject, type CanvasObjectType } from '@/lib/canvas';
@@ -337,11 +338,13 @@ export default function CanvasPage() {
               </div>
             )}
             {obj.type === 'IMAGE' && (obj.data?.url as string | undefined) && (
-              <img
+              <Image
                 src={obj.data?.url as string}
                 alt=""
-                className="h-full w-full rounded-lg object-cover"
+                fill
+                className="rounded-lg object-cover"
                 draggable={false}
+                unoptimized
               />
             )}
             {obj.type === 'LINE' && (

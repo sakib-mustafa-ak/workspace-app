@@ -66,6 +66,7 @@ export class NotificationHandler implements OnModuleInit {
         payload.workspaceId,
       );
       for (const m of members) {
+        if (m.userId === payload.createdBy) continue;
         await this.notifications.createAndDeliver(m.userId, {
           type: 'BOARD_SHARED',
           title: 'New board created',

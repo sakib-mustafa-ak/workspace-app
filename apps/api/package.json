@@ -27,6 +27,8 @@
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^11.4.4",
     "@nestjs/terminus": "^11.1.1",
+    "@nestjs/websockets": "^11.1.28",
+    "socket.io": "^4.8.3",
     "@repo/database": "workspace:^",
     "argon2": "^0.43.0",
     "class-transformer": "^0.5.1",

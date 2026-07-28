@@ -140,10 +140,27 @@ describe('CanvasService', () => {
   });
 
   it('should publish objectUpdated event when updating an object', async () => {
-    boardsRepo.findById.mockResolvedValue({ id: 'b-1', workspaceId: 'ws-1' } as any);
-    membersRepo.findByWorkspaceAndUser.mockResolvedValue({ id: 'm-1', workspaceId: 'ws-1', userId: 'user-1', role: 'OWNER' } as any);
-    canvasRepo.findObjectById.mockResolvedValue({ id: 'obj-1', canvasId: 'c-1', type: 'RECTANGLE' } as any);
-    canvasRepo.updateObject.mockResolvedValue({ id: 'obj-1', canvasId: 'c-1', x: 200, y: 300 } as any);
+    boardsRepo.findById.mockResolvedValue({
+      id: 'b-1',
+      workspaceId: 'ws-1',
+    } as any);
+    membersRepo.findByWorkspaceAndUser.mockResolvedValue({
+      id: 'm-1',
+      workspaceId: 'ws-1',
+      userId: 'user-1',
+      role: 'OWNER',
+    } as any);
+    canvasRepo.findObjectById.mockResolvedValue({
+      id: 'obj-1',
+      canvasId: 'c-1',
+      type: 'RECTANGLE',
+    } as any);
+    canvasRepo.updateObject.mockResolvedValue({
+      id: 'obj-1',
+      canvasId: 'c-1',
+      x: 200,
+      y: 300,
+    } as any);
 
     await service.updateObject('b-1', 'obj-1', 'user-1', { x: 200, y: 300 });
 
@@ -156,9 +173,20 @@ describe('CanvasService', () => {
   });
 
   it('should publish objectDeleted event when deleting an object', async () => {
-    boardsRepo.findById.mockResolvedValue({ id: 'b-1', workspaceId: 'ws-1' } as any);
-    membersRepo.findByWorkspaceAndUser.mockResolvedValue({ id: 'm-1', workspaceId: 'ws-1', userId: 'user-1', role: 'OWNER' } as any);
-    canvasRepo.findObjectById.mockResolvedValue({ id: 'obj-1', canvasId: 'c-1' } as any);
+    boardsRepo.findById.mockResolvedValue({
+      id: 'b-1',
+      workspaceId: 'ws-1',
+    } as any);
+    membersRepo.findByWorkspaceAndUser.mockResolvedValue({
+      id: 'm-1',
+      workspaceId: 'ws-1',
+      userId: 'user-1',
+      role: 'OWNER',
+    } as any);
+    canvasRepo.findObjectById.mockResolvedValue({
+      id: 'obj-1',
+      canvasId: 'c-1',
+    } as any);
     canvasRepo.softDeleteObject.mockResolvedValue(undefined);
 
     await service.deleteObject('b-1', 'obj-1', 'user-1');

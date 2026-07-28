@@ -1,0 +1,192 @@
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+
+import type { BoardCreatedPayload } from '../../boards/events/boards.events';
+import { BoardsEventBus } from '../../boards/events/boards.events';
+import type { CommentCreatedPayload } from '../../comments/events/comments.events';
+import { CommentsEventBus } from '../../comments/events/comments.events';
+import type { TaskCreatedPayload } from '../../tasks/events/tasks.events';
+import { TasksEventBus } from '../../tasks/events/tasks.events';
+import type {
+  MemberAddedPayload,
+  InvitationAcceptedPayload,
+} from '../../workspaces/events/workspaces.events';
+import { WorkspacesEventBus } from '../../workspaces/events/workspaces.events';
+import type { FileUploadedPayload } from '../../uploads/events/uploads.events';
+import { UploadsEventBus } from '../../uploads/events/uploads.events';
+import { WorkspaceMembersRepository } from '../../workspaces/repositories/workspace-members.repository';
+import { BoardsRepository } from '../../boards/repositories/boards.repository';
+
+import { NotificationsService } from '../services/notifications.service';
+
+@Injectable()
+export class NotificationHandler implements OnModuleInit {
+  private readonly logger = new Logger(NotificationHandler.name);
+
+  constructor(
+    private readonly notifications: NotificationsService,
+    private readonly boardsEventBus: BoardsEventBus,
+    private readonly commentsEventBus: CommentsEventBus,
+    private readonly tasksEventBus: TasksEventBus,
+    private readonly workspacesEventBus: WorkspacesEventBus,
+    private readonly uploadsEventBus: UploadsEventBus,
+    private readonly workspaceMembersRepo: WorkspaceMembersRepository,
+    private readonly boardsRepo: BoardsRepository,
+  ) {}
+
+  public onModuleInit(): void {
+    this.boardsEventBus.onBoardCreated((p) => { void this.handleBoardCreated(p); });
+    this.boardsEventBus.onBoardArchived((p) => { void this.handleBoardArchived(p); });
+    this.commentsEventBus.onCommentCreated((p) => { void this.handleCommentCreated(p); });
+    this.tasksEventBus.onTaskCreated((p) => { void this.handleTaskCreated(p); });
+    this.workspacesEventBus.onMemberAdded((p) => { void this.handleMemberAdded(p); });
+    this.workspacesEventBus.onInvitationAccepted((p) => { void this.handleInvitationAccepted(p); });
+    this.uploadsEventBus.onFileUploaded((p) => { void this.handleFileUploaded(p); });
+    this.logger.log('Notification handlers registered');
+  }
+
+  private async handleBoardCreated(
+    payload: BoardCreatedPayload,
+  ): Promise<void> {
+    try {
+      const members = await this.workspaceMembersRepo.listByWorkspace(
+        payload.workspaceId,
+      );
+      for (const m of members) {
+        await this.notifications.createAndDeliver(m.userId, {
+          type: 'BOARD_SHARED',
+          title: 'New board created',
+          body: undefined,
+          resourceType: 'board',
+          resourceId: payload.boardId,
+        });
+      }
+    } catch (err) {
+      this.logger.error('Failed to handle BoardCreated', err);
+    }
+  }
+
+  private async handleBoardArchived(payload: {
+    boardId: string;
+    archivedBy: string;
+  }): Promise<void> {
+    try {
+      const board = await this.boardsRepo.findById(payload.boardId);
+      if (!board) return;
+      const members = await this.workspaceMembersRepo.listByWorkspace(
+        board.workspaceId,
+      );
+      for (const m of members) {
+        if (m.userId === payload.archivedBy) continue;
+        await this.notifications.createAndDeliver(m.userId, {
+          type: 'BOARD_SHARED',
+          title: 'Board archived',
+          body: undefined,
+          resourceType: 'board',
+          resourceId: payload.boardId,
+        });
+      }
+    } catch (err) {
+      this.logger.error('Failed to handle BoardArchived', err);
+    }
+  }
+
+  private async handleCommentCreated(
+    payload: CommentCreatedPayload,
+  ): Promise<void> {
+    try {
+      const board = await this.boardsRepo.findById(payload.boardId);
+      if (!board) return;
+      const members = await this.workspaceMembersRepo.listByWorkspace(
+        board.workspaceId,
+      );
+      for (const m of members) {
+        if (m.userId === payload.userId) continue;
+        await this.notifications.createAndDeliver(m.userId, {
+          type: 'COMMENT_ADDED',
+          title: 'New comment on board',
+          body: undefined,
+          resourceType: 'board',
+          resourceId: payload.boardId,
+        });
+      }
+    } catch (err) {
+      this.logger.error('Failed to handle CommentCreated', err);
+    }
+  }
+
+  private async handleTaskCreated(payload: TaskCreatedPayload): Promise<void> {
+    if (!payload.assigneeId) return;
+    try {
+      await this.notifications.createAndDeliver(payload.assigneeId, {
+        type: 'TASK_ASSIGNED',
+        title: 'You were assigned a task',
+        body: undefined,
+        resourceType: 'task',
+        resourceId: payload.taskId,
+      });
+    } catch (err) {
+      this.logger.error('Failed to handle TaskCreated', err);
+    }
+  }
+
+  private async handleMemberAdded(payload: MemberAddedPayload): Promise<void> {
+    try {
+      await this.notifications.createAndDeliver(payload.userId, {
+        type: 'MEMBER_ADDED',
+        title: 'You were added to a workspace',
+        body: undefined,
+        resourceType: 'workspace',
+        resourceId: payload.workspaceId,
+      });
+    } catch (err) {
+      this.logger.error('Failed to handle MemberAdded', err);
+    }
+  }
+
+  private async handleInvitationAccepted(
+    payload: InvitationAcceptedPayload,
+  ): Promise<void> {
+    try {
+      const members = await this.workspaceMembersRepo.listByWorkspace(
+        payload.workspaceId,
+      );
+      for (const m of members) {
+        if (m.userId === payload.userId) continue;
+        await this.notifications.createAndDeliver(m.userId, {
+          type: 'INVITATION_ACCEPTED',
+          title: 'New member joined the workspace',
+          body: undefined,
+          resourceType: 'workspace',
+          resourceId: payload.workspaceId,
+        });
+      }
+    } catch (err) {
+      this.logger.error('Failed to handle InvitationAccepted', err);
+    }
+  }
+
+  private async handleFileUploaded(
+    payload: FileUploadedPayload,
+  ): Promise<void> {
+    if (!payload.boardId) return;
+    try {
+      const board = await this.boardsRepo.findById(payload.boardId);
+      if (!board) return;
+      const members = await this.workspaceMembersRepo.listByWorkspace(
+        board.workspaceId,
+      );
+      for (const m of members) {
+        if (m.userId === payload.userId) continue;
+        await this.notifications.createAndDeliver(m.userId, {
+          type: 'FILE_UPLOADED',
+          title: 'File uploaded to board',
+          body: payload.originalName,
+          resourceType: 'board',
+          resourceId: payload.boardId,
+        });
+      }
+    } catch (err) {
+      this.logger.error('Failed to handle FileUploaded', err);
+    }
+  }
+}

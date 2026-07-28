@@ -77,6 +77,10 @@ export class BoardsEventBus {
     this.emit(BOARDS_EVENTS.boardArchived, payload);
   }
 
+  onBoardArchived(listener: (payload: BoardArchivedPayload) => void): void {
+    this.emitter.on(BOARDS_EVENTS.boardArchived, listener);
+  }
+
   publishBoardDeleted(payload: BoardDeletedPayload): void {
     this.emit(BOARDS_EVENTS.boardDeleted, payload);
   }

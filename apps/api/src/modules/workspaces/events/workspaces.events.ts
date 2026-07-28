@@ -100,6 +100,10 @@ export class WorkspacesEventBus {
     this.emit(WORKSPACES_EVENTS.memberAdded, payload);
   }
 
+  onMemberAdded(listener: (payload: MemberAddedPayload) => void): void {
+    this.emitter.on(WORKSPACES_EVENTS.memberAdded, listener);
+  }
+
   publishMemberRoleChanged(payload: MemberRoleChangedPayload): void {
     this.emit(WORKSPACES_EVENTS.memberRoleChanged, payload);
   }
@@ -114,6 +118,12 @@ export class WorkspacesEventBus {
 
   publishInvitationAccepted(payload: InvitationAcceptedPayload): void {
     this.emit(WORKSPACES_EVENTS.invitationAccepted, payload);
+  }
+
+  onInvitationAccepted(
+    listener: (payload: InvitationAcceptedPayload) => void,
+  ): void {
+    this.emitter.on(WORKSPACES_EVENTS.invitationAccepted, listener);
   }
 
   private emit(name: WorkspacesEventName, payload: unknown): void {

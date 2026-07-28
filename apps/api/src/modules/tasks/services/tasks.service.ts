@@ -68,6 +68,7 @@ export class TasksService {
       boardId,
       columnId,
       createdBy: userId,
+      assigneeId: task.assigneeId ?? undefined,
     });
 
     return task;

@@ -6,6 +6,7 @@ export type TaskCreatedPayload = {
   boardId: string;
   columnId: string;
   createdBy: string;
+  assigneeId?: string;
 };
 
 export type TaskUpdatedPayload = {

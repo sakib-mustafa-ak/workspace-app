@@ -34,13 +34,27 @@ export class NotificationHandler implements OnModuleInit {
   ) {}
 
   public onModuleInit(): void {
-    this.boardsEventBus.onBoardCreated((p) => { void this.handleBoardCreated(p); });
-    this.boardsEventBus.onBoardArchived((p) => { void this.handleBoardArchived(p); });
-    this.commentsEventBus.onCommentCreated((p) => { void this.handleCommentCreated(p); });
-    this.tasksEventBus.onTaskCreated((p) => { void this.handleTaskCreated(p); });
-    this.workspacesEventBus.onMemberAdded((p) => { void this.handleMemberAdded(p); });
-    this.workspacesEventBus.onInvitationAccepted((p) => { void this.handleInvitationAccepted(p); });
-    this.uploadsEventBus.onFileUploaded((p) => { void this.handleFileUploaded(p); });
+    this.boardsEventBus.onBoardCreated((p) => {
+      void this.handleBoardCreated(p);
+    });
+    this.boardsEventBus.onBoardArchived((p) => {
+      void this.handleBoardArchived(p);
+    });
+    this.commentsEventBus.onCommentCreated((p) => {
+      void this.handleCommentCreated(p);
+    });
+    this.tasksEventBus.onTaskCreated((p) => {
+      void this.handleTaskCreated(p);
+    });
+    this.workspacesEventBus.onMemberAdded((p) => {
+      void this.handleMemberAdded(p);
+    });
+    this.workspacesEventBus.onInvitationAccepted((p) => {
+      void this.handleInvitationAccepted(p);
+    });
+    this.uploadsEventBus.onFileUploaded((p) => {
+      void this.handleFileUploaded(p);
+    });
     this.logger.log('Notification handlers registered');
   }
 

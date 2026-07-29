@@ -24,3 +24,12 @@
   --color-surface-900: #0f172a;
   --color-surface-950: #020617;
 }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.2s ease-out;
+}

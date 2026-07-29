@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/hooks/use-theme';
-import { api } from '@/lib/api';
+import { notificationsApi } from '@/lib/notifications';
 import { workspacesApi, type Workspace } from '@/lib/workspaces';
 import {
   LayoutDashboard,
@@ -73,11 +73,7 @@ export function Sidebar() {
 
   useEffect(() => {
     function poll() {
-      api.get<{count: number}>('/notifications/count').then((r) => {
-        if (typeof r === 'object' && r !== null && 'count' in r) {
-          setUnreadCount((r as {count: number}).count);
-        }
-      }).catch(() => {});
+      notificationsApi.countUnread().then((r) => setUnreadCount(r.count)).catch(() => {});
     }
     poll();
     const interval = setInterval(poll, 30000);

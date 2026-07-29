@@ -11,6 +11,40 @@ export class ApiError extends Error {
   }
 }
 
+let isRefreshing = false;
+let refreshQueue: Array<{
+  resolve: (token: string) => void;
+  reject: (err: unknown) => void;
+}> = [];
+
+function clearSession() {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+}
+
+async function refreshAccessToken(): Promise<string> {
+  const refreshToken = localStorage.getItem('refreshToken');
+  if (!refreshToken) throw new Error('No refresh token');
+
+  const res = await fetch(`${BASE_URL}/auth/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refreshToken }),
+  });
+
+  if (!res.ok) {
+    clearSession();
+    throw new Error('Session expired');
+  }
+
+  const data = await res.json();
+  localStorage.setItem('accessToken', data.accessToken);
+  if (data.refreshToken) {
+    localStorage.setItem('refreshToken', data.refreshToken);
+  }
+  return data.accessToken;
+}
+
 async function request<T>(
   path: string,
   options: RequestInit = {},
@@ -27,10 +61,38 @@ async function request<T>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${BASE_URL}${path}`, {
+  let res = await fetch(`${BASE_URL}${path}`, {
     ...options,
     headers,
   });
+
+  if (res.status === 401 && token) {
+    if (!isRefreshing) {
+      isRefreshing = true;
+      try {
+        const newToken = await refreshAccessToken();
+        isRefreshing = false;
+        refreshQueue.forEach((q) => q.resolve(newToken));
+        refreshQueue = [];
+
+        headers['Authorization'] = `Bearer ${newToken}`;
+        res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+      } catch (err) {
+        isRefreshing = false;
+        refreshQueue.forEach((q) => q.reject(err));
+        refreshQueue = [];
+        clearSession();
+        window.location.href = '/auth/login';
+        throw err;
+      }
+    } else {
+      const newToken = await new Promise<string>((resolve, reject) => {
+        refreshQueue.push({ resolve, reject });
+      });
+      headers['Authorization'] = `Bearer ${newToken}`;
+      res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+    }
+  }
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
@@ -42,7 +104,6 @@ async function request<T>(
   }
 
   if (res.status === 204) return undefined as T;
-
   return res.json();
 }
 

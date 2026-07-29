@@ -1,15 +1,25 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, type ReactNode } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { AuthProvider } from '@/contexts/auth-context';
 import { Sidebar } from '@/components/sidebar';
-import { Menu } from 'lucide-react';
+import { Menu, LayoutDashboard, Bell, Users, Settings } from 'lucide-react';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 
+const navItems = [
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/notifications', label: 'Notifications', icon: Bell },
+  { href: '/users', label: 'Users', icon: Users },
+  { href: '/settings', label: 'Settings', icon: Settings },
+];
+
 export function AuthenticatedLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const pathname = usePathname();
   const router = useRouter();
 
   const shortcuts = [
@@ -19,6 +29,13 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
     { keys: ['g', 'u'], description: 'Go to Users', action: () => router.push('/users') },
   ];
   const { showCheatSheet, setShowCheatSheet } = useKeyboardShortcuts(shortcuts);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   return (
     <AuthProvider>
@@ -38,7 +55,7 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
           <Sidebar />
         </div>
 
-        <main className="relative flex min-w-0 flex-1 flex-col overflow-auto">
+        <main className="relative flex min-w-0 flex-1 flex-col overflow-auto pb-16 lg:pb-0">
           <div className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-surface-800 bg-surface-950/80 px-4 backdrop-blur-md lg:hidden">
             <button
               onClick={() => setSidebarOpen(true)}
@@ -57,6 +74,23 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
           <ErrorBoundary>{children}</ErrorBoundary>
         </main>
       </div>
+
+      {isMobile && (
+        <nav className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-surface-800 bg-surface-950/95 backdrop-blur-md">
+          {navItems.slice(0, 4).map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] ${
+                pathname === item.href ? 'text-primary-400' : 'text-surface-500'
+              }`}
+            >
+              <item.icon size={18} />
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+      )}
 
       {showCheatSheet && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60" onClick={() => setShowCheatSheet(false)}>

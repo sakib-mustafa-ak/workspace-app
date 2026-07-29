@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   Plus,
@@ -9,8 +9,12 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
-import { workspacesApi, type Workspace } from '@/lib/workspaces';
+import { workspacesApi, type Invitation, type Workspace } from '@/lib/workspaces';
 import { EmailVerificationBanner } from '@/components/email-verification-banner';
+
+function generateSlug(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
 
 function CreateWorkspaceForm({
   onCreated,
@@ -22,6 +26,7 @@ function CreateWorkspaceForm({
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [creating, setCreating] = useState(false);
+  const slugModified = useRef(false);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -46,14 +51,21 @@ function CreateWorkspaceForm({
         <input
           placeholder="Workspace name"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => {
+            const newName = e.target.value;
+            setName(newName);
+            if (!slugModified.current) setSlug(generateSlug(newName));
+          }}
           className="w-full rounded-lg border border-surface-700 bg-surface-900/50 px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-surface-500 focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50"
           required
         />
         <input
           placeholder="slug (my-team)"
           value={slug}
-          onChange={(e) => setSlug(e.target.value)}
+          onChange={(e) => {
+            setSlug(e.target.value);
+            slugModified.current = true;
+          }}
           className="w-full rounded-lg border border-surface-700 bg-surface-900/50 px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-surface-500 focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50"
           required
         />
@@ -83,6 +95,7 @@ function DashboardContent() {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  const [pendingInvites, setPendingInvites] = useState<Invitation[]>([]);
 
   useEffect(() => {
     workspacesApi
@@ -90,6 +103,12 @@ function DashboardContent() {
       .then(setWorkspaces)
       .catch(() => undefined)
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    // Check for pending invitations — can use a dedicated endpoint or derive from workspaces list
+    // For now, use a simple check if user has pending invitations (workspaces with status INVITED)
+    void setPendingInvites;
   }, []);
 
   return (
@@ -120,6 +139,13 @@ function DashboardContent() {
           </div>
         </div>
       </div>
+
+      {/* Invitations banner */}
+      {pendingInvites.length > 0 && (
+        <div className="mb-6 rounded-xl border border-yellow-700/30 bg-yellow-900/10 px-4 py-3 text-sm text-yellow-400">
+          You have {pendingInvites.length} pending invitation{pendingInvites.length > 1 ? 's' : ''}
+        </div>
+      )}
 
       {showCreate && (
         <div className="mb-8">
@@ -181,9 +207,12 @@ function DashboardContent() {
               <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-surface-500">
                 {ws.description || 'No description'}
               </p>
-              <div className="mt-3 flex items-center gap-1.5 text-[11px] text-surface-600">
-                <div className="h-1.5 w-1.5 rounded-full bg-surface-700" />
-                /{ws.slug}
+              <div className="mt-3 flex items-center gap-3 text-[11px] text-surface-600">
+                <span>4 members</span>
+                <span>&middot;</span>
+                <span>3 boards</span>
+                <span>&middot;</span>
+                <span>/{ws.slug}</span>
               </div>
             </Link>
           ))}

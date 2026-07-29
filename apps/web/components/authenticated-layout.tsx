@@ -1,13 +1,24 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import { AuthProvider } from '@/contexts/auth-context';
 import { Sidebar } from '@/components/sidebar';
 import { Menu } from 'lucide-react';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 
 export function AuthenticatedLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const router = useRouter();
+
+  const shortcuts = [
+    { keys: ['g', 'd'], description: 'Go to Dashboard', action: () => router.push('/dashboard') },
+    { keys: ['g', 'n'], description: 'Go to Notifications', action: () => router.push('/notifications') },
+    { keys: ['g', 's'], description: 'Go to Settings', action: () => router.push('/settings') },
+    { keys: ['g', 'u'], description: 'Go to Users', action: () => router.push('/users') },
+  ];
+  const { showCheatSheet, setShowCheatSheet } = useKeyboardShortcuts(shortcuts);
 
   return (
     <AuthProvider>
@@ -46,6 +57,24 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
           <ErrorBoundary>{children}</ErrorBoundary>
         </main>
       </div>
+
+      {showCheatSheet && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60" onClick={() => setShowCheatSheet(false)}>
+          <div className="w-full max-w-sm rounded-xl border border-surface-800 bg-surface-900 p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-sm font-semibold mb-4">Keyboard Shortcuts</h3>
+            <div className="space-y-2">
+              {shortcuts.map((s) => (
+                <div key={s.keys.join('')} className="flex items-center justify-between text-sm">
+                  <span className="text-surface-400">{s.description}</span>
+                  <kbd className="rounded bg-surface-800 px-2 py-0.5 text-xs text-surface-300 font-mono">
+                    {s.keys.join(' ')}
+                  </kbd>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </AuthProvider>
   );
 }

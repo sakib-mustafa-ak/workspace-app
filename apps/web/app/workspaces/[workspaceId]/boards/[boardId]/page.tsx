@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  ArrowLeft, Plus, MessageSquare, Settings, Pencil, Archive,
+  ArrowLeft, Plus, MessageSquare, Layout, Settings, Pencil, Archive,
   Trash2, X, Check,
 } from 'lucide-react';
 import { workspacesApi } from '@/lib/workspaces';
@@ -12,6 +12,7 @@ import { boardsApi, type Board, type BoardColumn } from '@/lib/boards';
 import { tasksApi, type Task } from '@/lib/tasks';
 import { CommentsPanel } from '@/components/comments-panel';
 import { TaskModal } from '@/components/task-modal';
+import { addRecentBoard } from '@/lib/recent-activity';
 
 type ModalState =
   | { type: 'create'; columnId: string }
@@ -58,6 +59,17 @@ export default function BoardDetailPage() {
   }
 
   useEffect(() => { loadBoard(); }, [workspaceId, boardId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (board) {
+      addRecentBoard({
+        id: board.id,
+        name: board.name,
+        workspaceId,
+        workspaceName: '',
+      });
+    }
+  }, [board, workspaceId]);
 
   async function handleUpdateBoard() {
     try {
@@ -181,6 +193,13 @@ export default function BoardDetailPage() {
           )}
         </div>
         <div className="flex items-center gap-2">
+          <Link
+            href={`/workspaces/${workspaceId}/boards/${boardId}/canvas`}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-200"
+          >
+            <Layout size={14} />
+            Canvas
+          </Link>
           <button
             onClick={() => setShowComments(!showComments)}
             className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs transition-colors ${

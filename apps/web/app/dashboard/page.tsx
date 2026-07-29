@@ -11,6 +11,7 @@ import {
 import { useAuth } from '@/contexts/auth-context';
 import { workspacesApi, type Invitation, type Workspace } from '@/lib/workspaces';
 import { EmailVerificationBanner } from '@/components/email-verification-banner';
+import { getRecentBoards } from '@/lib/recent-activity';
 
 function generateSlug(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -156,6 +157,25 @@ function DashboardContent() {
             }}
             onCancel={() => setShowCreate(false)}
           />
+        </div>
+      )}
+
+      {/* Recent boards */}
+      {getRecentBoards().length > 0 && (
+        <div className="mb-8">
+          <h2 className="mb-3 text-sm font-semibold text-surface-300">Recent boards</h2>
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {getRecentBoards().map((rb) => (
+              <Link
+                key={rb.id}
+                href={`/workspaces/${rb.workspaceId}/boards/${rb.id}`}
+                className="shrink-0 rounded-xl border border-surface-800 bg-surface-900 p-4 transition-colors hover:border-surface-700"
+              >
+                <p className="text-sm font-medium">{rb.name}</p>
+                <p className="text-xs text-surface-500">{rb.workspaceName}</p>
+              </Link>
+            ))}
+          </div>
         </div>
       )}
 

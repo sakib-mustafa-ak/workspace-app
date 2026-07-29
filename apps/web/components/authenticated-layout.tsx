@@ -4,6 +4,7 @@ import { useState, type ReactNode } from 'react';
 import { AuthProvider } from '@/contexts/auth-context';
 import { Sidebar } from '@/components/sidebar';
 import { Menu } from 'lucide-react';
+import { ErrorBoundary } from '@/components/error-boundary';
 
 export function AuthenticatedLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -42,7 +43,7 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
 
-          {children}
+          <ErrorBoundary>{children}</ErrorBoundary>
         </main>
       </div>
     </AuthProvider>

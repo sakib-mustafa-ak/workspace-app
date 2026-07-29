@@ -38,6 +38,7 @@ export function Sidebar() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [searchResults, setSearchResults] = useState<any>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -68,6 +69,19 @@ export function Sidebar() {
 
   useEffect(() => {
     workspacesApi.list().then(setUserWorkspaces).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    function poll() {
+      api.get<{count: number}>('/notifications/count').then((r) => {
+        if (typeof r === 'object' && r !== null && 'count' in r) {
+          setUnreadCount((r as {count: number}).count);
+        }
+      }).catch(() => {});
+    }
+    poll();
+    const interval = setInterval(poll, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -119,7 +133,12 @@ export function Sidebar() {
               }`}
             >
               <item.icon size={16} className={active ? 'text-primary-400' : ''} />
-              {item.label}
+              <span className="flex-1">{item.label}</span>
+              {item.href === '/notifications' && unreadCount > 0 && (
+                <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
             </Link>
           );
         })}

@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/hooks/use-theme';
+import { api } from '@/lib/api';
 import {
   LayoutDashboard,
   Settings,
@@ -14,6 +16,7 @@ import {
   Sun,
   Moon,
   Monitor,
+  Search,
 } from 'lucide-react';
 
 
@@ -29,6 +32,38 @@ export function Sidebar() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
+  const [searchQuery, setSearchQuery] = useState('');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [searchResults, setSearchResults] = useState<any>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults(null);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await api.get(`/search?q=${encodeURIComponent(searchQuery)}`);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setSearchResults(res as any);
+        setSearchOpen(true);
+      } catch { /* handled */ }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setSearchOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
   return (
     <aside className="flex w-60 flex-shrink-0 flex-col border-r border-surface-800 bg-gradient-to-b from-surface-900 to-surface-900/95">
       <div className="flex h-14 items-center border-b border-surface-800 px-4">
@@ -38,6 +73,30 @@ export function Sidebar() {
           </div>
           <span className="text-sm font-semibold tracking-tight">Workspace OS</span>
         </div>
+      </div>
+
+      <div ref={searchRef} className="relative px-3 pb-2">
+        <Search size={14} className="absolute left-5 top-1/2 -translate-y-1/2 text-surface-500" />
+        <input
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search..."
+          className="w-full rounded-lg border border-surface-800 bg-surface-950 py-1.5 pl-8 pr-3 text-xs outline-none placeholder:text-surface-600 focus:border-primary-500/50"
+        />
+        {searchOpen && searchResults && (
+          <div className="absolute left-3 right-3 top-full mt-1 rounded-xl border border-surface-800 bg-surface-900 shadow-xl z-50 max-h-64 overflow-y-auto">
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            {searchResults.boards?.map((b: any) => (
+              <Link key={b.id} href={`/workspaces/${b.workspaceId}/boards/${b.id}`}
+                className="flex items-center gap-2 px-3 py-2 text-xs text-surface-300 hover:bg-surface-800">
+                {b.title}
+              </Link>
+            ))}
+            {(!searchResults.boards || searchResults.boards.length === 0) && (
+              <p className="px-3 py-4 text-center text-xs text-surface-500">No results</p>
+            )}
+          </div>
+        )}
       </div>
 
       <nav className="flex-1 space-y-1 p-3">

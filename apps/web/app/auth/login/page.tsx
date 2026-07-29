@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
-import { LogIn } from 'lucide-react';
+import { LogIn, Loader2 } from 'lucide-react';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -31,7 +31,8 @@ export default function LoginPage() {
       <div className="pointer-events-none absolute -bottom-40 -right-40 h-[500px] w-[500px] rounded-full bg-primary-500/5 blur-3xl" />
 
       <div className="relative w-full max-w-sm">
-        <div className="rounded-2xl border border-surface-800/50 bg-gradient-to-br from-surface-900 to-surface-900/60 p-8 shadow-xl shadow-black/20 backdrop-blur-xl">
+        <div className="animate-fadeIn">
+          <div className="rounded-2xl border border-surface-800/50 bg-gradient-to-br from-surface-900 to-surface-900/60 p-6 sm:p-8 shadow-xl shadow-black/20 backdrop-blur-xl">
           <div className="mb-8 text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-600/20 to-primary-600/10 shadow-sm shadow-primary-600/10">
               <LogIn size={20} className="text-primary-400" />
@@ -56,6 +57,7 @@ export default function LoginPage() {
               <input
                 type="email"
                 required
+                autoFocus
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-lg border border-surface-700 bg-surface-950/50 px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-surface-500 focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50"
@@ -82,7 +84,14 @@ export default function LoginPage() {
               disabled={submitting}
               className="w-full rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-500 hover:shadow-primary-500/30 active:scale-[0.98] disabled:opacity-50 disabled:shadow-none"
             >
-              {submitting ? 'Signing in…' : 'Sign in'}
+              {submitting ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 size={14} className="animate-spin" />
+                  Signing in
+                </span>
+              ) : (
+                'Sign in'
+              )}
             </button>
           </form>
 
@@ -105,6 +114,7 @@ export default function LoginPage() {
             Create one
           </Link>
         </p>
+        </div>
       </div>
     </div>
   );

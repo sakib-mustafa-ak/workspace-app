@@ -26,7 +26,7 @@ function VerifyEmailInner() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-surface-950">
-      <div className="flex flex-col items-center gap-3">
+      <div className="animate-fadeIn flex flex-col items-center gap-3">
         <Loader2 size={32} className="animate-spin text-primary-500" />
         <p className="text-sm text-surface-400">Verifying your email…</p>
       </div>
@@ -38,7 +38,9 @@ export default function VerifyEmailPage() {
   return (
     <Suspense fallback={
       <div className="flex min-h-screen items-center justify-center bg-surface-950">
-        <Loader2 size={24} className="animate-spin text-primary-500" />
+        <div className="animate-fadeIn">
+          <Loader2 size={24} className="animate-spin text-primary-500" />
+        </div>
       </div>
     }>
       <VerifyEmailInner />

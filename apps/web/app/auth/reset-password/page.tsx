@@ -4,7 +4,7 @@ import { Suspense, useState, type FormEvent } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { resetPassword } from '@/lib/auth';
-import { KeyRound, CheckCircle, Eye, EyeOff, Check, X } from 'lucide-react';
+import { KeyRound, CheckCircle, Eye, EyeOff, Check, X, Loader2 } from 'lucide-react';
 
 function getPasswordStrength(password: string): {
   score: number;
@@ -73,7 +73,7 @@ function ResetPasswordInner() {
     return (
       <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-surface-950 px-4">
         <div className="pointer-events-none absolute -left-40 -top-40 h-[500px] w-[500px] rounded-full bg-emerald-600/10 blur-3xl" />
-        <div className="w-full max-w-sm text-center">
+        <div className="w-full max-w-sm text-center animate-fadeIn">
           <CheckCircle size={40} className="mx-auto mb-4 text-emerald-500" />
           <h1 className="text-xl font-bold">Password changed</h1>
           <p className="mt-2 text-sm text-surface-400">
@@ -96,7 +96,8 @@ function ResetPasswordInner() {
       <div className="pointer-events-none absolute -bottom-40 -right-40 h-[500px] w-[500px] rounded-full bg-primary-500/5 blur-3xl" />
 
       <div className="relative w-full max-w-sm">
-        <div className="rounded-2xl border border-surface-800/50 bg-gradient-to-br from-surface-900 to-surface-900/60 p-8 shadow-xl shadow-black/20 backdrop-blur-xl">
+        <div className="animate-fadeIn">
+          <div className="rounded-2xl border border-surface-800/50 bg-gradient-to-br from-surface-900 to-surface-900/60 p-6 sm:p-8 shadow-xl shadow-black/20 backdrop-blur-xl">
           <div className="mb-8 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-600/20 to-primary-600/10 shadow-sm shadow-primary-600/10">
               <KeyRound size={20} className="text-primary-400" />
@@ -122,6 +123,7 @@ function ResetPasswordInner() {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
+                  autoFocus
                   minLength={12}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -193,7 +195,14 @@ function ResetPasswordInner() {
               disabled={submitting || !token}
               className="w-full rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-500 hover:shadow-primary-500/30 active:scale-[0.98] disabled:opacity-50 disabled:shadow-none"
             >
-              {submitting ? 'Resetting…' : 'Reset password'}
+              {submitting ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 size={14} className="animate-spin" />
+                  Resetting password
+                </span>
+              ) : (
+                'Reset password'
+              )}
             </button>
           </form>
 
@@ -202,6 +211,7 @@ function ResetPasswordInner() {
               Back to login
             </Link>
           </p>
+        </div>
         </div>
       </div>
     </div>

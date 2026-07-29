@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/hooks/use-theme';
 import { api } from '@/lib/api';
+import { workspacesApi, type Workspace } from '@/lib/workspaces';
 import {
   LayoutDashboard,
   Settings,
@@ -32,6 +33,7 @@ export function Sidebar() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
+  const [userWorkspaces, setUserWorkspaces] = useState<Workspace[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [searchResults, setSearchResults] = useState<any>(null);
@@ -62,6 +64,10 @@ export function Sidebar() {
     }
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  useEffect(() => {
+    workspacesApi.list().then(setUserWorkspaces).catch(() => {});
   }, []);
 
   return (
@@ -118,6 +124,28 @@ export function Sidebar() {
           );
         })}
       </nav>
+
+      {userWorkspaces.length > 0 && (
+        <div className="px-3 pt-2">
+          <p className="mb-1 px-3 text-[10px] font-medium uppercase tracking-wider text-surface-500">Workspaces</p>
+          {userWorkspaces.map((ws) => (
+            <Link
+              key={ws.id}
+              href={`/workspaces/${ws.id}`}
+              className={`flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                pathname.startsWith(`/workspaces/${ws.id}`)
+                  ? 'bg-surface-800 text-white'
+                  : 'text-surface-400 hover:bg-surface-800/50 hover:text-surface-200'
+              }`}
+            >
+              <div className="flex h-5 w-5 items-center justify-center rounded bg-surface-700 text-[9px] font-bold text-surface-300">
+                {ws.name.charAt(0).toUpperCase()}
+              </div>
+              {ws.name}
+            </Link>
+          ))}
+        </div>
+      )}
 
       <div className="border-t border-surface-800 p-3">
         <div className="mb-2 flex items-center gap-2.5 rounded-lg px-3 py-2 transition-colors hover:bg-surface-800/50">

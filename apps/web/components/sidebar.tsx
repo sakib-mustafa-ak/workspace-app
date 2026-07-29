@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
+import { useTheme } from '@/hooks/use-theme';
 import {
   LayoutDashboard,
   Settings,
@@ -10,6 +11,9 @@ import {
   Users,
   LogOut,
   ChevronRight,
+  Sun,
+  Moon,
+  Monitor,
 } from 'lucide-react';
 
 
@@ -23,6 +27,7 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <aside className="flex w-60 flex-shrink-0 flex-col border-r border-surface-800 bg-gradient-to-b from-surface-900 to-surface-900/95">
@@ -68,6 +73,13 @@ export function Sidebar() {
           </div>
           <ChevronRight size={14} className="text-surface-600" />
         </div>
+        <button
+          onClick={toggleTheme}
+          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-surface-400 transition-all hover:bg-surface-800/50 hover:text-surface-200"
+        >
+          {theme === 'dark' ? <Moon size={16} /> : theme === 'light' ? <Sun size={16} /> : <Monitor size={16} />}
+          {theme === 'dark' ? 'Dark' : theme === 'light' ? 'Light' : 'System'}
+        </button>
         <button
           onClick={logout}
           className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-surface-400 transition-all hover:bg-surface-800/50 hover:text-surface-200"

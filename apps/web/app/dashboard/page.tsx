@@ -183,23 +183,20 @@ function DashboardContent() {
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-36 animate-pulse rounded-xl bg-surface-800/50" />
+            <div key={i} className="h-36 rounded-xl bg-surface-800/50 overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-surface-700/20 to-transparent animate-shimmer" />
+            </div>
           ))}
         </div>
       ) : workspaces.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-surface-700/50 bg-surface-900/30 py-20">
-          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-surface-800">
-            <LayoutDashboard size={24} className="text-surface-500" />
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-surface-700/50 bg-surface-900/30 py-24">
+          <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-surface-800">
+            <LayoutDashboard size={36} className="text-surface-600" />
           </div>
-          <p className="mt-4 text-sm font-medium text-surface-400">No workspaces yet</p>
-          <p className="mt-1 text-xs text-surface-500">Create one to get started</p>
-          <button
-            onClick={() => setShowCreate(true)}
-            className="mt-4 flex items-center gap-1.5 rounded-lg bg-primary-600/10 px-4 py-2 text-xs font-medium text-primary-400 transition-colors hover:bg-primary-600/20"
-          >
-            <Plus size={14} />
+          <h3 className="mt-6 text-lg font-semibold text-surface-300">No workspaces yet</h3>
+          <p className="mt-1 text-sm text-surface-500">Create your first workspace to get started</p>
+          <button onClick={() => setShowCreate(true)} className="mt-6 flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-primary-600/20 hover:bg-primary-500">
+            <Plus size={16} />
             Create workspace
           </button>
         </div>

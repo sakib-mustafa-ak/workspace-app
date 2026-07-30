@@ -13,6 +13,11 @@ import { BoardsModule } from './modules/boards/boards.module.js';
 import { TasksModule } from './modules/tasks/tasks.module.js';
 import { CommentsModule } from './modules/comments/comments.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
+import { RealtimeModule } from './modules/realtime/realtime.module.js';
+import { UploadsModule } from './modules/uploads/uploads.module.js';
+import { SearchModule } from './modules/search/search.module.js';
+import { AiModule } from './modules/ai/ai.module.js';
+import { AuditModule } from './modules/audit/audit.module.js';
 
 /**
  * Root Nest module.
@@ -60,6 +65,11 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     TasksModule,
     CommentsModule,
     NotificationsModule,
+    RealtimeModule,
+    UploadsModule,
+    SearchModule,
+    AiModule,
+    AuditModule,
   ],
 })
 export class AppModule {}

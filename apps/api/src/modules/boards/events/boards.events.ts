@@ -69,6 +69,10 @@ export class BoardsEventBus {
     this.emitter.on(BOARDS_EVENTS.boardCreated, listener);
   }
 
+  onBoardUpdated(listener: (payload: BoardUpdatedPayload) => void): void {
+    this.emitter.on(BOARDS_EVENTS.boardUpdated, listener);
+  }
+
   publishBoardUpdated(payload: BoardUpdatedPayload): void {
     this.emit(BOARDS_EVENTS.boardUpdated, payload);
   }
@@ -85,16 +89,32 @@ export class BoardsEventBus {
     this.emit(BOARDS_EVENTS.boardDeleted, payload);
   }
 
+  onBoardDeleted(listener: (payload: BoardDeletedPayload) => void): void {
+    this.emitter.on(BOARDS_EVENTS.boardDeleted, listener);
+  }
+
   publishColumnCreated(payload: ColumnCreatedPayload): void {
     this.emit(BOARDS_EVENTS.columnCreated, payload);
+  }
+
+  onColumnCreated(listener: (payload: ColumnCreatedPayload) => void): void {
+    this.emitter.on(BOARDS_EVENTS.columnCreated, listener);
   }
 
   publishColumnUpdated(payload: ColumnUpdatedPayload): void {
     this.emit(BOARDS_EVENTS.columnUpdated, payload);
   }
 
+  onColumnUpdated(listener: (payload: ColumnUpdatedPayload) => void): void {
+    this.emitter.on(BOARDS_EVENTS.columnUpdated, listener);
+  }
+
   publishColumnArchived(payload: ColumnArchivedPayload): void {
     this.emit(BOARDS_EVENTS.columnArchived, payload);
+  }
+
+  onColumnArchived(listener: (payload: ColumnArchivedPayload) => void): void {
+    this.emitter.on(BOARDS_EVENTS.columnArchived, listener);
   }
 
   private emit(name: BoardsEventName, payload: unknown): void {

@@ -88,12 +88,30 @@ export class WorkspacesEventBus {
     this.emit(WORKSPACES_EVENTS.workspaceUpdated, payload);
   }
 
+  onWorkspaceUpdated(
+    listener: (payload: WorkspaceUpdatedPayload) => void,
+  ): void {
+    this.emitter.on(WORKSPACES_EVENTS.workspaceUpdated, listener);
+  }
+
   publishWorkspaceArchived(payload: WorkspaceArchivedPayload): void {
     this.emit(WORKSPACES_EVENTS.workspaceArchived, payload);
   }
 
+  onWorkspaceArchived(
+    listener: (payload: WorkspaceArchivedPayload) => void,
+  ): void {
+    this.emitter.on(WORKSPACES_EVENTS.workspaceArchived, listener);
+  }
+
   publishWorkspaceDeleted(payload: WorkspaceDeletedPayload): void {
     this.emit(WORKSPACES_EVENTS.workspaceDeleted, payload);
+  }
+
+  onWorkspaceDeleted(
+    listener: (payload: WorkspaceDeletedPayload) => void,
+  ): void {
+    this.emitter.on(WORKSPACES_EVENTS.workspaceDeleted, listener);
   }
 
   publishMemberAdded(payload: MemberAddedPayload): void {
@@ -108,12 +126,30 @@ export class WorkspacesEventBus {
     this.emit(WORKSPACES_EVENTS.memberRoleChanged, payload);
   }
 
+  onMemberRoleChanged(
+    listener: (payload: MemberRoleChangedPayload) => void,
+  ): void {
+    this.emitter.on(WORKSPACES_EVENTS.memberRoleChanged, listener);
+  }
+
   publishMemberRemoved(payload: MemberRemovedPayload): void {
     this.emit(WORKSPACES_EVENTS.memberRemoved, payload);
   }
 
+  onMemberRemoved(
+    listener: (payload: MemberRemovedPayload) => void,
+  ): void {
+    this.emitter.on(WORKSPACES_EVENTS.memberRemoved, listener);
+  }
+
   publishInvitationCreated(payload: InvitationCreatedPayload): void {
     this.emit(WORKSPACES_EVENTS.invitationCreated, payload);
+  }
+
+  onInvitationCreated(
+    listener: (payload: InvitationCreatedPayload) => void,
+  ): void {
+    this.emitter.on(WORKSPACES_EVENTS.invitationCreated, listener);
   }
 
   publishInvitationAccepted(payload: InvitationAcceptedPayload): void {

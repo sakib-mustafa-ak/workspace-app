@@ -5,13 +5,25 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft, Plus, MessageSquare, Layout, Settings, Pencil, Archive,
-  Trash2, X, Check,
+  Trash2, X, Check, FileText, Sparkles,
 } from 'lucide-react';
+import {
+  DndContext, closestCorners, KeyboardSensor,
+  PointerSensor, useSensor, useSensors, type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext, verticalListSortingStrategy, arrayMove,
+} from '@dnd-kit/sortable';
 import { workspacesApi } from '@/lib/workspaces';
 import { boardsApi, type Board, type BoardColumn } from '@/lib/boards';
 import { tasksApi, type Task } from '@/lib/tasks';
 import { CommentsPanel } from '@/components/comments-panel';
 import { TaskModal } from '@/components/task-modal';
+import { SortableTaskCard } from '@/components/sortable-task-card';
+import { BoardUploadButton } from '@/components/board-upload-button';
+import { BoardFileSidebar } from '@/components/board-file-sidebar';
+import { AiSummarizePanel } from '@/components/ai-summarize-panel';
+import { AiIdeasDialog } from '@/components/ai-ideas-dialog';
 import { addRecentBoard } from '@/lib/recent-activity';
 
 type ModalState =
@@ -30,6 +42,9 @@ export default function BoardDetailPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [showComments, setShowComments] = useState(false);
+  const [showFiles, setShowFiles] = useState(false);
+  const [showAiSummary, setShowAiSummary] = useState(false);
+  const [showAiIdeas, setShowAiIdeas] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [modal, setModal] = useState<ModalState>(null);
 
@@ -40,6 +55,11 @@ export default function BoardDetailPage() {
   const [newColName, setNewColName] = useState('');
   const [editingColId, setEditingColId] = useState<string | null>(null);
   const [editingColName, setEditingColName] = useState('');
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor),
+  );
 
   function loadBoard() {
     setLoading(true);
@@ -146,6 +166,56 @@ export default function BoardDetailPage() {
     setTasks((prev) => prev.filter((t) => t.id !== taskId));
   }
 
+  function handleDragStart() {
+    /* drag started */
+  }
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const activeTask = tasks.find((t) => t.id === active.id);
+    const overTask = tasks.find((t) => t.id === over.id);
+
+    if (!activeTask) return;
+
+    // Same column — reorder
+    if (overTask && activeTask.columnId === overTask.columnId) {
+      const colTasks = tasks
+        .filter((t) => t.columnId === activeTask.columnId)
+        .sort((a, b) => a.position - b.position);
+      const oldIdx = colTasks.findIndex((t) => t.id === active.id);
+      const newIdx = colTasks.findIndex((t) => t.id === over.id);
+      if (oldIdx === -1 || newIdx === -1 || oldIdx === newIdx) return;
+
+      const reordered = arrayMove(colTasks, oldIdx, newIdx);
+      setTasks((prev) =>
+        prev.map((t) => {
+          const found = reordered.find((r) => r.id === t.id);
+          return found ? { ...t, position: reordered.indexOf(found) } : t;
+        }),
+      );
+      await tasksApi.move(workspaceId, boardId, active.id as string, {
+        columnId: activeTask.columnId,
+        position: newIdx,
+      }).catch(() => loadBoard());
+    } else {
+      // Move to different column
+      const targetColumnId = overTask ? overTask.columnId : (over.id as string);
+      const targetTasks = tasks.filter((t) => t.columnId === targetColumnId);
+      const newPosition = targetTasks.length;
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === active.id ? { ...t, columnId: targetColumnId, position: newPosition } : t,
+        ),
+      );
+      await tasksApi.move(workspaceId, boardId, active.id as string, {
+        columnId: targetColumnId,
+        position: newPosition,
+      }).catch(() => loadBoard());
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -158,6 +228,11 @@ export default function BoardDetailPage() {
 
   const sortedColumns = [...columns].sort((a, b) => a.position - b.position);
   const colOptions = sortedColumns.map((c) => ({ id: c.id, name: c.name }));
+
+  const COLUMN_COLORS = [
+    'bg-blue-500', 'bg-emerald-500', 'bg-violet-500', 'bg-amber-500',
+    'bg-rose-500', 'bg-cyan-500', 'bg-pink-500', 'bg-lime-500',
+  ];
 
   return (
     <div className="flex h-full flex-col">
@@ -193,6 +268,32 @@ export default function BoardDetailPage() {
           )}
         </div>
         <div className="flex items-center gap-2">
+          <BoardUploadButton workspaceId={workspaceId} boardId={boardId} onUploaded={() => setShowFiles(true)} />
+          <button
+            onClick={() => setShowFiles(!showFiles)}
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs transition-colors ${
+              showFiles
+                ? 'bg-primary-600/20 text-primary-400'
+                : 'text-surface-400 hover:bg-surface-800 hover:text-surface-200'
+            }`}
+          >
+            <FileText size={14} />
+            Files
+          </button>
+          <button
+            onClick={() => setShowAiSummary(!showAiSummary)}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-200"
+          >
+            <Sparkles size={14} />
+            Summarize
+          </button>
+          <button
+            onClick={() => setShowAiIdeas(true)}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-200"
+          >
+            <Sparkles size={14} />
+            Ideas
+          </button>
           <Link
             href={`/workspaces/${workspaceId}/boards/${boardId}/canvas`}
             className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-200"
@@ -245,14 +346,20 @@ export default function BoardDetailPage() {
       </header>
 
       <div className="flex flex-1">
-        <div className="flex flex-1 gap-4 overflow-x-auto p-6">
+        <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <div className="flex flex-1 gap-4 overflow-x-auto p-6 scroll-smooth">
           {sortedColumns.map((col) => {
             const colTasks = tasks
               .filter((t) => t.columnId === col.id)
               .sort((a, b) => a.position - b.position);
 
+            const colorIndex = col.name
+              .split('')
+              .reduce((acc, c) => acc + c.charCodeAt(0), 0) % COLUMN_COLORS.length;
+
             return (
               <div key={col.id} className="flex w-72 shrink-0 flex-col rounded-xl bg-surface-900">
+                <div className={`h-1 rounded-t-xl ${COLUMN_COLORS[colorIndex]}`} />
                 <div className="flex items-center justify-between px-4 py-3">
                   {editingColId === col.id ? (
                     <div className="flex items-center gap-1">
@@ -272,7 +379,7 @@ export default function BoardDetailPage() {
                   ) : (
                     <div className="flex items-center gap-2">
                       <h3 className="text-sm font-medium text-surface-300">{col.name}</h3>
-                      <span className="rounded-md bg-surface-800 px-2 py-0.5 text-xs text-surface-500">
+                      <span key={colTasks.length} className="rounded-md bg-surface-800 px-2 py-0.5 text-xs text-surface-500 animate-countUp">
                         {colTasks.length}
                       </span>
                     </div>
@@ -293,35 +400,26 @@ export default function BoardDetailPage() {
                   </div>
                 </div>
 
-                <div className="flex-1 space-y-2 px-3 pb-3">
-                  {colTasks.map((task) => (
-                    <div
-                      key={task.id}
-                      onClick={() => setModal({ type: 'edit', task })}
-                      className="cursor-pointer rounded-lg border border-surface-800 bg-surface-950 p-3 transition-colors hover:border-surface-700"
-                    >
-                      <p className="text-sm font-medium">{task.title}</p>
-                      <div className="mt-2 flex items-center gap-2">
-                        <span
-                          className={`rounded px-1.5 py-0.5 text-[10px] font-medium uppercase ${
-                            task.priority === 'CRITICAL'
-                              ? 'bg-red-500/10 text-red-400'
-                              : task.priority === 'HIGH'
-                                ? 'bg-orange-500/10 text-orange-400'
-                                : task.priority === 'MEDIUM'
-                                  ? 'bg-yellow-500/10 text-yellow-400'
-                                  : 'bg-surface-800 text-surface-500'
-                          }`}
-                        >
-                          {task.priority}
-                        </span>
-                        {task.assigneeId && (
-                          <span className="text-xs text-surface-500">Assigned</span>
-                        )}
+                <SortableContext items={colTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+                  <div className="flex-1 space-y-2 px-3 pb-3">
+                    {colTasks.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-8 text-center">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-800">
+                          <Plus size={18} className="text-surface-600" />
+                        </div>
+                        <p className="mt-2 text-xs text-surface-500">Add your first task</p>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ) : (
+                      colTasks.map((task) => (
+                        <SortableTaskCard
+                          key={task.id}
+                          task={task}
+                          onClick={() => setModal({ type: 'edit', task })}
+                        />
+                      ))
+                    )}
+                  </div>
+                </SortableContext>
 
                 <div className="border-t border-surface-800 px-3 py-2">
                   <button
@@ -351,7 +449,11 @@ export default function BoardDetailPage() {
             </div>
           </div>
         </div>
+        </DndContext>
 
+        {showFiles && (
+          <BoardFileSidebar workspaceId={workspaceId} boardId={boardId} onClose={() => setShowFiles(false)} />
+        )}
         {showComments && (
           <div className="w-80 shrink-0">
             <CommentsPanel boardId={boardId} />
@@ -379,6 +481,19 @@ export default function BoardDetailPage() {
           onClose={() => setModal(null)}
           onSaved={handleTaskSaved}
           onDeleted={handleTaskDeleted}
+        />
+      )}
+
+      {showAiSummary && <AiSummarizePanel boardId={boardId} onClose={() => setShowAiSummary(false)} />}
+      {showAiIdeas && (
+        <AiIdeasDialog
+          onClose={() => setShowAiIdeas(false)}
+          onCreateIdea={async (title) => {
+            try {
+              const task = await tasksApi.create(workspaceId, boardId, columns[0]?.id || '', { title });
+              setTasks(prev => [...prev, task]);
+            } catch { /* handled */ }
+          }}
         />
       )}
     </div>

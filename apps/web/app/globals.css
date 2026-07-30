@@ -50,3 +50,43 @@
 .animate-shimmer {
   animation: shimmer 1.5s infinite;
 }
+
+@keyframes countUp {
+  from { opacity: 0; transform: scale(0.5); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-countUp {
+  animation: countUp 0.3s ease-out;
+}
+
+@keyframes borderGlow {
+  0%, 100% { border-color: rgb(59 130 246 / 0.3); }
+  50% { border-color: rgb(59 130 246 / 0.6); }
+}
+.animate-borderGlow {
+  animation: borderGlow 1.5s ease-in-out infinite;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+.animate-slideIn {
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.35s ease-out both;
+}

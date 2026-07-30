@@ -1,7 +1,7 @@
 'use client';
 
 import { Component, type ReactNode } from 'react';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 type Props = { children: ReactNode; fallback?: ReactNode };
 type State = { hasError: boolean; error: Error | null };
@@ -26,14 +26,9 @@ export class ErrorBoundary extends Component<Props, State> {
             <AlertTriangle size={24} className="text-red-400" />
           </div>
           <h2 className="mt-4 text-lg font-bold">Something went wrong</h2>
-          <p className="mt-1 text-sm text-surface-400">
-            {this.state.error?.message || 'An unexpected error occurred'}
-          </p>
-          <button
-            onClick={() => this.setState({ hasError: false, error: null })}
-            className="mt-4 flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-500"
-          >
-            <RefreshCw size={14} />
+          <p className="mt-1 text-sm text-surface-400">{this.state.error?.message || 'An unexpected error occurred'}</p>
+          <button onClick={() => this.setState({ hasError: false, error: null })} className="mt-4 flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-500">
+            <span className="text-[16px]">&#x21bb;</span>
             Try again
           </button>
         </div>

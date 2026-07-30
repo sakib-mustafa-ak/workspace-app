@@ -20,3 +20,4 @@ export * from './notifications/index.js';
 export * from './canvas/index.js';
 export * from './uploads/index.js';
 export * from './audit/index.js';
+export * from './checklists/index.js';

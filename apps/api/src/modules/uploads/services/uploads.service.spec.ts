@@ -1,0 +1,89 @@
+import { UploadsService } from './uploads.service';
+
+describe('UploadsService', () => {
+  const membership = { role: 'EDITOR' } as never;
+  const upload = {
+    id: 'upload-1',
+    workspaceId: 'workspace-1',
+    boardId: 'board-1',
+    userId: 'user-1',
+    originalName: 'image.png',
+    mimeType: 'image/png',
+    size: 10,
+    storageKey: 'workspace-1/image.png',
+    url: '/uploads/workspace-1/image.png',
+    provider: 'local',
+  } as never;
+
+  function createService() {
+    const uploadsRepo = {
+      create: jest.fn().mockResolvedValue(upload),
+    };
+    const boardsRepo = {
+      findById: jest.fn().mockResolvedValue({
+        id: 'board-1',
+        workspaceId: 'workspace-1',
+      }),
+    };
+    const membersRepo = {
+      findByWorkspaceAndUser: jest.fn().mockResolvedValue(membership),
+    };
+    const eventBus = { publishFileUploaded: jest.fn() };
+    const policy = { canUpload: jest.fn().mockReturnValue(true) };
+    const storage = {
+      save: jest.fn().mockResolvedValue({
+        storageKey: 'workspace-1/image.png',
+        url: '/uploads/workspace-1/image.png',
+      }),
+    };
+
+    return {
+      service: new UploadsService(
+        uploadsRepo as never,
+        boardsRepo as never,
+        membersRepo as never,
+        eventBus as never,
+        policy as never,
+        storage as never,
+      ),
+      uploadsRepo,
+      boardsRepo,
+      membersRepo,
+      storage,
+    };
+  }
+
+  it('checks membership using workspace then user IDs', async () => {
+    const { service, membersRepo } = createService();
+
+    await service.upload('workspace-1', 'user-1', 'board-1', {
+      buffer: Buffer.from('image'),
+      originalname: 'image.png',
+      mimetype: 'image/png',
+      size: 10,
+    });
+
+    expect(membersRepo.findByWorkspaceAndUser).toHaveBeenCalledWith(
+      'workspace-1',
+      'user-1',
+    );
+  });
+
+  it('rejects a board from a different workspace', async () => {
+    const { service, boardsRepo, storage } = createService();
+    boardsRepo.findById.mockResolvedValue({
+      id: 'board-1',
+      workspaceId: 'other-workspace',
+    });
+
+    await expect(
+      service.upload('workspace-1', 'user-1', 'board-1', {
+        buffer: Buffer.from('image'),
+        originalname: 'image.png',
+        mimetype: 'image/png',
+        size: 10,
+      }),
+    ).rejects.toThrow('does not belong to workspace');
+    expect(storage.save).not.toHaveBeenCalled();
+  });
+});

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 
 import type { NotificationRow, NotificationType } from '@repo/database';
 
@@ -14,7 +14,9 @@ export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
 
   constructor(
+    @Inject(NotificationsRepository)
     private readonly notificationsRepo: NotificationsRepository,
+    @Inject(NotificationsEventBus)
     private readonly events: NotificationsEventBus,
   ) {}
 

@@ -1,0 +1,168 @@
+import type { CanvasState, CanvasObject } from '../_context/canvas-state';
+
+export function renderFrame(ctx: CanvasRenderingContext2D, state: CanvasState) {
+  const { width, height } = ctx.canvas;
+  ctx.clearRect(0, 0, width, height);
+
+  ctx.save();
+  ctx.translate(state.pan.x, state.pan.y);
+  ctx.scale(state.zoom, state.zoom);
+
+  if (state.gridVisible) {
+    drawGrid(ctx, state);
+  }
+
+  const sorted = [...state.objects].sort((a, b) => a.zIndex - b.zIndex);
+  for (const obj of sorted) {
+    ctx.save();
+    ctx.globalAlpha = obj.opacity;
+    ctx.translate(obj.x, obj.y);
+    ctx.rotate((obj.rotation * Math.PI) / 180);
+    renderObject(ctx, obj);
+    ctx.restore();
+  }
+
+  drawSelectionOverlay(ctx, state);
+
+  ctx.restore();
+}
+
+function drawGrid(ctx: CanvasRenderingContext2D, state: CanvasState) {
+  const gridSize = 40 * state.zoom;
+  const { width, height } = ctx.canvas;
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+
+  const offsetX = state.pan.x % gridSize;
+  const offsetY = state.pan.y % gridSize;
+
+  for (let x = offsetX; x < width; x += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+    ctx.stroke();
+  }
+  for (let y = offsetY; y < height; y += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
+  }
+}
+
+function renderObject(ctx: CanvasRenderingContext2D, obj: CanvasObject) {
+  switch (obj.type) {
+    case 'rectangle':
+      ctx.fillStyle = obj.fill;
+      ctx.fillRect(0, 0, obj.width, obj.height);
+      ctx.strokeStyle = obj.stroke;
+      ctx.lineWidth = obj.strokeWidth;
+      ctx.strokeRect(0, 0, obj.width, obj.height);
+      break;
+    case 'ellipse':
+      ctx.fillStyle = obj.fill;
+      ctx.beginPath();
+      ctx.ellipse(obj.width / 2, obj.height / 2, Math.abs(obj.width / 2), Math.abs(obj.height / 2), 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = obj.stroke;
+      ctx.lineWidth = obj.strokeWidth;
+      ctx.stroke();
+      break;
+    case 'line':
+    case 'arrow':
+      ctx.strokeStyle = obj.stroke;
+      ctx.lineWidth = obj.strokeWidth;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(obj.width, obj.height);
+      ctx.stroke();
+      if (obj.type === 'arrow') {
+        const angle = Math.atan2(obj.height, obj.width);
+        const headLen = 12;
+        ctx.beginPath();
+        ctx.moveTo(obj.width, obj.height);
+        ctx.lineTo(obj.width - headLen * Math.cos(angle - 0.4), obj.height - headLen * Math.sin(angle - 0.4));
+        ctx.moveTo(obj.width, obj.height);
+        ctx.lineTo(obj.width - headLen * Math.cos(angle + 0.4), obj.height - headLen * Math.sin(angle + 0.4));
+        ctx.stroke();
+      }
+      break;
+    case 'text':
+      ctx.font = '16px sans-serif';
+      ctx.fillStyle = obj.fill;
+      ctx.fillText(obj.text || '', 0, 16);
+      break;
+    case 'stickyNote':
+      ctx.fillStyle = obj.fill || '#ffd93d';
+      roundRect(ctx, 0, 0, Math.max(obj.width, 100), Math.max(obj.height, 80), 4);
+      ctx.fill();
+      ctx.fillStyle = '#333';
+      ctx.font = '14px sans-serif';
+      ctx.fillText(obj.text || '', 8, 20);
+      break;
+    case 'image':
+      if (obj.imageData) {
+        const img = new Image();
+        img.src = obj.imageData;
+        ctx.drawImage(img, 0, 0, obj.width, obj.height);
+      }
+      break;
+    case 'connector':
+      if (obj.sourceId && obj.targetId) break;
+      ctx.strokeStyle = obj.stroke;
+      ctx.lineWidth = obj.strokeWidth;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.bezierCurveTo(obj.width / 2, 0, obj.width / 2, obj.height, obj.width, obj.height);
+      ctx.stroke();
+      break;
+  }
+}
+
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.arcTo(x + w, y, x + w, y + r, r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h);
+  ctx.arcTo(x, y + h, x, y + h - r, r);
+  ctx.lineTo(x, y + r);
+  ctx.arcTo(x, y, x + r, y, r);
+  ctx.closePath();
+}
+
+function drawSelectionOverlay(ctx: CanvasRenderingContext2D, state: CanvasState) {
+  if (state.selectedIds.length === 0) return;
+  for (const obj of state.objects) {
+    if (!state.selectedIds.includes(obj.id)) continue;
+    ctx.save();
+    ctx.translate(obj.x, obj.y);
+    ctx.rotate((obj.rotation * Math.PI) / 180);
+
+    ctx.strokeStyle = '#4d96ff';
+    ctx.lineWidth = 2 / state.zoom;
+    ctx.setLineDash([6 / state.zoom, 3 / state.zoom]);
+    ctx.strokeRect(-2, -2, obj.width + 4, obj.height + 4);
+
+    const hs = 6 / state.zoom;
+    const positions: [number, number][] = [
+      [0, 0], [obj.width / 2, 0], [obj.width, 0],
+      [obj.width, obj.height / 2],
+      [obj.width, obj.height], [obj.width / 2, obj.height], [0, obj.height],
+      [0, obj.height / 2],
+    ];
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#4d96ff';
+    ctx.lineWidth = 1.5 / state.zoom;
+    for (const [px, py] of positions) {
+      ctx.fillRect(px - hs / 2, py - hs / 2, hs, hs);
+      ctx.strokeRect(px - hs / 2, py - hs / 2, hs, hs);
+    }
+
+    ctx.restore();
+  }
+}

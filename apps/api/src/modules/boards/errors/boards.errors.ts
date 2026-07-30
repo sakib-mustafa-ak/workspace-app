@@ -7,6 +7,8 @@ export const BoardsErrorCode = {
   COLUMN_ARCHIVED: 'BOARD.COLUMN_ARCHIVED',
   NOT_A_MEMBER: 'BOARD.NOT_A_MEMBER',
   INSUFFICIENT_ROLE: 'BOARD.INSUFFICIENT_ROLE',
+  EXPORT_FAILED: 'BOARD.EXPORT_FAILED',
+  IMPORT_FAILED: 'BOARD.IMPORT_FAILED',
 } as const;
 
 export type BoardsErrorCode =
@@ -19,6 +21,8 @@ const STATUS_BY_CODE: Readonly<Record<BoardsErrorCode, number>> = {
   [BoardsErrorCode.COLUMN_ARCHIVED]: 423,
   [BoardsErrorCode.NOT_A_MEMBER]: 403,
   [BoardsErrorCode.INSUFFICIENT_ROLE]: 403,
+  [BoardsErrorCode.EXPORT_FAILED]: 500,
+  [BoardsErrorCode.IMPORT_FAILED]: 500,
 };
 
 export class BoardsException extends HttpException {

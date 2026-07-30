@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/hooks/use-theme';
+import { api } from '@/lib/api';
 import { notificationsApi } from '@/lib/notifications';
 import { workspacesApi, type Workspace } from '@/lib/workspaces';
 import {

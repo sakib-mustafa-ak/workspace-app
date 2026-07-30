@@ -56,6 +56,19 @@ export class WorkspaceMembersRepository {
     return row;
   }
 
+  public async listByUser(userId: string): Promise<WorkspaceMemberRow[]> {
+    return this.db
+      .select()
+      .from(workspaceMembers)
+      .where(
+        and(
+          eq(workspaceMembers.userId, userId),
+          sql`${workspaceMembers.deletedAt} IS NULL`,
+        ),
+      )
+      .orderBy(workspaceMembers.joinedAt);
+  }
+
   public async listByWorkspace(
     workspaceId: string,
   ): Promise<WorkspaceMemberRow[]> {
@@ -105,5 +118,27 @@ export class WorkspaceMembersRepository {
           eq(workspaceMembers.userId, userId),
         ),
       );
+  }
+
+  async countByWorkspaces(
+    workspaceIds: string[],
+  ): Promise<{ workspaceId: string; count: number }[]> {
+    if (workspaceIds.length === 0) return [];
+    return this.db
+      .select({
+        workspaceId: workspaceMembers.workspaceId,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(workspaceMembers)
+      .where(
+        and(
+          sql`${workspaceMembers.workspaceId} IN (${sql.join(
+            workspaceIds.map((id) => sql`${id}`),
+            sql`,`,
+          )})`,
+          sql`${workspaceMembers.deletedAt} IS NULL`,
+        ),
+      )
+      .groupBy(workspaceMembers.workspaceId);
   }
 }

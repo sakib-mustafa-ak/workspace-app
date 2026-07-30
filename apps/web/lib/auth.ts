@@ -10,10 +10,16 @@ export type User = {
   createdAt: string;
 };
 
-export type AuthResponse = {
+export type AuthTokens = {
   accessToken: string;
   refreshToken: string;
+  accessTokenExpiresInSeconds: number;
+  refreshTokenExpiresInSeconds: number;
+};
+
+export type AuthResponse = {
   user: User;
+  tokens: AuthTokens;
 };
 
 export async function login(
@@ -24,8 +30,8 @@ export async function login(
     email,
     password,
   });
-  localStorage.setItem('accessToken', data.accessToken);
-  localStorage.setItem('refreshToken', data.refreshToken);
+  localStorage.setItem('accessToken', data.tokens.accessToken);
+  localStorage.setItem('refreshToken', data.tokens.refreshToken);
   return data;
 }
 
@@ -39,8 +45,8 @@ export async function register(
     password,
     displayName,
   });
-  localStorage.setItem('accessToken', data.accessToken);
-  localStorage.setItem('refreshToken', data.refreshToken);
+  localStorage.setItem('accessToken', data.tokens.accessToken);
+  localStorage.setItem('refreshToken', data.tokens.refreshToken);
   return data;
 }
 

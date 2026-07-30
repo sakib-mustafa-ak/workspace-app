@@ -23,6 +23,7 @@ export type CreateTaskData = {
   description?: string;
   priority?: string;
   assigneeId?: string;
+  dueDate?: string;
   position?: number;
 };
 
@@ -32,6 +33,7 @@ export type UpdateTaskData = {
   status?: string;
   priority?: string;
   assigneeId?: string | null;
+  dueDate?: string | null;
   position?: number;
 };
 

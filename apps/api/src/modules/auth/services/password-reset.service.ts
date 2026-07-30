@@ -54,12 +54,13 @@ export class PasswordResetService {
   constructor(
     @Inject(DATABASE) private readonly db: Db,
     @Inject(MAIL_PROVIDER) private readonly mail: RecordingMailProvider,
-    private readonly eventBus: AuthEventBus,
-    private readonly tokenHash: TokenHashService,
-    private readonly passwords: PasswordService,
+    @Inject(AuthEventBus) private readonly eventBus: AuthEventBus,
+    @Inject(TokenHashService) private readonly tokenHash: TokenHashService,
+    @Inject(PasswordService) private readonly passwords: PasswordService,
+    @Inject(PasswordResetTokenRepository)
     private readonly repository: PasswordResetTokenRepository,
-    private readonly sessions: SessionRepository,
-    private readonly configService: ConfigService,
+    @Inject(SessionRepository) private readonly sessions: SessionRepository,
+    @Inject(ConfigService) private readonly configService: ConfigService,
   ) {}
 
   /**

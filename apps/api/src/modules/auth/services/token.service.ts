@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { jwtVerify, SignJWT } from 'jose';
 
@@ -30,7 +30,7 @@ export class TokenService {
   private readonly accessTtl: number;
   private readonly refreshTtl: number;
 
-  constructor(configService: ConfigService) {
+  constructor(@Inject(ConfigService) configService: ConfigService) {
     const accessSecret = configService.getOrThrow<string>(
       'auth.jwt.access.secret',
     );

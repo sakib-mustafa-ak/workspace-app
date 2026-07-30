@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 type Shortcut = {
   keys: string[];
@@ -11,7 +10,6 @@ type Shortcut = {
 
 export function useKeyboardShortcuts(shortcuts: Shortcut[]) {
   const [showCheatSheet, setShowCheatSheet] = useState(false);
-  const router = useRouter();
 
   useEffect(() => {
     let buffer = '';
@@ -19,13 +17,11 @@ export function useKeyboardShortcuts(shortcuts: Shortcut[]) {
 
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === '?' && !e.ctrlKey && !e.metaKey) {
-        setShowCheatSheet((prev) => !prev);
+        setShowCheatSheet(prev => !prev);
         return;
       }
 
-      if (e.ctrlKey || e.metaKey || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return;
-      }
+      if (e.ctrlKey || e.metaKey || e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
       buffer += e.key.toLowerCase();
       clearTimeout(timer);
@@ -44,7 +40,7 @@ export function useKeyboardShortcuts(shortcuts: Shortcut[]) {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [shortcuts, router]);
+  }, [shortcuts]);
 
   return { showCheatSheet, setShowCheatSheet };
 }

@@ -11,7 +11,12 @@ import { BoardAuditHandler } from './handlers/board-audit.handler';
 @Module({
   imports: [WorkspacesModule, BoardsModule],
   controllers: [AuditController],
-  providers: [AuditService, AuditRepository, WorkspaceAuditHandler, BoardAuditHandler],
+  providers: [
+    AuditService,
+    AuditRepository,
+    WorkspaceAuditHandler,
+    BoardAuditHandler,
+  ],
   exports: [AuditService],
 })
 export class AuditModule {}

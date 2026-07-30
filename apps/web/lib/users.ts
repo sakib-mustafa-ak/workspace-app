@@ -25,9 +25,36 @@ export type UpdateProfileData = {
   displayName?: string;
 };
 
+export type UserListParams = {
+  search?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+};
+
 export type UserListResponse = {
   users: UserProfile[];
   total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+
+export type UserMembership = {
+  workspaceId: string;
+  workspaceName: string;
+  role: string;
+  joinedAt: string;
+};
+
+export type AuditLogEntry = {
+  id: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  metadata: Record<string, unknown>;
+  createdAt: string;
 };
 
 export const usersApi = {
@@ -36,8 +63,12 @@ export const usersApi = {
     api.patch<UserProfile>('/users/me', data),
   getById: (id: string) =>
     api.get<UserProfile>(`/users/${id}`),
-  list: (params?: { limit?: number; offset?: number }) =>
-    api.get<UserListResponse>(`/users${buildQuery(params)}`),
+  list: (params?: UserListParams) =>
+    api.get<UserListResponse>(`/users${buildQuery(params as Record<string, string | number | undefined>)}`),
   delete: (id: string) =>
     api.delete<void>(`/users/${id}`),
+  getMemberships: (id: string) =>
+    api.get<UserMembership[]>(`/users/${id}/memberships`),
+  getActivity: (id: string) =>
+    api.get<AuditLogEntry[]>(`/users/${id}/activity`),
 };

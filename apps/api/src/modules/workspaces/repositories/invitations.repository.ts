@@ -95,6 +95,19 @@ export class InvitationsRepository {
     return result.count ?? 0;
   }
 
+  public async listPendingByEmail(email: string): Promise<InvitationRow[]> {
+    return this.db
+      .select()
+      .from(invitations)
+      .where(
+        and(
+          sql`lower(${invitations.email}) = lower(${email})`,
+          eq(invitations.status, 'PENDING'),
+        ),
+      )
+      .orderBy(invitations.createdAt);
+  }
+
   public async countPendingByWorkspace(workspaceId: string): Promise<number> {
     const [result] = await this.db
       .select({ count: sql<number>`count(*)` })

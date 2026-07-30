@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
-import { X, Trash2 } from 'lucide-react';
+import { useState, useEffect, type FormEvent } from 'react';
+import { X, Trash2, Plus, Check, Square } from 'lucide-react';
 import { tasksApi, type Task, type CreateTaskData } from '@/lib/tasks';
+import { checklistApi, type ChecklistItem } from '@/lib/checklist';
+import { workspacesApi, type WorkspaceMember } from '@/lib/workspaces';
 
 export type TaskModalMode = 'create' | 'edit';
 
@@ -33,9 +35,21 @@ export function TaskModal({
   const [description, setDescription] = useState(task?.description || '');
   const [priority, setPriority] = useState(task?.priority || 'MEDIUM');
   const [assigneeId, setAssigneeId] = useState(task?.assigneeId || '');
+  const [dueDate, setDueDate] = useState(task?.dueDate?.split('T')[0] || '');
   const [columnId, setColumnId] = useState(initialColumnId || task?.columnId || '');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [members, setMembers] = useState<WorkspaceMember[]>([]);
+
+  const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
+  const [newChecklistText, setNewChecklistText] = useState('');
+
+  useEffect(() => {
+    Promise.all([
+      workspacesApi.getMembers(workspaceId).then(setMembers).catch(() => {}),
+      mode === 'edit' && task ? checklistApi.list(workspaceId, boardId, task.id).then(setChecklist).catch(() => {}) : Promise.resolve(),
+    ]);
+  }, [workspaceId, boardId, task, mode]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -50,6 +64,7 @@ export function TaskModal({
           description: description.trim() || undefined,
           priority,
           assigneeId: assigneeId || undefined,
+          dueDate: dueDate || undefined,
         };
         const created = await tasksApi.create(workspaceId, boardId, columnId, data);
         onSaved(created);
@@ -59,6 +74,7 @@ export function TaskModal({
           description: description.trim() || null,
           priority,
           assigneeId: assigneeId || null,
+          dueDate: dueDate || null,
         });
         onSaved(updated);
       }
@@ -89,10 +105,35 @@ export function TaskModal({
     } catch { /* handled */ }
   }
 
+  async function handleAddChecklist() {
+    if (!newChecklistText.trim() || !task) return;
+    try {
+      const item = await checklistApi.create(workspaceId, boardId, task.id, { text: newChecklistText.trim() });
+      setChecklist(prev => [...prev, item]);
+      setNewChecklistText('');
+    } catch { /* handled */ }
+  }
+
+  async function handleToggleChecklist(item: ChecklistItem) {
+    if (!task) return;
+    try {
+      const updated = await checklistApi.update(workspaceId, boardId, task.id, item.id, { completed: !item.completed });
+      setChecklist(prev => prev.map(i => i.id === item.id ? updated : i));
+    } catch { /* handled */ }
+  }
+
+  async function handleDeleteChecklist(itemId: string) {
+    if (!task) return;
+    try {
+      await checklistApi.delete(workspaceId, boardId, task.id, itemId);
+      setChecklist(prev => prev.filter(i => i.id !== itemId));
+    } catch { /* handled */ }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
       <div
-        className="w-full max-w-lg rounded-xl border border-surface-800 bg-surface-900 shadow-2xl"
+        className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-surface-800 bg-surface-900 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-surface-800 px-6 py-4">
@@ -149,14 +190,30 @@ export function TaskModal({
             </div>
 
             <div>
-              <label className="block text-xs font-medium mb-1 text-surface-400">Assignee ID</label>
+              <label className="block text-xs font-medium mb-1 text-surface-400">Due date</label>
               <input
-                value={assigneeId}
-                onChange={(e) => setAssigneeId(e.target.value)}
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
                 className="w-full rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm outline-none focus:border-primary-500"
-                placeholder="user id"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium mb-1 text-surface-400">Assignee</label>
+            <select
+              value={assigneeId}
+              onChange={(e) => setAssigneeId(e.target.value)}
+              className="w-full rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm outline-none focus:border-primary-500"
+            >
+              <option value="">Unassigned</option>
+              {members.map((m) => (
+                <option key={m.id} value={m.userId}>
+                  {m.userId}
+                </option>
+              ))}
+            </select>
           </div>
 
           {mode === 'edit' && columns && columns.length > 0 && (
@@ -177,6 +234,39 @@ export function TaskModal({
                     {c.name}
                   </button>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {mode === 'edit' && task && (
+            <div>
+              <label className="block text-xs font-medium mb-1 text-surface-400">Checklist</label>
+              <div className="space-y-1">
+                {checklist.map((item) => (
+                  <div key={item.id} className="flex items-center gap-2 rounded-lg px-2 py-1 text-xs hover:bg-surface-800">
+                    <button type="button" onClick={() => handleToggleChecklist(item)} className="text-surface-500 hover:text-primary-400">
+                      {item.completed ? <Check size={12} className="text-green-400" /> : <Square size={12} />}
+                    </button>
+                    <span className={`flex-1 ${item.completed ? 'text-surface-500 line-through' : 'text-surface-300'}`}>
+                      {item.text}
+                    </span>
+                    <button type="button" onClick={() => handleDeleteChecklist(item.id)} className="text-surface-600 hover:text-red-400">
+                      <X size={10} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2 mt-2">
+                <input
+                  value={newChecklistText}
+                  onChange={(e) => setNewChecklistText(e.target.value)}
+                  placeholder="Add item..."
+                  className="flex-1 rounded-lg border border-surface-700 bg-surface-800 px-2 py-1 text-xs outline-none focus:border-primary-500"
+                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddChecklist())}
+                />
+                <button type="button" onClick={handleAddChecklist} disabled={!newChecklistText.trim()} className="rounded p-1 text-surface-500 hover:text-primary-400 disabled:opacity-30">
+                  <Plus size={12} />
+                </button>
               </div>
             </div>
           )}
@@ -205,7 +295,7 @@ export function TaskModal({
                 disabled={submitting || !title.trim()}
                 className="rounded-lg bg-primary-600 px-4 py-2 text-xs font-medium text-white hover:bg-primary-500 disabled:opacity-50"
               >
-                {submitting ? 'Saving…' : mode === 'create' ? 'Create' : 'Save'}
+                {submitting ? 'Saving\u2026' : mode === 'create' ? 'Create' : 'Save'}
               </button>
             </div>
           </div>

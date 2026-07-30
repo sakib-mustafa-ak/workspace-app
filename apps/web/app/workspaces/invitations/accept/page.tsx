@@ -14,17 +14,21 @@ function AcceptInvitationInner() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    const token = searchParams.get('token');
-    if (!token || !token.includes(':')) {
-      setStatus('error');
-      setMessage('Invalid invitation link. The token is missing or malformed.');
-      return;
+    let selector = searchParams.get('selector') ?? '';
+    let verifier = searchParams.get('verifier') ?? '';
+
+    if (!selector || !verifier) {
+      const token = searchParams.get('token');
+      if (token && token.includes(':')) {
+        const parts = token.split(':');
+        selector = parts[0] ?? '';
+        verifier = parts[1] ?? '';
+      }
     }
 
-    const [selector, verifier] = token.split(':');
     if (!selector || !verifier) {
       setStatus('error');
-      setMessage('Invalid invitation token format.');
+      setMessage('Invalid invitation link. Missing selector or verifier.');
       return;
     }
 

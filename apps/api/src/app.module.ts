@@ -18,6 +18,7 @@ import { UploadsModule } from './modules/uploads/uploads.module.js';
 import { SearchModule } from './modules/search/search.module.js';
 import { AiModule } from './modules/ai/ai.module.js';
 import { AuditModule } from './modules/audit/audit.module.js';
+import { ChecklistModule } from './modules/checklists/checklist.module.js';
 
 /**
  * Root Nest module.
@@ -70,6 +71,7 @@ import { AuditModule } from './modules/audit/audit.module.js';
     SearchModule,
     AiModule,
     AuditModule,
+    ChecklistModule,
   ],
 })
 export class AppModule {}

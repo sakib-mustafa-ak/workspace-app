@@ -38,6 +38,12 @@ export class WorkspaceResponseDto {
 
   @ApiProperty()
   updatedAt!: Date;
+
+  @ApiProperty()
+  memberCount!: number;
+
+  @ApiProperty()
+  boardCount!: number;
 }
 
 export class WorkspaceMemberResponseDto {

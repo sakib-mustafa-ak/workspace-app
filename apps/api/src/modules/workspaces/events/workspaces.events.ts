@@ -51,6 +51,13 @@ export type InvitationAcceptedPayload = {
   email: string;
 };
 
+export type WorkspaceTransferredPayload = {
+  workspaceId: string;
+  previousOwnerId: string;
+  newOwnerId: string;
+  transferredBy: string;
+};
+
 export const WORKSPACES_EVENTS = {
   workspaceCreated: 'WorkspaceCreated',
   workspaceUpdated: 'WorkspaceUpdated',
@@ -61,6 +68,7 @@ export const WORKSPACES_EVENTS = {
   memberRemoved: 'MemberRemoved',
   invitationCreated: 'InvitationCreated',
   invitationAccepted: 'InvitationAccepted',
+  workspaceTransferred: 'WorkspaceTransferred',
 } as const;
 
 export type WorkspacesEventName =
@@ -136,9 +144,7 @@ export class WorkspacesEventBus {
     this.emit(WORKSPACES_EVENTS.memberRemoved, payload);
   }
 
-  onMemberRemoved(
-    listener: (payload: MemberRemovedPayload) => void,
-  ): void {
+  onMemberRemoved(listener: (payload: MemberRemovedPayload) => void): void {
     this.emitter.on(WORKSPACES_EVENTS.memberRemoved, listener);
   }
 
@@ -160,6 +166,16 @@ export class WorkspacesEventBus {
     listener: (payload: InvitationAcceptedPayload) => void,
   ): void {
     this.emitter.on(WORKSPACES_EVENTS.invitationAccepted, listener);
+  }
+
+  publishWorkspaceTransferred(payload: WorkspaceTransferredPayload): void {
+    this.emit(WORKSPACES_EVENTS.workspaceTransferred, payload);
+  }
+
+  onWorkspaceTransferred(
+    listener: (payload: WorkspaceTransferredPayload) => void,
+  ): void {
+    this.emitter.on(WORKSPACES_EVENTS.workspaceTransferred, listener);
   }
 
   private emit(name: WorkspacesEventName, payload: unknown): void {

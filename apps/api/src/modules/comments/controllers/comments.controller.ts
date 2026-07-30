@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   Patch,
   Post,
@@ -30,7 +31,9 @@ import { CommentResponseDto } from '../dto/comment-response.dto';
 @ApiBearerAuth()
 @Controller({ path: 'boards/:boardId/comments', version: '1' })
 export class CommentsController {
-  constructor(private readonly comments: CommentsService) {}
+  constructor(
+    @Inject(CommentsService) private readonly comments: CommentsService,
+  ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)

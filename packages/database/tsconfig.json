@@ -7,7 +7,7 @@
     "isolatedModules": true,
     "declaration": true,
     "removeComments": true,
-    "target": "ES2023",
+    "target": "ES2022",
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true,

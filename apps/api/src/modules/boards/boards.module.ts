@@ -6,8 +6,10 @@ import { BoardPolicy } from './policies/board.policy';
 import { BoardsRepository } from './repositories/boards.repository';
 import { BoardColumnsRepository } from './repositories/board-columns.repository';
 import { BoardsService } from './services/boards.service';
+import { TasksModule } from '../tasks/tasks.module';
 
 @Module({
+  imports: [TasksModule],
   controllers: [BoardsController],
   providers: [
     BoardsService,

@@ -3,18 +3,29 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { usersApi, type UserProfile } from '@/lib/users';
-import { ArrowLeft, Mail, Calendar, Shield, BadgeCheck, BadgeX, Loader2 } from 'lucide-react';
+import { usersApi, type UserProfile, type UserMembership, type AuditLogEntry } from '@/lib/users';
+import { ArrowLeft, Mail, Calendar, Shield, BadgeCheck, BadgeX, Loader2, ExternalLink, Clock, LogIn, Edit3, Trash2, UserPlus } from 'lucide-react';
 
 export default function UserDetailPage() {
   const params = useParams();
   const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
+  const [memberships, setMemberships] = useState<UserMembership[]>([]);
+  const [activity, setActivity] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    usersApi.getById(params.id as string)
-      .then(setUser)
+    const id = params.id as string;
+    Promise.all([
+      usersApi.getById(id),
+      usersApi.getMemberships(id).catch(() => [] as UserMembership[]),
+      usersApi.getActivity(id).catch(() => [] as AuditLogEntry[]),
+    ])
+      .then(([u, m, a]) => {
+        setUser(u);
+        setMemberships(m);
+        setActivity(a);
+      })
       .catch(() => router.push('/users'))
       .finally(() => setLoading(false));
   }, [params.id, router]);
@@ -127,6 +138,84 @@ export default function UserDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Workspace memberships */}
+      {memberships.length > 0 && (
+        <div className="mt-6 overflow-hidden rounded-2xl border border-surface-800/50 bg-surface-900/60 shadow-xl shadow-black/20">
+          <div className="border-b border-surface-800 px-6 py-4">
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-surface-300">
+              <ExternalLink size={14} className="text-surface-500" />
+              Workspace memberships ({memberships.length})
+            </h2>
+          </div>
+          <div className="divide-y divide-surface-800">
+            {memberships.map((m) => (
+              <Link
+                key={m.workspaceId}
+                href={`/workspaces/${m.workspaceId}`}
+                className="flex items-center justify-between px-6 py-3 transition-colors hover:bg-surface-800/50"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-700 text-xs font-bold text-surface-300">
+                    {m.workspaceName.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-surface-200">{m.workspaceName}</p>
+                    <p className="text-xs text-surface-500">Joined {new Date(m.joinedAt).toLocaleDateString()}</p>
+                  </div>
+                </div>
+                <span className="rounded-md bg-surface-800 px-2 py-0.5 text-xs capitalize text-surface-400">{m.role}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Activity timeline */}
+      {activity.length > 0 && (
+        <div className="mt-6 overflow-hidden rounded-2xl border border-surface-800/50 bg-surface-900/60 shadow-xl shadow-black/20">
+          <div className="border-b border-surface-800 px-6 py-4">
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-surface-300">
+              <Clock size={14} className="text-surface-500" />
+              Recent activity
+            </h2>
+          </div>
+          <div className="px-6 py-4">
+            <div className="relative space-y-0">
+              {activity.slice(0, 10).map((log, i) => (
+                <div key={log.id} className="flex gap-4 pb-4 last:pb-0">
+                  <div className="flex flex-col items-center">
+                    <div className="z-10 flex h-6 w-6 items-center justify-center rounded-full bg-surface-800">
+                      {actionIcon(log.action)}
+                    </div>
+                    {i < Math.min(activity.length, 10) - 1 && <div className="mt-1 w-px flex-1 bg-surface-800" />}
+                  </div>
+                  <div className="flex-1 pb-2">
+                    <p className="text-sm text-surface-300">
+                      {formatAction(log)}
+                    </p>
+                    <p className="text-xs text-surface-500">{new Date(log.createdAt).toLocaleString()}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
+}
+
+function actionIcon(action: string) {
+  const icons: Record<string, React.ReactNode> = {
+    'LOGIN': <LogIn size={10} />,
+    'UPDATE': <Edit3 size={10} />,
+    'DELETE': <Trash2 size={10} />,
+    'CREATE': <UserPlus size={10} />,
+  };
+  return <span className="text-surface-400">{icons[action] || <Clock size={10} />}</span>;
+}
+
+function formatAction(log: AuditLogEntry): string {
+  return `${log.action} ${log.entityType}${log.entityId ? ` #${log.entityId.slice(0, 8)}` : ''}`;
 }

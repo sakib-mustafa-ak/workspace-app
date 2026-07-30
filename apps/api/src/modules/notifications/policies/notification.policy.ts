@@ -1,10 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 
 import { NotificationsRepository } from '../repositories/notifications.repository';
 
 @Injectable()
 export class NotificationPolicy {
-  constructor(private readonly notificationsRepo: NotificationsRepository) {}
+  constructor(
+    @Inject(NotificationsRepository)
+    private readonly notificationsRepo: NotificationsRepository,
+  ) {}
 
   public async canRead(
     notificationId: string,

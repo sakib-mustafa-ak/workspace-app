@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   Patch,
   Post,
@@ -30,12 +31,14 @@ import {
 } from '../dto/board-response.dto';
 import { CreateColumnDto } from '../dto/create-column.dto';
 import { UpdateColumnDto } from '../dto/update-column.dto';
+import { BoardExportData } from '../dto/board-export.dto';
+import { CreateBoardFromTemplateDto } from '../dto/create-board-template.dto';
 
 @ApiTags('Boards')
 @ApiBearerAuth()
 @Controller({ path: 'workspaces/:workspaceId/boards', version: '1' })
 export class BoardsController {
-  constructor(private readonly boards: BoardsService) {}
+  constructor(@Inject(BoardsService) private readonly boards: BoardsService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -47,6 +50,36 @@ export class BoardsController {
     @Body() body: CreateBoardDto,
   ): Promise<BoardResponseDto> {
     const board = await this.boards.create(workspaceId, user.id, body);
+    return toBoardResponse(board);
+  }
+
+  @Post('import')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Import a board from JSON' })
+  @ApiOkResponse({ type: BoardResponseDto })
+  public async importBoard(
+    @CurrentUser() user: CurrentUserModel,
+    @Param('workspaceId') workspaceId: string,
+    @Body() body: BoardExportData,
+  ): Promise<BoardResponseDto> {
+    const board = await this.boards.importBoard(workspaceId, user.id, body);
+    return toBoardResponse(board);
+  }
+
+  @Post('templates')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Create a board from a template' })
+  @ApiCreatedResponse({ type: BoardResponseDto })
+  public async createFromTemplate(
+    @CurrentUser() user: CurrentUserModel,
+    @Param('workspaceId') workspaceId: string,
+    @Body() body: CreateBoardFromTemplateDto,
+  ): Promise<BoardResponseDto> {
+    const board = await this.boards.createFromTemplate(
+      workspaceId,
+      user.id,
+      body,
+    );
     return toBoardResponse(board);
   }
 
@@ -163,6 +196,17 @@ export class BoardsController {
     @Param('columnId') columnId: string,
   ): Promise<void> {
     await this.boards.archiveColumn(columnId, user.id);
+  }
+
+  @Post(':boardId/export')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Export a board as JSON' })
+  @ApiOkResponse({ type: BoardExportData })
+  public async exportBoard(
+    @CurrentUser() user: CurrentUserModel,
+    @Param('boardId') boardId: string,
+  ): Promise<BoardExportData> {
+    return this.boards.exportBoard(boardId, user.id);
   }
 }
 

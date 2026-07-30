@@ -55,13 +55,13 @@ export class AuthService {
 
   constructor(
     @Inject(DATABASE) private readonly db: Db,
-    private readonly users: UserRepository,
-    private readonly identities: IdentityRepository,
-    private readonly sessions: SessionRepository,
-    private readonly passwords: PasswordService,
-    private readonly tokens: TokenService,
-    private readonly tokenHash: TokenHashService,
-    private readonly events: AuthEventBus,
+    @Inject(UserRepository) private readonly users: UserRepository,
+    @Inject(IdentityRepository) private readonly identities: IdentityRepository,
+    @Inject(SessionRepository) private readonly sessions: SessionRepository,
+    @Inject(PasswordService) private readonly passwords: PasswordService,
+    @Inject(TokenService) private readonly tokens: TokenService,
+    @Inject(TokenHashService) private readonly tokenHash: TokenHashService,
+    @Inject(AuthEventBus) private readonly events: AuthEventBus,
   ) {}
 
   /**

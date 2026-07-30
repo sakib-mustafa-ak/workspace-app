@@ -10,6 +10,8 @@ export type Workspace = {
   archivedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  memberCount: number;
+  boardCount: number;
 };
 
 export type WorkspaceMember = {
@@ -38,6 +40,7 @@ export type Invitation = {
 
 export const workspacesApi = {
   list: () => api.get<Workspace[]>('/workspaces'),
+  listMyPendingInvitations: () => api.get<Invitation[]>('/workspaces/invitations/pending'),
   getById: (id: string) => api.get<Workspace>(`/workspaces/${id}`),
   create: (data: { name: string; slug: string; description?: string }) =>
     api.post<Workspace>('/workspaces', data),
@@ -62,6 +65,8 @@ export const workspacesApi = {
     api.post<{ workspaceId: string; message: string }>('/workspaces/invitations/accept', { selector, verifier }),
   getActivity: (id: string, params?: { cursor?: string; action?: string; resourceType?: string }) =>
     api.get<{ data: AuditEvent[]; nextCursor: string | null }>(`/workspaces/${id}/activity?${new URLSearchParams(params as Record<string, string>)}`),
+  transferOwnership: (id: string, newOwnerId: string) =>
+    api.post<Workspace>(`/workspaces/${id}/transfer`, { newOwnerId }),
 };
 
 export type AuditEvent = {

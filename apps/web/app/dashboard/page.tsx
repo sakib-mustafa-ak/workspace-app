@@ -7,6 +7,8 @@ import {
   ExternalLink,
   LayoutDashboard,
   Loader2,
+  Users,
+  LayoutGrid,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { workspacesApi, type Invitation, type Workspace } from '@/lib/workspaces';
@@ -76,7 +78,7 @@ function CreateWorkspaceForm({
             disabled={creating}
             className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-primary-500 hover:shadow-lg hover:shadow-primary-600/25 disabled:opacity-50"
           >
-            {creating ? 'Creating…' : 'Create'}
+            {creating ? 'Creating\u2026' : 'Create'}
           </button>
           <button
             type="button"
@@ -107,10 +109,12 @@ function DashboardContent() {
   }, []);
 
   useEffect(() => {
-    // Check for pending invitations — can use a dedicated endpoint or derive from workspaces list
-    // For now, use a simple check if user has pending invitations (workspaces with status INVITED)
-    void setPendingInvites;
+    workspacesApi.listMyPendingInvitations?.()
+      .then(setPendingInvites)
+      .catch(() => {});
   }, []);
+
+  const recentBoards = getRecentBoards();
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
@@ -127,7 +131,7 @@ function DashboardContent() {
                 Hello, <span className="bg-gradient-to-r from-primary-300 to-primary-500 bg-clip-text text-transparent">{user?.displayName || 'there'}</span>
               </h1>
               <p className="mt-1.5 text-sm text-surface-400">
-                {workspaces.length} workspace{workspaces.length !== 1 ? 's' : ''} · {user?.email}
+                {workspaces.length} workspace{workspaces.length !== 1 ? 's' : ''} \u00B7 {user?.email}
               </p>
             </div>
             <button
@@ -143,7 +147,7 @@ function DashboardContent() {
 
       {/* Invitations banner */}
       {pendingInvites.length > 0 && (
-        <div className="mb-6 rounded-xl border border-yellow-700/30 bg-yellow-900/10 px-4 py-3 text-sm text-yellow-400">
+        <div className="mb-6 animate-slideIn rounded-xl border border-yellow-700/30 bg-yellow-900/10 px-4 py-3 text-sm text-yellow-400">
           You have {pendingInvites.length} pending invitation{pendingInvites.length > 1 ? 's' : ''}
         </div>
       )}
@@ -161,18 +165,18 @@ function DashboardContent() {
       )}
 
       {/* Recent boards */}
-      {getRecentBoards().length > 0 && (
+      {recentBoards.length > 0 && (
         <div className="mb-8">
           <h2 className="mb-3 text-sm font-semibold text-surface-300">Recent boards</h2>
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {getRecentBoards().map((rb) => (
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+            {recentBoards.map((rb) => (
               <Link
                 key={rb.id}
                 href={`/workspaces/${rb.workspaceId}/boards/${rb.id}`}
-                className="shrink-0 rounded-xl border border-surface-800 bg-surface-900 p-4 transition-colors hover:border-surface-700"
+                className="group shrink-0 rounded-xl border border-surface-800 bg-surface-900 p-4 transition-all hover:border-surface-700 hover:bg-surface-800/50"
               >
-                <p className="text-sm font-medium">{rb.name}</p>
-                <p className="text-xs text-surface-500">{rb.workspaceName}</p>
+                <p className="text-sm font-medium text-surface-200 group-hover:text-white">{rb.name}</p>
+                <p className="mt-0.5 text-xs text-surface-500">{rb.workspaceName}</p>
               </Link>
             ))}
           </div>
@@ -201,38 +205,41 @@ function DashboardContent() {
           </button>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {workspaces.map((ws, i) => (
-            <Link
-              key={ws.id}
-              href={`/workspaces/${ws.id}`}
-              className="group relative overflow-hidden rounded-xl border border-surface-800 bg-gradient-to-br from-surface-900 to-surface-900/50 p-5 transition-all hover:border-surface-700 hover:shadow-lg hover:shadow-primary-600/5"
-              style={{ animationDelay: `${i * 50}ms` }}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary-600/20 to-primary-600/10 text-sm font-bold text-primary-400 shadow-sm shadow-primary-600/10">
-                  {ws.name.charAt(0).toUpperCase()}
+        <div>
+          <h2 className="mb-3 text-sm font-semibold text-surface-300">All workspaces</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {workspaces.map((ws, i) => (
+              <Link
+                key={ws.id}
+                href={`/workspaces/${ws.id}`}
+                className="group relative overflow-hidden rounded-xl border border-surface-800 bg-gradient-to-br from-surface-900 to-surface-900/50 p-5 transition-all hover:border-surface-700 hover:shadow-lg hover:shadow-primary-600/5 animate-fadeIn"
+                style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'backwards' }}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary-600/20 to-primary-600/10 text-sm font-bold text-primary-400 shadow-sm shadow-primary-600/10">
+                    {ws.name.charAt(0).toUpperCase()}
+                  </div>
+                  <ExternalLink
+                    size={14}
+                    className="mt-1 text-surface-600 opacity-0 transition-opacity group-hover:opacity-100"
+                  />
                 </div>
-                <ExternalLink
-                  size={14}
-                  className="mt-1 text-surface-600 opacity-0 transition-opacity group-hover:opacity-100"
-                />
-              </div>
-              <h3 className="mt-4 text-sm font-semibold text-surface-200 group-hover:text-white">
-                {ws.name}
-              </h3>
-              <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-surface-500">
-                {ws.description || 'No description'}
-              </p>
-              <div className="mt-3 flex items-center gap-3 text-[11px] text-surface-600">
-                <span>4 members</span>
-                <span>&middot;</span>
-                <span>3 boards</span>
-                <span>&middot;</span>
-                <span>/{ws.slug}</span>
-              </div>
-            </Link>
-          ))}
+                <h3 className="mt-4 text-sm font-semibold text-surface-200 group-hover:text-white">
+                  {ws.name}
+                </h3>
+                <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-surface-500">
+                  {ws.description || 'No description'}
+                </p>
+                <div className="mt-3 flex items-center gap-3 text-[11px] text-surface-600">
+                  <span className="flex items-center gap-1"><Users size={11} />{ws.memberCount ?? 1}</span>
+                  <span className="text-surface-700">\u00B7</span>
+                  <span className="flex items-center gap-1"><LayoutGrid size={11} />{ws.boardCount ?? 0}</span>
+                  <span className="text-surface-700">\u00B7</span>
+                  <span>/{ws.slug}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       )}
     </div>

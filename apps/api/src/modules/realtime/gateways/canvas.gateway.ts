@@ -8,7 +8,7 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { jwtVerify } from 'jose';
 import { TextEncoder } from 'node:util';
@@ -39,7 +39,9 @@ export class CanvasGateway
 
   private boardRooms = new Map<string, Map<string, PresenceUser>>();
 
-  constructor(private readonly canvasEventBus: CanvasEventBus) {}
+  constructor(
+    @Inject(CanvasEventBus) private readonly canvasEventBus: CanvasEventBus,
+  ) {}
 
   afterInit(): void {
     this.canvasEventBus.onObjectCreated((payload: ObjectCreatedPayload) => {
@@ -70,9 +72,11 @@ export class CanvasGateway
       return;
     }
     try {
-      const secret = new TextEncoder().encode(
-        process.env.JWT_ACCESS_SECRET || 'replace_me_at_least_16_chars',
-      );
+      const jwtSecret = process.env.JWT_ACCESS_SECRET;
+      if (!jwtSecret) {
+        throw new Error('JWT_ACCESS_SECRET is not configured');
+      }
+      const secret = new TextEncoder().encode(jwtSecret);
       const { payload } = await jwtVerify(token, secret);
       client.userId = payload.sub as string;
       client.displayName =

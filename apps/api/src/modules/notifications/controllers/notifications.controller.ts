@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   Patch,
   Post,
@@ -28,7 +29,10 @@ import { NotificationResponseDto } from '../dto/notification-response.dto';
 @ApiBearerAuth()
 @Controller({ path: 'notifications', version: '1' })
 export class NotificationsController {
-  constructor(private readonly notifications: NotificationsService) {}
+  constructor(
+    @Inject(NotificationsService)
+    private readonly notifications: NotificationsService,
+  ) {}
 
   @Get()
   @HttpCode(HttpStatus.OK)

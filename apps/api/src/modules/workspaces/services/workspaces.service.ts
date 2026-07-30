@@ -3,6 +3,7 @@ import { createHash, randomBytes } from 'node:crypto';
 
 import {
   DATABASE,
+  and,
   eq,
   type Db,
   type WorkspaceRole,
@@ -37,12 +38,77 @@ export class WorkspacesService {
 
   constructor(
     @Inject(DATABASE) private readonly db: Db,
+    @Inject(WorkspacesRepository)
     private readonly workspacesRepo: WorkspacesRepository,
+    @Inject(WorkspaceMembersRepository)
     private readonly members: WorkspaceMembersRepository,
+    @Inject(InvitationsRepository)
     private readonly invitations: InvitationsRepository,
-    private readonly policy: WorkspacePolicy,
-    private readonly events: WorkspacesEventBus,
+    @Inject(WorkspacePolicy) private readonly policy: WorkspacePolicy,
+    @Inject(WorkspacesEventBus) private readonly events: WorkspacesEventBus,
   ) {}
+
+  public async transferOwnership(
+    workspaceId: string,
+    currentOwnerId: string,
+    newOwnerId: string,
+  ): Promise<WorkspaceRow> {
+    if (currentOwnerId === newOwnerId) {
+      throw new WorkspacesException(
+        WorkspacesErrorCode.TRANSFER_SAME_USER,
+        'You are already the owner.',
+      );
+    }
+
+    await this.requireRole(workspaceId, currentOwnerId, 'OWNER');
+
+    const newOwnerMembership = await this.members.findByWorkspaceAndUser(
+      workspaceId,
+      newOwnerId,
+    );
+    if (!newOwnerMembership) {
+      throw new WorkspacesException(
+        WorkspacesErrorCode.NOT_A_MEMBER,
+        'New owner must be a member of the workspace.',
+      );
+    }
+
+    await this.db.transaction(async (tx) => {
+      await tx
+        .update(workspaceMembers)
+        .set({ role: 'ADMIN' })
+        .where(
+          and(
+            eq(workspaceMembers.workspaceId, workspaceId),
+            eq(workspaceMembers.userId, currentOwnerId),
+          ),
+        );
+
+      await tx
+        .update(workspaceMembers)
+        .set({ role: 'OWNER' })
+        .where(
+          and(
+            eq(workspaceMembers.workspaceId, workspaceId),
+            eq(workspaceMembers.userId, newOwnerId),
+          ),
+        );
+
+      await tx
+        .update(workspaces)
+        .set({ ownerId: newOwnerId })
+        .where(eq(workspaces.id, workspaceId));
+    });
+
+    this.events.publishWorkspaceTransferred({
+      workspaceId,
+      previousOwnerId: currentOwnerId,
+      newOwnerId,
+      transferredBy: currentOwnerId,
+    });
+
+    return this.getById(workspaceId);
+  }
 
   public async create(
     userId: string,
@@ -156,6 +222,39 @@ export class WorkspacesService {
 
   public async listByUser(userId: string): Promise<WorkspaceRow[]> {
     return this.workspacesRepo.listByUser(userId);
+  }
+
+  public async listByUserWithStats(
+    userId: string,
+  ): Promise<(WorkspaceRow & { memberCount: number; boardCount: number })[]> {
+    const list = await this.workspacesRepo.listByUser(userId);
+    if (list.length === 0) return [];
+
+    const workspaceIds = list.map((w) => w.id);
+
+    const [memberCounts, boardCounts] = await Promise.all([
+      this.members.countByWorkspaces(workspaceIds),
+      this.workspacesRepo.countBoardsByWorkspaces(workspaceIds),
+    ]);
+
+    const memberMap = new Map(
+      memberCounts.map((r) => [r.workspaceId, Number(r.count)]),
+    );
+    const boardMap = new Map(
+      boardCounts.map((r) => [r.workspaceId, Number(r.count)]),
+    );
+
+    return list.map((w) => ({
+      ...w,
+      memberCount: memberMap.get(w.id) ?? 1,
+      boardCount: boardMap.get(w.id) ?? 0,
+    }));
+  }
+
+  public async getMyPendingInvitations(
+    email: string,
+  ): Promise<InvitationRow[]> {
+    return this.invitations.listPendingByEmail(email);
   }
 
   public async getMembers(workspaceId: string): Promise<WorkspaceMemberRow[]> {

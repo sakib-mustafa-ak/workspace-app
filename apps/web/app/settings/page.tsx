@@ -1,89 +1,41 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
-import { useAuth } from '@/contexts/auth-context';
-import { usersApi } from '@/lib/users';
-import { User, Save } from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { User, Shield, Settings2, AlertTriangle } from 'lucide-react';
+import { TabNav } from './_components/tab-nav';
+import { ProfileTab } from './_components/profile-tab';
+import { SecurityTab } from './_components/security-tab';
+import { PreferencesTab } from './_components/preferences-tab';
+import { DangerTab } from './_components/danger-tab';
+
+const TABS = [
+  { id: 'profile', label: 'Profile', icon: User },
+  { id: 'security', label: 'Security', icon: Shield },
+  { id: 'preferences', label: 'Preferences', icon: Settings2 },
+  { id: 'danger', label: 'Danger Zone', icon: AlertTriangle },
+];
 
 export default function SettingsPage() {
-  const { user } = useAuth();
-  const [displayName, setDisplayName] = useState(user?.displayName || '');
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState('');
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const activeTab = searchParams.get('tab') || 'profile';
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setError('');
-    setSaving(true);
-    setSaved(false);
-    try {
-      const updated = await usersApi.updateMe({ displayName });
-      setSaved(true);
-      if (user) {
-        localStorage.setItem('user', JSON.stringify({ ...user, displayName: updated.displayName }));
-      }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Update failed');
-    } finally {
-      setSaving(false);
-    }
+  function setActiveTab(tab: string) {
+    router.push(`/settings?tab=${tab}`);
   }
 
   return (
-    <div className="mx-auto max-w-lg p-8">
-      <div className="mb-8 flex items-center gap-3">
-        <User size={24} className="text-primary-500" />
-        <div>
-          <h1 className="text-xl font-bold">Profile settings</h1>
-          <p className="text-sm text-surface-400">Manage your profile information</p>
-        </div>
+    <div className="mx-auto max-w-3xl px-4 py-8">
+      <h1 className="mb-6 text-2xl font-bold">Settings</h1>
+
+      <TabNav tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
+
+      <div className="mt-8">
+        {activeTab === 'profile' && <ProfileTab />}
+        {activeTab === 'security' && <SecurityTab />}
+        {activeTab === 'preferences' && <PreferencesTab />}
+        {activeTab === 'danger' && <DangerTab />}
       </div>
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {error && (
-          <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-2 text-sm text-red-400">
-            {error}
-          </div>
-        )}
-
-        {saved && (
-          <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-4 py-2 text-sm text-emerald-400">
-            Profile updated successfully.
-          </div>
-        )}
-
-        <div>
-          <label className="block text-sm font-medium mb-1.5 text-surface-300">Email</label>
-          <input
-            type="email"
-            value={user?.email || ''}
-            disabled
-            className="w-full rounded-lg border border-surface-700 bg-surface-800 px-3.5 py-2.5 text-sm text-surface-500 outline-none"
-          />
-          <p className="mt-1 text-xs text-surface-500">Email cannot be changed</p>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1.5 text-surface-300">Display name</label>
-          <input
-            type="text"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            className="w-full rounded-lg border border-surface-700 bg-surface-800 px-3.5 py-2.5 text-sm outline-none focus:border-primary-500"
-            placeholder="Your name"
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={saving}
-          className="flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-500 disabled:opacity-50"
-        >
-          <Save size={16} />
-          {saving ? 'Saving…' : 'Save changes'}
-        </button>
-      </form>
     </div>
   );
 }

@@ -57,7 +57,7 @@ describe('CanvasService', () => {
   });
 
   it('should throw BOARD_NOT_FOUND when board does not exist in getOrCreateCanvas', async () => {
-    boardsRepo.findById.mockResolvedValue(null);
+    boardsRepo.findById.mockResolvedValue(undefined);
     await expect(service.getOrCreateCanvas('b-999', 'user-1')).rejects.toThrow(
       CanvasException,
     );

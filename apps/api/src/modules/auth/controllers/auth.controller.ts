@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Post,
   Req,
 } from '@nestjs/common';
@@ -58,8 +59,10 @@ import { PasswordResetService } from '../services/password-reset.service';
 })
 export class AuthController {
   constructor(
-    private readonly auth: AuthService,
+    @Inject(AuthService) private readonly auth: AuthService,
+    @Inject(EmailVerificationService)
     private readonly emailVerification: EmailVerificationService,
+    @Inject(PasswordResetService)
     private readonly passwordReset: PasswordResetService,
   ) {}
 

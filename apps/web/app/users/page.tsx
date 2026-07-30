@@ -9,13 +9,13 @@ export default function UsersPage() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [offset, setOffset] = useState(0);
+  const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const limit = 20;
 
   function loadUsers() {
     setLoading(true);
-    usersApi.list({ limit, offset })
+    usersApi.list({ limit, page })
       .then((res) => {
         setUsers(res.users);
         setTotal(res.total);
@@ -24,7 +24,7 @@ export default function UsersPage() {
       .finally(() => setLoading(false));
   }
 
-  useEffect(() => { loadUsers(); }, [offset]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadUsers(); }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtered = search
     ? users.filter((u) =>
@@ -43,7 +43,6 @@ export default function UsersPage() {
   }
 
   const totalPages = Math.ceil(total / limit);
-  const currentPage = Math.floor(offset / limit) + 1;
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
@@ -77,7 +76,7 @@ export default function UsersPage() {
                 <Link
                   key={u.id}
                   href={`/users/${u.id}`}
-                  className="flex items-center gap-4 bg-surface-900/50 px-5 py-4 transition-colors hover:bg-surface-800/50"
+                  className="group flex items-center gap-4 bg-surface-900/50 px-5 py-4 transition-colors hover:bg-surface-800/50"
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-surface-600 to-surface-700 text-sm font-medium text-surface-200 shadow-sm">
                     {u.displayName.charAt(0).toUpperCase()}
@@ -117,20 +116,20 @@ export default function UsersPage() {
           {totalPages > 1 && (
             <div className="mt-4 flex items-center justify-between text-sm">
               <p className="text-surface-500">
-                Page {currentPage} of {totalPages}
+                Page {page} of {totalPages}
               </p>
               <div className="flex gap-1">
                 <button
-                  onClick={() => setOffset(Math.max(0, offset - limit))}
-                  disabled={offset === 0}
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
                   className="flex items-center gap-1 rounded-lg border border-surface-700 px-3 py-1.5 text-xs text-surface-400 transition-colors hover:text-white disabled:opacity-30"
                 >
                   <ChevronLeft size={14} />
                   Previous
                 </button>
                 <button
-                  onClick={() => setOffset(offset + limit)}
-                  disabled={offset + limit >= total}
+                  onClick={() => setPage(p => p + 1)}
+                  disabled={page >= totalPages}
                   className="flex items-center gap-1 rounded-lg border border-surface-700 px-3 py-1.5 text-xs text-surface-400 transition-colors hover:text-white disabled:opacity-30"
                 >
                   Next

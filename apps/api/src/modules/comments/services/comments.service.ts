@@ -24,9 +24,10 @@ export class CommentsService {
 
   constructor(
     @Inject(DATABASE) private readonly db: Db,
+    @Inject(CommentsRepository)
     private readonly commentsRepo: CommentsRepository,
-    private readonly policy: CommentPolicy,
-    private readonly events: CommentsEventBus,
+    @Inject(CommentPolicy) private readonly policy: CommentPolicy,
+    @Inject(CommentsEventBus) private readonly events: CommentsEventBus,
   ) {}
 
   public async create(

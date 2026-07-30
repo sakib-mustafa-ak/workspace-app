@@ -65,11 +65,13 @@ export class UserProfileDto {
 export class AuthResponseDto {
   @ApiProperty({
     description: 'Stable API contract for the authenticated subject.',
+    type: () => UserProfileDto,
   })
   user!: UserProfileDto;
 
   @ApiProperty({
     description: 'Token bundle — both must be persisted by the client.',
+    type: () => AuthTokensDto,
   })
   tokens!: AuthTokensDto;
 }

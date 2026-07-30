@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   Patch,
   Query,
@@ -34,7 +35,7 @@ import { UsersService } from '../services/users.service';
   version: '1',
 })
 export class UsersController {
-  constructor(private readonly users: UsersService) {}
+  constructor(@Inject(UsersService) private readonly users: UsersService) {}
 
   @Get('me')
   @HttpCode(HttpStatus.OK)

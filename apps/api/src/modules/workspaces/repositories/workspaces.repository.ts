@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 
 import {
   and,
+  boards,
   DATABASE,
   desc,
   eq,
@@ -130,5 +131,24 @@ export class WorkspacesRepository {
       .limit(limit)
       .offset(offset);
     return rows;
+  }
+
+  async countBoardsByWorkspaces(
+    workspaceIds: string[],
+  ): Promise<{ workspaceId: string; count: number }[]> {
+    if (workspaceIds.length === 0) return [];
+    return this.db
+      .select({
+        workspaceId: boards.workspaceId,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(boards)
+      .where(
+        sql`${boards.workspaceId} IN (${sql.join(
+          workspaceIds.map((id) => sql`${id}`),
+          sql`,`,
+        )})`,
+      )
+      .groupBy(boards.workspaceId);
   }
 }

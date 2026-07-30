@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   Patch,
   Post,
@@ -34,7 +35,7 @@ import { TaskResponseDto } from '../dto/task-response.dto';
   version: '1',
 })
 export class TasksController {
-  constructor(private readonly tasks: TasksService) {}
+  constructor(@Inject(TasksService) private readonly tasks: TasksService) {}
 
   @Post('columns/:columnId')
   @HttpCode(HttpStatus.CREATED)

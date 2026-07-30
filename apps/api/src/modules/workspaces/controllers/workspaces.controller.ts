@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   Patch,
   Post,
@@ -28,6 +29,7 @@ import { UpdateWorkspaceDto } from '../dto/update-workspace.dto';
 import { CreateInvitationDto } from '../dto/create-invitation.dto';
 import { ChangeRoleDto } from '../dto/change-role.dto';
 import { AcceptInvitationDto } from '../dto/accept-invitation.dto';
+import { TransferOwnershipDto } from '../dto/transfer-ownership.dto';
 import {
   WorkspaceResponseDto,
   WorkspaceMemberResponseDto,
@@ -40,7 +42,9 @@ import {
 @ApiBearerAuth()
 @Controller({ path: 'workspaces', version: '1' })
 export class WorkspacesController {
-  constructor(private readonly workspaces: WorkspacesService) {}
+  constructor(
+    @Inject(WorkspacesService) private readonly workspaces: WorkspacesService,
+  ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -61,8 +65,19 @@ export class WorkspacesController {
   public async listMyWorkspaces(
     @CurrentUser() user: CurrentUserModel,
   ): Promise<WorkspaceResponseDto[]> {
-    const list = await this.workspaces.listByUser(user.id);
+    const list = await this.workspaces.listByUserWithStats(user.id);
     return list.map(toWorkspaceResponse);
+  }
+
+  @Get('invitations/pending')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get my pending invitations' })
+  @ApiOkResponse({ type: [InvitationResponseDto] })
+  public async getMyPendingInvitations(
+    @CurrentUser() user: CurrentUserModel,
+  ): Promise<InvitationResponseDto[]> {
+    const list = await this.workspaces.getMyPendingInvitations(user.email);
+    return list.map(toInvitationResponse);
   }
 
   @Get(':id')
@@ -159,6 +174,23 @@ export class WorkspacesController {
     await this.workspaces.removeMember(id, user.id, targetUserId);
   }
 
+  @Post(':id/transfer')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Transfer workspace ownership' })
+  @ApiOkResponse({ type: WorkspaceResponseDto })
+  public async transferOwnership(
+    @CurrentUser() user: CurrentUserModel,
+    @Param('id') id: string,
+    @Body() body: TransferOwnershipDto,
+  ): Promise<WorkspaceResponseDto> {
+    const ws = await this.workspaces.transferOwnership(
+      id,
+      user.id,
+      body.newOwnerId,
+    );
+    return toWorkspaceResponse(ws);
+  }
+
   @Post(':id/invitations')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create invitation' })
@@ -231,6 +263,8 @@ function toWorkspaceResponse(ws: {
   archivedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
+  memberCount?: number | null;
+  boardCount?: number | null;
 }): WorkspaceResponseDto {
   return {
     id: ws.id,
@@ -244,6 +278,8 @@ function toWorkspaceResponse(ws: {
     archivedAt: ws.archivedAt,
     createdAt: ws.createdAt,
     updatedAt: ws.updatedAt,
+    memberCount: ws.memberCount ?? 0,
+    boardCount: ws.boardCount ?? 0,
   };
 }
 

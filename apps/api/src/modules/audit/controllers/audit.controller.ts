@@ -16,7 +16,7 @@ import {
 
 import { AuditService } from '../services/audit.service';
 import { ActivityQueryDto } from '../dto/activity-query.dto';
-import { ActivityResponseDto } from '../dto/audit-response.dto';
+import { ActivityResponseDto, AuditEventDto } from '../dto/audit-response.dto';
 
 @ApiTags('Audit')
 @ApiBearerAuth()
@@ -32,6 +32,32 @@ export class AuditController {
     @Param('id') id: string,
     @Query() query: ActivityQueryDto,
   ): Promise<ActivityResponseDto> {
-    return this.audit.getWorkspaceActivity(id, query);
+    const result = await this.audit.getWorkspaceActivity(id, query);
+    return {
+      data: result.data.map(toAuditEventDto),
+      nextCursor: result.nextCursor,
+    };
   }
+}
+
+function toAuditEventDto(e: {
+  id: string;
+  createdAt: Date;
+  workspaceId: string;
+  userId: string;
+  action: string;
+  resourceType: string;
+  resourceId: string | null;
+  metadata: Record<string, unknown> | null;
+}): AuditEventDto {
+  return {
+    id: e.id,
+    workspaceId: e.workspaceId,
+    userId: e.userId,
+    action: e.action,
+    resourceType: e.resourceType,
+    resourceId: e.resourceId,
+    metadata: e.metadata,
+    createdAt: e.createdAt.toISOString(),
+  };
 }

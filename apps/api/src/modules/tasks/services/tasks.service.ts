@@ -21,9 +21,9 @@ export class TasksService {
 
   constructor(
     @Inject(DATABASE) private readonly db: Db,
-    private readonly tasksRepo: TasksRepository,
-    private readonly policy: TaskPolicy,
-    private readonly events: TasksEventBus,
+    @Inject(TasksRepository) private readonly tasksRepo: TasksRepository,
+    @Inject(TaskPolicy) private readonly policy: TaskPolicy,
+    @Inject(TasksEventBus) private readonly events: TasksEventBus,
   ) {}
 
   public async create(

@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 
 import type { BoardCreatedPayload } from '../../boards/events/boards.events';
 import { BoardsEventBus } from '../../boards/events/boards.events';
@@ -23,14 +23,18 @@ export class NotificationHandler implements OnModuleInit {
   private readonly logger = new Logger(NotificationHandler.name);
 
   constructor(
+    @Inject(NotificationsService)
     private readonly notifications: NotificationsService,
-    private readonly boardsEventBus: BoardsEventBus,
+    @Inject(BoardsEventBus) private readonly boardsEventBus: BoardsEventBus,
+    @Inject(CommentsEventBus)
     private readonly commentsEventBus: CommentsEventBus,
-    private readonly tasksEventBus: TasksEventBus,
+    @Inject(TasksEventBus) private readonly tasksEventBus: TasksEventBus,
+    @Inject(WorkspacesEventBus)
     private readonly workspacesEventBus: WorkspacesEventBus,
-    private readonly uploadsEventBus: UploadsEventBus,
+    @Inject(UploadsEventBus) private readonly uploadsEventBus: UploadsEventBus,
+    @Inject(WorkspaceMembersRepository)
     private readonly workspaceMembersRepo: WorkspaceMembersRepository,
-    private readonly boardsRepo: BoardsRepository,
+    @Inject(BoardsRepository) private readonly boardsRepo: BoardsRepository,
   ) {}
 
   public onModuleInit(): void {

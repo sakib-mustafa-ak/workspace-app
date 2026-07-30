@@ -12,8 +12,8 @@ export class UsersService {
 
   constructor(
     @Inject(DATABASE) private readonly db: Db,
-    private readonly users: UsersRepository,
-    private readonly events: UsersEventBus,
+    @Inject(UsersRepository) private readonly users: UsersRepository,
+    @Inject(UsersEventBus) private readonly events: UsersEventBus,
   ) {}
 
   public async getProfile(userId: string): Promise<UserRow> {

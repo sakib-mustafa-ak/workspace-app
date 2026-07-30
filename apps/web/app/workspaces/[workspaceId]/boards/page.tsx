@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, ArrowLeft, Columns, Loader2 } from 'lucide-react';
+import { Plus, ArrowLeft, Columns, Loader2, Search, Archive, Trash2 } from 'lucide-react';
 import { workspacesApi, type Workspace } from '@/lib/workspaces';
 import { boardsApi, type Board } from '@/lib/boards';
 
@@ -17,8 +17,10 @@ export default function BoardsPage() {
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [name, setName] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
+  function loadBoards() {
+    setLoading(true);
     Promise.all([
       workspacesApi.getById(workspaceId),
       boardsApi.list(workspaceId),
@@ -29,7 +31,9 @@ export default function BoardsPage() {
       })
       .catch(() => router.push('/dashboard'))
       .finally(() => setLoading(false));
-  }, [workspaceId, router]);
+  }
+
+  useEffect(() => { loadBoards(); }, [workspaceId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -42,6 +46,11 @@ export default function BoardsPage() {
       // handled
     }
   }
+
+  const filteredBoards = boards.filter((b) => {
+    const q = searchQuery.toLowerCase();
+    return !q || b.name.toLowerCase().includes(q) || (b.description?.toLowerCase().includes(q) ?? false);
+  });
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
@@ -67,6 +76,17 @@ export default function BoardsPage() {
           <Plus size={16} />
           New board
         </button>
+      </div>
+
+      <div className="mb-6 flex items-center gap-2 rounded-lg border border-surface-800 bg-surface-900 px-3 py-2">
+        <Search size={16} className="text-surface-500" />
+        <input
+          type="text"
+          placeholder="Search boards..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="flex-1 bg-transparent text-sm outline-none placeholder:text-surface-500"
+        />
       </div>
 
       {showCreate && (
@@ -106,44 +126,71 @@ export default function BoardsPage() {
         <div className="flex items-center justify-center py-20">
           <Loader2 size={24} className="animate-spin text-primary-500" />
         </div>
-      ) : boards.length === 0 ? (
+      ) : filteredBoards.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-surface-700/50 bg-surface-900/30 py-20">
           <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-surface-800">
             <Columns size={24} className="text-surface-500" />
           </div>
-          <p className="mt-4 text-sm font-medium text-surface-400">No boards yet</p>
-          <p className="mt-1 text-xs text-surface-500">Create a board to organize your tasks</p>
-          <button
-            onClick={() => setShowCreate(true)}
-            className="mt-4 flex items-center gap-1.5 rounded-lg bg-primary-600/10 px-4 py-2 text-xs font-medium text-primary-400 transition-colors hover:bg-primary-600/20"
-          >
-            <Plus size={14} />
-            Create board
-          </button>
+          <p className="mt-4 text-sm font-medium text-surface-400">
+            {searchQuery ? 'No boards match your search' : 'No boards yet'}
+          </p>
+          <p className="mt-1 text-xs text-surface-500">
+            {searchQuery ? 'Try a different search term' : 'Create a board to organize your tasks'}
+          </p>
+          {!searchQuery && (
+            <button
+              onClick={() => setShowCreate(true)}
+              className="mt-4 flex items-center gap-1.5 rounded-lg bg-primary-600/10 px-4 py-2 text-xs font-medium text-primary-400 transition-colors hover:bg-primary-600/20"
+            >
+              <Plus size={14} />
+              Create board
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {boards.map((board) => (
-            <Link
-              key={board.id}
-              href={`/workspaces/${workspaceId}/boards/${board.id}`}
-              className="group relative overflow-hidden rounded-xl border border-surface-800 bg-gradient-to-br from-surface-900 to-surface-900/50 p-5 transition-all hover:border-surface-700 hover:shadow-lg hover:shadow-primary-600/5"
-            >
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600/20 to-emerald-600/10 text-sm font-bold text-emerald-400 shadow-sm shadow-emerald-600/10">
-                {board.name.charAt(0).toUpperCase()}
-              </div>
-              <h3 className="mt-4 text-sm font-semibold text-surface-200 group-hover:text-white">
-                {board.name}
-              </h3>
-              <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-surface-500">
-                {board.description || 'No description'}
-              </p>
+          {filteredBoards.map((board) => (
+            <div key={board.id} className="group relative overflow-hidden rounded-xl border border-surface-800 bg-gradient-to-br from-surface-900 to-surface-900/50 p-5 transition-all hover:border-surface-700 hover:shadow-lg hover:shadow-primary-600/5">
+              <Link href={`/workspaces/${workspaceId}/boards/${board.id}`}>
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600/20 to-emerald-600/10 text-sm font-bold text-emerald-400 shadow-sm shadow-emerald-600/10">
+                  {board.name.charAt(0).toUpperCase()}
+                </div>
+                <h3 className="mt-4 text-sm font-semibold text-surface-200 group-hover:text-white">
+                  {board.name}
+                </h3>
+                <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-surface-500">
+                  {board.description || 'No description'}
+                </p>
+              </Link>
               {board.archivedAt && (
                 <span className="mt-3 inline-flex items-center rounded border border-amber-500/20 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-400">
                   Archived
                 </span>
               )}
-            </Link>
+              <div className="mt-3 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                {board.archivedAt ? (
+                  <button
+                    onClick={() => boardsApi.unarchive(workspaceId, board.id).then(() => loadBoards())}
+                    className="flex items-center gap-1 rounded px-2 py-1 text-[11px] text-surface-400 hover:bg-surface-800 hover:text-white"
+                  >
+                    <Archive size={12} /> Unarchive
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => boardsApi.archive(workspaceId, board.id).then(() => loadBoards())}
+                    className="flex items-center gap-1 rounded px-2 py-1 text-[11px] text-surface-400 hover:bg-surface-800 hover:text-white"
+                  >
+                    <Archive size={12} /> Archive
+                  </button>
+                )}
+                <button
+                  onClick={() => { if (confirm('Delete this board?')) boardsApi.delete(workspaceId, board.id).then(() => loadBoards()); }}
+                  className="flex items-center gap-1 rounded px-2 py-1 text-[11px] text-red-400 hover:bg-red-500/10"
+                >
+                  <Trash2 size={12} /> Delete
+                </button>
+              </div>
+            </div>
           ))}
         </div>
       )}

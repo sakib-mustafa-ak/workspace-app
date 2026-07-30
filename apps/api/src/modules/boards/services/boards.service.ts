@@ -16,6 +16,11 @@ import { BoardPolicy } from '../policies/board.policy';
 import { BoardsRepository } from '../repositories/boards.repository';
 import { BoardColumnsRepository } from '../repositories/board-columns.repository';
 import { BoardsEventBus } from '../events/boards.events';
+import { TasksRepository } from '../../tasks/repositories/tasks.repository';
+import type { BoardExportData } from '../dto/board-export.dto';
+import type { BoardTemplate } from '../dto/create-board-template.dto';
+import { getTemplateColumns } from '../dto/create-board-template.dto';
+import type { TaskPriority } from '@repo/database';
 
 @Injectable()
 export class BoardsService {
@@ -23,11 +28,45 @@ export class BoardsService {
 
   constructor(
     @Inject(DATABASE) private readonly db: Db,
-    private readonly boardsRepo: BoardsRepository,
+    @Inject(BoardsRepository) private readonly boardsRepo: BoardsRepository,
+    @Inject(BoardColumnsRepository)
     private readonly columnsRepo: BoardColumnsRepository,
-    private readonly policy: BoardPolicy,
-    private readonly events: BoardsEventBus,
+    @Inject(BoardPolicy) private readonly policy: BoardPolicy,
+    @Inject(BoardsEventBus) private readonly events: BoardsEventBus,
+    @Inject(TasksRepository) private readonly tasksRepo: TasksRepository,
   ) {}
+
+  public async createFromTemplate(
+    workspaceId: string,
+    userId: string,
+    input: { name: string; template: BoardTemplate },
+  ): Promise<BoardRow> {
+    await this.requireRole(workspaceId, userId, 'EDITOR');
+
+    const board = await this.boardsRepo.create({
+      workspaceId,
+      name: input.name,
+      description: null,
+      position: 0,
+    });
+
+    const columns = getTemplateColumns(input.template);
+    for (let i = 0; i < columns.length; i++) {
+      await this.columnsRepo.create({
+        boardId: board.id,
+        name: columns[i],
+        position: i,
+      });
+    }
+
+    this.events.publishBoardCreated({
+      boardId: board.id,
+      workspaceId,
+      createdBy: userId,
+    });
+
+    return board;
+  }
 
   public async create(
     workspaceId: string,
@@ -272,6 +311,78 @@ export class BoardsService {
       boardId: board.id,
       archivedBy: userId,
     });
+  }
+
+  public async exportBoard(
+    boardId: string,
+    userId: string,
+  ): Promise<BoardExportData> {
+    const board = await this.boardsRepo.findById(boardId);
+    if (!board) {
+      throw new BoardsException(
+        BoardsErrorCode.BOARD_NOT_FOUND,
+        'Board not found.',
+      );
+    }
+
+    await this.requireRole(board.workspaceId, userId, 'VIEWER');
+
+    const columns = await this.columnsRepo.listByBoard(boardId);
+    const allTasks = await this.tasksRepo.listByBoard(boardId);
+
+    return {
+      board: { name: board.name, description: board.description },
+      columns: columns.map((c) => ({ name: c.name, position: c.position })),
+      tasks: allTasks.map((t) => ({
+        title: t.title,
+        description: t.description,
+        position: t.position,
+        priority: t.priority,
+        columnName: columns.find((c) => c.id === t.columnId)?.name ?? '',
+      })),
+    };
+  }
+
+  public async importBoard(
+    workspaceId: string,
+    userId: string,
+    data: BoardExportData,
+  ): Promise<BoardRow> {
+    await this.requireRole(workspaceId, userId, 'EDITOR');
+
+    const board = await this.boardsRepo.create({
+      workspaceId,
+      name: data.board.name,
+      description: data.board.description ?? null,
+      position: 0,
+    });
+
+    const columnMap = new Map<string, string>();
+    for (const col of data.columns) {
+      const created = await this.columnsRepo.create({
+        boardId: board.id,
+        name: col.name,
+        position: col.position,
+      });
+      columnMap.set(col.name, created.id);
+    }
+
+    for (const task of data.tasks) {
+      const columnId = columnMap.get(task.columnName);
+      if (!columnId) continue;
+      await this.tasksRepo.create({
+        boardId: board.id,
+        workspaceId,
+        columnId,
+        title: task.title,
+        description: task.description ?? null,
+        position: task.position,
+        priority: task.priority as TaskPriority,
+        createdById: userId,
+      });
+    }
+
+    return board;
   }
 
   private async requireRole(

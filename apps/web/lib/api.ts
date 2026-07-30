@@ -37,12 +37,15 @@ async function refreshAccessToken(): Promise<string> {
     throw new Error('Session expired');
   }
 
-  const data = await res.json();
-  localStorage.setItem('accessToken', data.accessToken);
-  if (data.refreshToken) {
-    localStorage.setItem('refreshToken', data.refreshToken);
+  const json = await res.json();
+  const payload = json && typeof json === 'object' && 'data' in json ? json.data : json;
+  const accessToken = payload.tokens?.accessToken || payload.accessToken;
+  const newRefresh = payload.tokens?.refreshToken || payload.refreshToken;
+  localStorage.setItem('accessToken', accessToken);
+  if (newRefresh) {
+    localStorage.setItem('refreshToken', newRefresh);
   }
-  return data.accessToken;
+  return accessToken;
 }
 
 async function request<T>(
@@ -104,7 +107,12 @@ async function request<T>(
   }
 
   if (res.status === 204) return undefined as T;
-  return res.json();
+  const json = await res.json();
+  // Unwrap global ResponseInterceptor: { success, data, message }
+  if (json && typeof json === 'object' && 'success' in json && 'data' in json) {
+    return json.data as T;
+  }
+  return json as T;
 }
 
 async function requestFormData<T>(

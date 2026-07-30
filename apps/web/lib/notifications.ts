@@ -1,5 +1,12 @@
 import { api } from './api';
 
+function buildQuery(params?: Record<string, string | number | undefined>): string {
+  if (!params) return '';
+  const entries = Object.entries(params).filter(([, v]) => v !== undefined);
+  if (entries.length === 0) return '';
+  return '?' + entries.map(([k, v]) => `${k}=${encodeURIComponent(v!)}`).join('&');
+}
+
 export type Notification = {
   id: string;
   userId: string;
@@ -16,14 +23,14 @@ export type Notification = {
   createdAt: string;
 };
 
+export type NotificationsListResponse = {
+  data: Notification[];
+  total: number;
+};
+
 export const notificationsApi = {
-  list: (params?: { limit?: number; offset?: number }) => {
-    const search = new URLSearchParams();
-    if (params?.limit) search.set('limit', String(params.limit));
-    if (params?.offset) search.set('offset', String(params.offset));
-    const qs = search.toString();
-    return api.get<Notification[]>(`/notifications${qs ? `?${qs}` : ''}`);
-  },
+  list: (params?: { limit?: number; offset?: number; filter?: string }) =>
+    api.get<NotificationsListResponse>(`/notifications${buildQuery(params as Record<string, string | number | undefined>)}`),
   getById: (id: string) =>
     api.get<Notification>(`/notifications/${id}`),
   countUnread: () =>

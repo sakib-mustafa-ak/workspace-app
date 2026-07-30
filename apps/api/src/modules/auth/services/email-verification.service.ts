@@ -52,10 +52,11 @@ export class EmailVerificationService {
   constructor(
     @Inject(DATABASE) private readonly db: Db,
     @Inject(MAIL_PROVIDER) private readonly mail: RecordingMailProvider,
-    private readonly eventBus: AuthEventBus,
-    private readonly tokenHash: TokenHashService,
+    @Inject(AuthEventBus) private readonly eventBus: AuthEventBus,
+    @Inject(TokenHashService) private readonly tokenHash: TokenHashService,
+    @Inject(EmailVerificationTokenRepository)
     private readonly repository: EmailVerificationTokenRepository,
-    private readonly configService: ConfigService,
+    @Inject(ConfigService) private readonly configService: ConfigService,
   ) {}
 
   /**

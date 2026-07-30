@@ -1,13 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-class AuditEventDto {
+export class AuditEventDto {
   @ApiProperty() id!: string;
   @ApiProperty() workspaceId!: string;
   @ApiProperty() userId!: string;
   @ApiProperty() action!: string;
   @ApiProperty() resourceType!: string;
   @ApiProperty({ nullable: true }) resourceId!: string | null;
-  @ApiProperty() metadata!: Record<string, unknown>;
+  @ApiProperty({ nullable: true }) metadata!: Record<string, unknown> | null;
   @ApiProperty({ type: String, format: 'date-time' }) createdAt!: string;
 }
 

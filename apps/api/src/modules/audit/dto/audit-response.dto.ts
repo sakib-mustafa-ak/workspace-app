@@ -8,7 +8,7 @@ class AuditEventDto {
   @ApiProperty() resourceType!: string;
   @ApiProperty({ nullable: true }) resourceId!: string | null;
   @ApiProperty() metadata!: Record<string, unknown>;
-  @ApiProperty() createdAt!: Date;
+  @ApiProperty({ type: String, format: 'date-time' }) createdAt!: string;
 }
 
 export class ActivityResponseDto {

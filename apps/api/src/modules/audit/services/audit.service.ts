@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import { DATABASE, type Db, type NewAuditEventRow } from '@repo/database';
+import { type NewAuditEventRow } from '@repo/database';
 
 import { AuditRepository } from '../repositories/audit.repository';
 import { AUDIT_PAGE_SIZE } from '../audit.constants';
@@ -9,7 +9,6 @@ import type { ActivityQueryDto } from '../dto/activity-query.dto';
 @Injectable()
 export class AuditService {
   constructor(
-    @Inject(DATABASE) private readonly db: Db,
     @Inject(AuditRepository) private readonly repo: AuditRepository,
   ) {}
 

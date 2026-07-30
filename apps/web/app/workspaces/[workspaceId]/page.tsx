@@ -6,7 +6,7 @@ import Link from 'next/link';
 import {
   ArrowLeft, Columns, Settings, Users, Mail, ExternalLink,
   Pencil, Archive, Trash2, UserMinus, Send,
-  Ban, Check,
+  Ban, Check, History,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import {
@@ -16,8 +16,9 @@ import {
   type Invitation,
 } from '@/lib/workspaces';
 import { boardsApi, type Board } from '@/lib/boards';
+import { ActivityTabContent } from './_components/activity-tab';
 
-type Tab = 'boards' | 'members' | 'invitations' | 'settings';
+type Tab = 'boards' | 'members' | 'invitations' | 'settings' | 'activity';
 
 export default function WorkspaceDetailPage() {
   const params = useParams();
@@ -158,6 +159,7 @@ export default function WorkspaceDetailPage() {
     { key: 'members', label: 'Members', icon: Users },
     { key: 'invitations', label: 'Invitations', icon: Mail },
     { key: 'settings', label: 'Settings', icon: Settings },
+    { key: 'activity', label: 'Activity', icon: History },
   ];
 
   return (
@@ -358,6 +360,8 @@ export default function WorkspaceDetailPage() {
             </div>
           </div>
         )}
+
+        {tab === 'activity' && <ActivityTabContent workspaceId={workspaceId} />}
 
         {tab === 'settings' && (
           <div className="p-6 max-w-lg">

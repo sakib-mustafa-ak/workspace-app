@@ -60,4 +60,17 @@ export const workspacesApi = {
     api.delete<void>(`/workspaces/${id}/invitations/${invitationId}`),
   acceptInvitation: (selector: string, verifier: string) =>
     api.post<{ workspaceId: string; message: string }>('/workspaces/invitations/accept', { selector, verifier }),
+  getActivity: (id: string, params?: { cursor?: string; action?: string; resourceType?: string }) =>
+    api.get<{ data: AuditEvent[]; nextCursor: string | null }>(`/workspaces/${id}/activity?${new URLSearchParams(params as Record<string, string>)}`),
+};
+
+export type AuditEvent = {
+  id: string;
+  workspaceId: string;
+  userId: string;
+  action: string;
+  resourceType: string;
+  resourceId: string | null;
+  metadata: Record<string, unknown>;
+  createdAt: string;
 };

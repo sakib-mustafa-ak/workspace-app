@@ -8,8 +8,13 @@ import {
   type Db,
   type NewWorkspaceMemberRow,
   type WorkspaceMemberRow,
+  users,
   workspaceMembers,
 } from '@repo/database';
+
+export type WorkspaceMemberWithUser = WorkspaceMemberRow & {
+  user: { displayName: string; email: string } | null;
+};
 
 @Injectable()
 export class WorkspaceMembersRepository {
@@ -71,10 +76,14 @@ export class WorkspaceMembersRepository {
 
   public async listByWorkspace(
     workspaceId: string,
-  ): Promise<WorkspaceMemberRow[]> {
-    return this.db
-      .select()
+  ): Promise<WorkspaceMemberWithUser[]> {
+    const rows = await this.db
+      .select({
+        member: workspaceMembers,
+        user: { displayName: users.displayName, email: users.email },
+      })
       .from(workspaceMembers)
+      .innerJoin(users, eq(workspaceMembers.userId, users.id))
       .where(
         and(
           eq(workspaceMembers.workspaceId, workspaceId),
@@ -82,6 +91,7 @@ export class WorkspaceMembersRepository {
         ),
       )
       .orderBy(workspaceMembers.joinedAt);
+    return rows.map((r) => ({ ...r.member, user: r.user }));
   }
 
   public async updateRole(

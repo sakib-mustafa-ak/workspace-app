@@ -11,6 +11,7 @@ import { BoardPolicy } from '../policies/board.policy';
 import { BoardsRepository } from '../repositories/boards.repository';
 import { BoardColumnsRepository } from '../repositories/board-columns.repository';
 import { BoardsEventBus } from '../events/boards.events';
+import { TasksRepository } from '../../tasks/repositories/tasks.repository';
 import { BoardsService } from './boards.service';
 
 const mockBoard: BoardRow = {
@@ -136,6 +137,12 @@ describe('BoardsService', () => {
             publishColumnCreated: jest.fn(),
             publishColumnUpdated: jest.fn(),
             publishColumnArchived: jest.fn(),
+          },
+        },
+        {
+          provide: TasksRepository,
+          useValue: {
+            countByBoard: jest.fn(),
           },
         },
       ],

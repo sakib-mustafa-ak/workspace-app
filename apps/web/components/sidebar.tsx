@@ -32,7 +32,7 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
 
   const [userWorkspaces, setUserWorkspaces] = useState<Workspace[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -82,23 +82,23 @@ export function Sidebar() {
   }, []);
 
   return (
-    <aside className="flex w-60 flex-shrink-0 flex-col border-r border-surface-800 bg-gradient-to-b from-surface-900 to-surface-900/95">
+    <aside className="flex h-full w-60 flex-shrink-0 flex-col border-r border-surface-800 bg-gradient-to-b from-surface-900 to-surface-900/95">
       <div className="flex h-14 items-center border-b border-surface-800 px-4">
         <div className="flex items-center gap-2.5">
           <div className="flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br from-primary-500 to-primary-700 text-xs font-bold text-white shadow-sm shadow-primary-600/30">
             W
           </div>
-          <span className="text-sm font-semibold tracking-tight">Workspace OS</span>
+          <span className="font-display text-sm font-semibold tracking-tight">Workspace OS</span>
         </div>
       </div>
 
-      <div ref={searchRef} className="relative px-3 pb-2">
+      <div ref={searchRef} className="relative px-3 pb-3">
         <Search size={14} className="absolute left-5 top-1/2 -translate-y-1/2 text-surface-500" />
         <input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search..."
-          className="w-full rounded-lg border border-surface-800 bg-surface-950 py-1.5 pl-8 pr-3 text-xs outline-none placeholder:text-surface-600 focus:border-primary-500/50"
+          className="w-full rounded-lg border border-surface-700/60 bg-surface-800/40 pt-[5px] pb-[7px] pl-9 pr-3 text-xs outline-none transition-colors placeholder:text-surface-500 hover:border-surface-700 focus:border-primary-500/50 mt-3"
         />
         {searchOpen && searchResults && (
           <div className="absolute left-3 right-3 top-full mt-1 rounded-xl border border-surface-800 bg-surface-900 shadow-xl z-50 max-h-64 overflow-y-auto">
@@ -116,55 +116,59 @@ export function Sidebar() {
         )}
       </div>
 
-      <nav className="flex-1 space-y-1 p-3">
-        {navItems.map((item) => {
-          const active = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all ${
-                active
-                  ? 'bg-surface-800 text-white shadow-sm'
-                  : 'text-surface-400 hover:bg-surface-800/50 hover:text-surface-200'
-              }`}
-            >
-              <item.icon size={16} className={active ? 'text-primary-400' : ''} />
-              <span className="flex-1">{item.label}</span>
-              {item.href === '/notifications' && unreadCount > 0 && (
-                <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </span>
-              )}
-            </Link>
-          );
-        })}
-      </nav>
+      <div className="flex-1 overflow-y-auto">
+        <nav className="space-y-1 p-3">
+          {navItems.map((item) => {
+            const active = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all ${
+                  active
+                    ? 'bg-surface-800 text-white shadow-sm'
+                    : 'text-surface-400 hover:bg-surface-800/50 hover:text-surface-200'
+                }`}
+              >
+                <item.icon size={16} className={active ? 'text-primary-400' : ''} />
+                <span className="flex-1">{item.label}</span>
+                {item.href === '/notifications' && unreadCount > 0 && (
+                  <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
 
-      {userWorkspaces.length > 0 && (
-        <div className="px-3 pt-2">
-          <p className="mb-1 px-3 text-[10px] font-medium uppercase tracking-wider text-surface-500">Workspaces</p>
-          {userWorkspaces.map((ws) => (
-            <Link
-              key={ws.id}
-              href={`/workspaces/${ws.id}`}
-              className={`flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
-                pathname.startsWith(`/workspaces/${ws.id}`)
-                  ? 'bg-surface-800 text-white'
-                  : 'text-surface-400 hover:bg-surface-800/50 hover:text-surface-200'
-              }`}
-            >
-              <div className="flex h-5 w-5 items-center justify-center rounded bg-surface-700 text-[9px] font-bold text-surface-300">
-                {ws.name.charAt(0).toUpperCase()}
-              </div>
-              {ws.name}
-            </Link>
-          ))}
-        </div>
-      )}
+        {userWorkspaces.length > 0 && (
+          <div className="px-3 pt-2">
+            <p className="mb-2 px-3 text-label text-surface-500">Workspaces</p>
+            <div className="space-y-1">
+              {userWorkspaces.map((ws) => (
+                <Link
+                  key={ws.id}
+                  href={`/workspaces/${ws.id}`}
+                  className={`flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                    pathname.startsWith(`/workspaces/${ws.id}`)
+                      ? 'bg-surface-800 text-white'
+                      : 'text-surface-400 hover:bg-surface-800/50 hover:text-surface-200'
+                  }`}
+                >
+                  <div className="flex h-5 w-5 items-center justify-center rounded bg-surface-700 text-[9px] font-bold text-surface-300">
+                    {ws.name.charAt(0).toUpperCase()}
+                  </div>
+                  {ws.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="border-t border-surface-800 p-3">
-        <div className="mb-2 flex items-center gap-2.5 rounded-lg px-3 py-2 transition-colors hover:bg-surface-800/50">
+        <div className="group mb-2 flex items-center gap-2.5 rounded-lg px-3 py-2 transition-colors hover:bg-surface-800/50">
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-surface-600 to-surface-700 text-xs font-medium text-surface-200 shadow-sm">
             {user?.displayName?.charAt(0)?.toUpperCase() || 'U'}
           </div>
@@ -172,17 +176,36 @@ export function Sidebar() {
             <p className="truncate text-sm font-medium text-surface-200">
               {user?.displayName || 'User'}
             </p>
-            <p className="truncate text-xs text-surface-500">{user?.email}</p>
+            <p className="hidden truncate text-xs text-surface-500 group-hover:block">{user?.email}</p>
           </div>
           <ChevronRight size={14} className="text-surface-600" />
         </div>
-        <button
-          onClick={toggleTheme}
-          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-surface-400 transition-all hover:bg-surface-800/50 hover:text-surface-200"
-        >
-          {theme === 'dark' ? <Moon size={16} /> : theme === 'light' ? <Sun size={16} /> : <Monitor size={16} />}
-          {theme === 'dark' ? 'Dark' : theme === 'light' ? 'Light' : 'System'}
-        </button>
+        <div role="group" aria-label="Theme" className="flex items-center justify-between gap-1 px-1">
+          <button
+            onClick={() => setTheme('dark')}
+            title="Dark"
+            aria-label="Dark"
+            className={`flex h-7 w-7 items-center justify-center rounded-md transition-all ${theme === 'dark' ? 'text-primary-400' : 'text-surface-400 hover:bg-surface-800/50 hover:text-surface-200'}`}
+          >
+            <Moon size={15} />
+          </button>
+          <button
+            onClick={() => setTheme('light')}
+            title="Light"
+            aria-label="Light"
+            className={`flex h-7 w-7 items-center justify-center rounded-md transition-all ${theme === 'light' ? 'text-primary-400' : 'text-surface-400 hover:bg-surface-800/50 hover:text-surface-200'}`}
+          >
+            <Sun size={15} />
+          </button>
+          <button
+            onClick={() => setTheme('system')}
+            title="System"
+            aria-label="System"
+            className={`flex h-7 w-7 items-center justify-center rounded-md transition-all ${theme === 'system' ? 'text-primary-400' : 'text-surface-400 hover:bg-surface-800/50 hover:text-surface-200'}`}
+          >
+            <Monitor size={15} />
+          </button>
+        </div>
         <button
           onClick={logout}
           className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-surface-400 transition-all hover:bg-surface-800/50 hover:text-surface-200"

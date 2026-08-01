@@ -1,15 +1,34 @@
 import type { CanvasState, CanvasObject } from '../_context/canvas-state';
 
+const imageCache = new Map<string, HTMLImageElement>();
+
+function themeColors(): { bg: string; grid: string; accent: string } {
+  if (typeof window === 'undefined') {
+    return { bg: '#020617', grid: 'rgba(148,163,184,0.15)', accent: '#4d96ff' };
+  }
+  const cs = getComputedStyle(document.documentElement);
+  const get = (name: string, fallback: string) => cs.getPropertyValue(name).trim() || fallback;
+  return {
+    bg: get('--color-surface-950', '#020617'),
+    grid: get('--color-surface-700', '#334155'),
+    accent: get('--color-primary-500', '#3b82f6'),
+  };
+}
+
 export function renderFrame(ctx: CanvasRenderingContext2D, state: CanvasState) {
   const { width, height } = ctx.canvas;
+  const colors = themeColors();
+
   ctx.clearRect(0, 0, width, height);
+  ctx.fillStyle = colors.bg;
+  ctx.fillRect(0, 0, width, height);
 
   ctx.save();
   ctx.translate(state.pan.x, state.pan.y);
   ctx.scale(state.zoom, state.zoom);
 
   if (state.gridVisible) {
-    drawGrid(ctx, state);
+    drawGrid(ctx, state, colors.grid);
   }
 
   const sorted = [...state.objects].sort((a, b) => a.zIndex - b.zIndex);
@@ -22,20 +41,21 @@ export function renderFrame(ctx: CanvasRenderingContext2D, state: CanvasState) {
     ctx.restore();
   }
 
-  drawSelectionOverlay(ctx, state);
+  drawSelectionOverlay(ctx, state, colors.accent);
 
   ctx.restore();
 }
 
-function drawGrid(ctx: CanvasRenderingContext2D, state: CanvasState) {
+function drawGrid(ctx: CanvasRenderingContext2D, state: CanvasState, gridColor: string) {
   const gridSize = 40 * state.zoom;
   const { width, height } = ctx.canvas;
 
-  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.strokeStyle = gridColor;
+  ctx.globalAlpha = 0.25;
   ctx.lineWidth = 1;
 
-  const offsetX = state.pan.x % gridSize;
-  const offsetY = state.pan.y % gridSize;
+  const offsetX = ((state.pan.x % gridSize) + gridSize) % gridSize;
+  const offsetY = ((state.pan.y % gridSize) + gridSize) % gridSize;
 
   for (let x = offsetX; x < width; x += gridSize) {
     ctx.beginPath();
@@ -49,6 +69,7 @@ function drawGrid(ctx: CanvasRenderingContext2D, state: CanvasState) {
     ctx.lineTo(width, y);
     ctx.stroke();
   }
+  ctx.globalAlpha = 1;
 }
 
 function renderObject(ctx: CanvasRenderingContext2D, obj: CanvasObject) {
@@ -103,9 +124,15 @@ function renderObject(ctx: CanvasRenderingContext2D, obj: CanvasObject) {
       break;
     case 'image':
       if (obj.imageData) {
-        const img = new Image();
-        img.src = obj.imageData;
-        ctx.drawImage(img, 0, 0, obj.width, obj.height);
+        let img = imageCache.get(obj.imageData);
+        if (!img) {
+          img = new Image();
+          img.src = obj.imageData;
+          imageCache.set(obj.imageData, img);
+        }
+        if (img.complete && img.naturalWidth > 0) {
+          ctx.drawImage(img, 0, 0, obj.width, obj.height);
+        }
       }
       break;
     case 'connector':
@@ -134,7 +161,7 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.closePath();
 }
 
-function drawSelectionOverlay(ctx: CanvasRenderingContext2D, state: CanvasState) {
+function drawSelectionOverlay(ctx: CanvasRenderingContext2D, state: CanvasState, accent: string) {
   if (state.selectedIds.length === 0) return;
   for (const obj of state.objects) {
     if (!state.selectedIds.includes(obj.id)) continue;
@@ -142,7 +169,7 @@ function drawSelectionOverlay(ctx: CanvasRenderingContext2D, state: CanvasState)
     ctx.translate(obj.x, obj.y);
     ctx.rotate((obj.rotation * Math.PI) / 180);
 
-    ctx.strokeStyle = '#4d96ff';
+    ctx.strokeStyle = accent;
     ctx.lineWidth = 2 / state.zoom;
     ctx.setLineDash([6 / state.zoom, 3 / state.zoom]);
     ctx.strokeRect(-2, -2, obj.width + 4, obj.height + 4);
@@ -155,8 +182,8 @@ function drawSelectionOverlay(ctx: CanvasRenderingContext2D, state: CanvasState)
       [0, obj.height / 2],
     ];
     ctx.setLineDash([]);
-    ctx.fillStyle = '#ffffff';
-    ctx.strokeStyle = '#4d96ff';
+    ctx.fillStyle = themeColors().bg;
+    ctx.strokeStyle = accent;
     ctx.lineWidth = 1.5 / state.zoom;
     for (const [px, py] of positions) {
       ctx.fillRect(px - hs / 2, py - hs / 2, hs, hs);

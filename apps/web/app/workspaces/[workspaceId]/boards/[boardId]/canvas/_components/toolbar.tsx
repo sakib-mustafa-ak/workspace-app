@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import {
   MousePointer2, Square, Circle, Minus, ArrowRight, Type, StickyNote,
   GitBranch, Undo2, Redo2, Grid3x3, AlignStartVertical, AlignCenterVertical,
@@ -46,7 +46,6 @@ function AlignButton({ icon: Icon, title, onClick }: { icon: React.ComponentType
 export function Toolbar() {
   const { state, dispatch } = useCanvas();
   const imageInputRef = useRef<HTMLInputElement>(null);
-  const [showLayers, setShowLayers] = useState(false);
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -161,8 +160,8 @@ export function Toolbar() {
 
         <button
           title="Toggle layers panel"
-          onClick={() => setShowLayers((p) => !p)}
-          className={`rounded-lg p-2 transition-colors hover:bg-surface-800 hover:text-surface-200 ${showLayers ? 'text-primary-400 bg-surface-800' : 'text-surface-400'}`}
+          onClick={() => dispatch({ type: 'TOGGLE_LAYERS' })}
+          className={`rounded-lg p-2 transition-colors hover:bg-surface-800 hover:text-surface-200 ${state.layersOpen ? 'text-primary-400 bg-surface-800' : 'text-surface-400'}`}
         >
           <Layers size={18} />
         </button>

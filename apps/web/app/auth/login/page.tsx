@@ -3,10 +3,12 @@
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
-import { LogIn, Loader2 } from 'lucide-react';
+import { useTheme } from '@/hooks/use-theme';
+import { LogIn, Loader2, Moon, Sun } from 'lucide-react';
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -31,6 +33,22 @@ export default function LoginPage() {
       <div className="pointer-events-none absolute -bottom-40 -right-40 h-[500px] w-[500px] rounded-full bg-primary-500/5 blur-3xl" />
 
       <div className="relative w-full max-w-sm">
+        <div className="mb-4 flex items-center gap-0.5 rounded-lg border border-surface-700/60 bg-surface-900/60 p-0.5">
+          <button
+            onClick={() => setTheme('dark')}
+            className={`flex h-7 flex-1 items-center justify-center gap-1.5 rounded-md text-xs font-medium transition-all ${theme === 'dark' ? 'bg-surface-800 text-primary-400 shadow-sm' : 'text-surface-400 hover:text-surface-200'}`}
+          >
+            <Moon size={13} />
+            Dark
+          </button>
+          <button
+            onClick={() => setTheme('light')}
+            className={`flex h-7 flex-1 items-center justify-center gap-1.5 rounded-md text-xs font-medium transition-all ${theme === 'light' ? 'bg-surface-800 text-primary-400 shadow-sm' : 'text-surface-400 hover:text-surface-200'}`}
+          >
+            <Sun size={13} />
+            Light
+          </button>
+        </div>
         <div className="animate-fadeIn">
           <div className="rounded-2xl border border-surface-800/50 bg-gradient-to-br from-surface-900 to-surface-900/60 p-6 sm:p-8 shadow-xl shadow-black/20 backdrop-blur-xl">
           <div className="mb-8 text-center">
@@ -60,7 +78,7 @@ export default function LoginPage() {
                 autoFocus
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-lg border border-surface-700 bg-surface-950/50 px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-surface-500 focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50"
+                className="w-full rounded-lg border border-surface-700/60 bg-surface-800/40 px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-surface-500 hover:border-surface-700 focus:border-primary-500/50"
                 placeholder="you@example.com"
               />
             </div>
@@ -74,7 +92,7 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-lg border border-surface-700 bg-surface-950/50 px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-surface-500 focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50"
+                className="w-full rounded-lg border border-surface-700/60 bg-surface-800/40 px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-surface-500 hover:border-surface-700 focus:border-primary-500/50"
                 placeholder="••••••••"
               />
             </div>

@@ -50,14 +50,14 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl p-8">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-8 sm:py-8">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Link href="/dashboard" className="text-surface-400 hover:text-white">
             <ArrowLeft size={18} />
           </Link>
           <Bell size={20} className="text-primary-500" />
-          <h1 className="text-lg font-bold">Notifications</h1>
+          <h1 className="font-display text-lg font-bold">Notifications</h1>
         </div>
         <button onClick={handleMarkAllRead} className="flex items-center gap-1.5 rounded-lg border border-surface-700 px-3 py-1.5 text-xs text-surface-400 hover:text-white">
           <CheckCheck size={14} />
@@ -86,7 +86,7 @@ export default function NotificationsPage() {
         <>
           <div className="space-y-1">
             {notifications.map((n) => (
-              <div key={n.id} className={`flex items-start gap-4 rounded-lg border px-5 py-4 transition-colors ${!n.readAt ? 'border-surface-700 bg-surface-800/40' : 'border-surface-800'}`}>
+              <div key={n.id} className={`flex items-start gap-3 rounded-lg border px-4 py-3.5 transition-colors sm:gap-4 sm:px-5 sm:py-4 ${!n.readAt ? 'border-surface-700 bg-surface-800/40' : 'border-surface-800'}`}>
                 <div className={`mt-0.5 h-2 w-2 shrink-0 rounded-full ${!n.readAt ? 'bg-primary-500' : 'bg-transparent'}`} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium">{n.title}</p>
@@ -112,7 +112,7 @@ export default function NotificationsPage() {
           </div>
 
           {totalPages > 1 && (
-            <div className="mt-6 flex items-center justify-center gap-1">
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-1">
               <button disabled={page <= 0} onClick={() => setPage(page - 1)} className="rounded-lg border border-surface-700 p-2 text-surface-400 hover:text-white disabled:opacity-30">
                 <ChevronLeft size={14} />
               </button>

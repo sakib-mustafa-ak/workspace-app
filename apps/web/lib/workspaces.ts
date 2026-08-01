@@ -21,6 +21,7 @@ export type WorkspaceMember = {
   role: string;
   status: string;
   joinedAt: string | null;
+  user: { displayName: string; email: string } | null;
   createdAt: string;
   updatedAt: string;
 };

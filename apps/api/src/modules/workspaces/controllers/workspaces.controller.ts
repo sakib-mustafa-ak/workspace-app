@@ -19,7 +19,6 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 
-import { Public } from '../../auth/decorators/public.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import type { CurrentUser as CurrentUserModel } from '../../auth/interfaces/current-user.interface';
 
@@ -230,10 +229,9 @@ export class WorkspacesController {
     await this.workspaces.revokeInvitation(id, invitationId, user.id);
   }
 
-  @Public()
   @Post('invitations/accept')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Accept invitation (public, auth required)' })
+  @ApiOperation({ summary: 'Accept invitation (auth required)' })
   @ApiOkResponse({ type: AcceptedInvitationResponseDto })
   public async acceptInvitation(
     @CurrentUser() user: CurrentUserModel,
@@ -292,6 +290,7 @@ function toMemberResponse(m: {
   joinedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
+  user?: { displayName: string; email: string } | null;
 }): WorkspaceMemberResponseDto {
   return {
     id: m.id,
@@ -300,6 +299,7 @@ function toMemberResponse(m: {
     role: m.role as WorkspaceMemberResponseDto['role'],
     status: m.status as WorkspaceMemberResponseDto['status'],
     joinedAt: m.joinedAt,
+    user: m.user ?? null,
     createdAt: m.createdAt,
     updatedAt: m.updatedAt,
   };

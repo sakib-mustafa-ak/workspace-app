@@ -65,6 +65,9 @@ export class WorkspaceMemberResponseDto {
   @ApiProperty({ nullable: true })
   joinedAt!: Date | null;
 
+  @ApiProperty({ nullable: true })
+  user!: { displayName: string; email: string } | null;
+
   @ApiProperty()
   createdAt!: Date;
 

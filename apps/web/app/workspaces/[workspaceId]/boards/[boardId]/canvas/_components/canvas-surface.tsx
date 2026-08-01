@@ -5,6 +5,7 @@ import { useCanvas, type CanvasObject } from '../_context/canvas-state';
 import { renderFrame } from './canvas-renderer';
 import { hitTest, hitTestHandle, handleResize } from './selection-manager';
 import { ContextMenu } from './context-menu';
+import { LayerPanel } from './layer-panel';
 
 export function CanvasSurface() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -19,6 +20,8 @@ export function CanvasSurface() {
 
   const dragMode = useRef<'none' | 'draw' | 'move' | 'resize'>('none');
   const resizeHandle = useRef<string | null>(null);
+  const resizeIdRef = useRef<string | null>(null);
+  const moveIdsRef = useRef<string[]>([]);
   const moveStartRef = useRef<{ x: number; y: number } | null>(null);
   const selectedSnapshot = useRef<Map<string, { x: number; y: number }>>(new Map());
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
@@ -119,6 +122,10 @@ export function CanvasSurface() {
     const sx = e.clientX - rect.left;
     const sy = e.clientY - rect.top;
 
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch { /* already captured or inactive */ }
+
     if (e.button === 1 || spaceRef.current) {
       panningRef.current = true;
       panOriginRef.current = { x: sx - state.pan.x, y: sy - state.pan.y };
@@ -136,6 +143,7 @@ export function CanvasSurface() {
           dispatch({ type: 'SELECT', payload: [obj.id] });
           dragMode.current = 'resize';
           resizeHandle.current = handle;
+          resizeIdRef.current = obj.id;
           originRef.current = pos;
           return;
         }
@@ -143,13 +151,15 @@ export function CanvasSurface() {
 
       for (const obj of sorted) {
         if (hitTest(pos, obj)) {
+          const ids = state.selectedIds.includes(obj.id) ? state.selectedIds : [obj.id];
           if (!state.selectedIds.includes(obj.id)) {
-            dispatch({ type: 'SELECT', payload: [obj.id] });
+            dispatch({ type: 'SELECT', payload: ids });
           }
           dragMode.current = 'move';
           moveStartRef.current = pos;
+          moveIdsRef.current = ids;
           selectedSnapshot.current = new Map(
-            state.objects.filter(o => state.selectedIds.includes(o.id)).map(o => [o.id, { x: o.x, y: o.y }]),
+            state.objects.filter(o => ids.includes(o.id)).map(o => [o.id, { x: o.x, y: o.y }]),
           );
           return;
         }
@@ -196,7 +206,7 @@ export function CanvasSurface() {
     if (dragMode.current === 'move' && moveStartRef.current) {
       const dx = pos.x - moveStartRef.current.x;
       const dy = pos.y - moveStartRef.current.y;
-      const updates = state.selectedIds.map(id => ({
+      const updates = moveIdsRef.current.map(id => ({
         id,
         x: (selectedSnapshot.current.get(id)?.x || 0) + dx,
         y: (selectedSnapshot.current.get(id)?.y || 0) + dy,
@@ -206,7 +216,7 @@ export function CanvasSurface() {
     }
 
     if (dragMode.current === 'resize' && originRef.current) {
-      const obj = state.objects.find(o => o.id === state.selectedIds[0]);
+      const obj = state.objects.find(o => o.id === resizeIdRef.current);
       if (obj && resizeHandle.current) {
         const result = handleResize(obj, resizeHandle.current, originRef.current, pos);
         dispatch({
@@ -224,31 +234,35 @@ export function CanvasSurface() {
     });
   }
 
-  function handlePointerUp() {
+  function handlePointerUp(e: React.PointerEvent) {
     if (dragMode.current === 'draw' && drawingRef.current && originRef.current) {
       const obj = state.objects.find(o => o.id === drawingRef.current);
       if (obj && Math.abs(obj.width) < 3 && Math.abs(obj.height) < 3) {
         dispatch({ type: 'DELETE_OBJECTS', payload: [drawingRef.current] });
       }
     }
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch { /* ignore */ }
     drawingRef.current = null;
     originRef.current = null;
     panningRef.current = false;
     dragMode.current = 'none';
     resizeHandle.current = null;
+    resizeIdRef.current = null;
+    moveIdsRef.current = [];
     moveStartRef.current = null;
-  }
-
-  function handleWheel(e: React.WheelEvent) {
-    if (e.ctrlKey || e.metaKey) {
-      e.preventDefault();
-      const delta = e.deltaY > 0 ? 0.9 : 1.1;
-      dispatch({ type: 'SET_ZOOM', payload: +(state.zoom * delta).toFixed(2) });
-    }
   }
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
+      const target = e.target as HTMLElement | null;
+      if (editingText) return;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return;
+      }
       if (e.code === 'Space') { spaceRef.current = true; }
       if (e.key === 'Delete' || e.key === 'Backspace') {
         if (state.selectedIds.length > 0) {
@@ -268,37 +282,53 @@ export function CanvasSurface() {
       window.removeEventListener('keydown', handleKey);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [state.selectedIds, dispatch]);
+  }, [state.selectedIds, editingText, dispatch]);
+
+  useEffect(() => {
+    const cvs = canvasRef.current;
+    if (!cvs) return;
+    function onWheel(e: WheelEvent) {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
+        dispatch({ type: 'SET_ZOOM', payload: +(state.zoom * delta).toFixed(2) });
+      }
+    }
+    cvs.addEventListener('wheel', onWheel, { passive: false });
+    return () => cvs.removeEventListener('wheel', onWheel);
+  }, [state.zoom, dispatch]);
 
   return (
-    <div ref={containerRef} className="flex-1 overflow-hidden bg-surface-950">
-      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-      <canvas
-        ref={canvasRef}
-        className="h-full w-full"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onWheel={handleWheel}
-        onContextMenu={handleContextMenu}
-        onDoubleClick={handleDoubleClick}
-      />
-      {editingText && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center" onClick={() => handleTextEditCommit()}>
-          <textarea
-            autoFocus
-            value={editingText.text}
-            onChange={e => setEditingText({ ...editingText, text: e.target.value })}
-            onBlur={handleTextEditCommit}
-            onKeyDown={e => { if (e.key === 'Escape') handleTextEditCommit(); }}
-            className="min-w-[200px] rounded-lg border border-primary-500 bg-surface-800 p-2 text-sm text-surface-200 outline-none"
-            onClick={e => e.stopPropagation()}
-          />
-        </div>
-      )}
-      {contextMenu && (
-        <ContextMenu x={contextMenu.x} y={contextMenu.y} onClose={() => setContextMenu(null)} />
-      )}
+    <div className="relative flex flex-1 overflow-hidden">
+      <div ref={containerRef} className="relative flex-1 overflow-hidden bg-surface-950">
+        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+        <canvas
+          ref={canvasRef}
+          className="h-full w-full"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onContextMenu={handleContextMenu}
+          onDoubleClick={handleDoubleClick}
+        />
+        {editingText && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center" onClick={() => handleTextEditCommit()}>
+            <textarea
+              autoFocus
+              value={editingText.text}
+              onChange={e => setEditingText({ ...editingText, text: e.target.value })}
+              onBlur={handleTextEditCommit}
+              onKeyDown={e => { if (e.key === 'Escape') handleTextEditCommit(); }}
+              className="min-w-[200px] rounded-lg border border-primary-500 bg-surface-800 p-2 text-sm text-surface-200 outline-none"
+              onClick={e => e.stopPropagation()}
+            />
+          </div>
+        )}
+        {contextMenu && (
+          <ContextMenu x={contextMenu.x} y={contextMenu.y} onClose={() => setContextMenu(null)} />
+        )}
+      </div>
+      {state.layersOpen && <LayerPanel />}
     </div>
   );
 }

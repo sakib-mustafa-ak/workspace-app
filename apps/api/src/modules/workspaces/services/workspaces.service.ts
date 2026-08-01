@@ -18,6 +18,8 @@ import {
   invitations,
 } from '@repo/database';
 
+import type { WorkspaceMemberWithUser } from '../repositories/workspace-members.repository';
+
 import {
   WorkspacesErrorCode,
   WorkspacesException,
@@ -257,7 +259,9 @@ export class WorkspacesService {
     return this.invitations.listPendingByEmail(email);
   }
 
-  public async getMembers(workspaceId: string): Promise<WorkspaceMemberRow[]> {
+  public async getMembers(
+    workspaceId: string,
+  ): Promise<WorkspaceMemberWithUser[]> {
     const ws = await this.workspacesRepo.findById(workspaceId);
     if (!ws) {
       throw new WorkspacesException(

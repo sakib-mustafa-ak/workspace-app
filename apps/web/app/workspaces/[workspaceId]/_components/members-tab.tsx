@@ -120,11 +120,11 @@ export function MembersTab({
                 />
               )}
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-700 text-xs font-medium">
-                {m.userId.charAt(0).toUpperCase()}
+                {m.user?.displayName?.charAt(0)?.toUpperCase() || m.userId.charAt(0).toUpperCase()}
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium">{m.userId.slice(0, 8)}...</p>
+                  <p className="text-sm font-medium">{m.user?.displayName || 'Member'}</p>
                   <RoleBadge role={m.role} />
                 </div>
                 <p className="text-xs text-surface-500">{m.status}</p>

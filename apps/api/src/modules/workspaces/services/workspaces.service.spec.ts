@@ -4,13 +4,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import {
   DATABASE,
   type WorkspaceRow,
-  type WorkspaceMemberRow,
   type InvitationRow,
 } from '@repo/database';
 
 import { WorkspacePolicy } from '../policies/workspace.policy';
 import { WorkspacesRepository } from '../repositories/workspaces.repository';
-import { WorkspaceMembersRepository } from '../repositories/workspace-members.repository';
+import {
+  WorkspaceMembersRepository,
+  type WorkspaceMemberWithUser,
+} from '../repositories/workspace-members.repository';
 import { InvitationsRepository } from '../repositories/invitations.repository';
 import { WorkspacesEventBus } from '../events/workspaces.events';
 import { WorkspacesService } from './workspaces.service';
@@ -31,7 +33,7 @@ const mockWorkspace: WorkspaceRow = {
   deletedAt: null,
 };
 
-const mockOwnership: WorkspaceMemberRow = {
+const mockOwnership: WorkspaceMemberWithUser = {
   id: 'm1',
   workspaceId: 'w1',
   userId: 'u1',
@@ -40,11 +42,12 @@ const mockOwnership: WorkspaceMemberRow = {
   joinedAt: new Date(),
   deletedAt: null,
   invitationId: null,
+  user: { displayName: 'Owner', email: 'owner@example.com' },
   createdAt: new Date(),
   updatedAt: new Date(),
 };
 
-const mockMemberEntry: WorkspaceMemberRow = {
+const mockMemberEntry: WorkspaceMemberWithUser = {
   id: 'm2',
   workspaceId: 'w1',
   userId: 'u2',
@@ -53,6 +56,7 @@ const mockMemberEntry: WorkspaceMemberRow = {
   joinedAt: new Date(),
   deletedAt: null,
   invitationId: null,
+  user: { displayName: 'Editor', email: 'editor@example.com' },
   createdAt: new Date(),
   updatedAt: new Date(),
 };

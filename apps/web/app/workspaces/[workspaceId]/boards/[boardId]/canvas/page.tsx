@@ -14,7 +14,7 @@ export default function CanvasPage() {
 
   return (
     <CanvasProvider>
-      <div className="flex h-full flex-col">
+      <div className="relative flex h-full flex-col">
         <div className="flex items-center gap-2 border-b border-surface-800 px-4 py-2">
           <Link
             href={`/workspaces/${workspaceId}/boards/${boardId}`}
@@ -24,7 +24,7 @@ export default function CanvasPage() {
             Back to board
           </Link>
           <span className="text-xs text-surface-600">|</span>
-          <span className="text-xs font-medium text-surface-300">Canvas</span>
+          <span className="text-label text-surface-500">Canvas</span>
         </div>
         <Toolbar />
         <CanvasSurface />

@@ -260,7 +260,7 @@ export default function BoardDetailPage() {
             </div>
           ) : (
             <div>
-              <h1 className="text-lg font-bold">{board.name}</h1>
+              <h1 className="font-display text-lg font-bold">{board.name}</h1>
               <p className="text-xs text-surface-500">
                 {board.description || 'No description'}
               </p>

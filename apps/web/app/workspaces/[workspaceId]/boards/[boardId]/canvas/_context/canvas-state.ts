@@ -28,6 +28,7 @@ export interface CanvasState {
   pan: { x: number; y: number };
   gridVisible: boolean;
   snapToGrid: boolean;
+  layersOpen: boolean;
   activeTool: ToolType;
   fillColor: string;
   strokeColor: string;
@@ -45,6 +46,7 @@ export type CanvasAction =
   | { type: 'SET_PAN'; payload: { x: number; y: number } }
   | { type: 'TOGGLE_GRID' }
   | { type: 'SET_SNAP'; payload: boolean }
+  | { type: 'TOGGLE_LAYERS' }
   | { type: 'SET_ACTIVE_TOOL'; payload: ToolType }
   | { type: 'SET_FILL_COLOR'; payload: string }
   | { type: 'SET_STROKE_COLOR'; payload: string }
@@ -84,6 +86,8 @@ export function canvasReducer(state: CanvasState, action: CanvasAction): CanvasS
       return { ...state, gridVisible: !state.gridVisible };
     case 'SET_SNAP':
       return { ...state, snapToGrid: action.payload };
+    case 'TOGGLE_LAYERS':
+      return { ...state, layersOpen: !state.layersOpen };
     case 'SET_ACTIVE_TOOL':
       return { ...state, activeTool: action.payload };
     case 'SET_FILL_COLOR':
@@ -193,6 +197,7 @@ export const initialState: CanvasState = {
   pan: { x: 0, y: 0 },
   gridVisible: true,
   snapToGrid: false,
+  layersOpen: false,
   activeTool: 'select',
   fillColor: '#ffffff',
   strokeColor: '#000000',

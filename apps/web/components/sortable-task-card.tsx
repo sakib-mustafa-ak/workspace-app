@@ -9,14 +9,6 @@ type Props = {
   onClick: () => void;
 };
 
-const PRIORITY_BORDER: Record<string, string> = {
-  CRITICAL: 'border-l-red-500',
-  HIGH: 'border-l-orange-500',
-  MEDIUM: 'border-l-yellow-500',
-  LOW: 'border-l-gray-500',
-  NONE: 'border-l-gray-500',
-};
-
 export function SortableTaskCard({ task, onClick }: Props) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
@@ -28,8 +20,6 @@ export function SortableTaskCard({ task, onClick }: Props) {
     opacity: isDragging ? 0.4 : 1,
   };
 
-  const priorityBorder = PRIORITY_BORDER[task.priority] || 'border-l-gray-500';
-
   return (
     <div
       ref={setNodeRef}
@@ -37,7 +27,7 @@ export function SortableTaskCard({ task, onClick }: Props) {
       {...attributes}
       {...listeners}
       onClick={onClick}
-      className={`cursor-pointer rounded-lg border border-surface-800 border-l-4 ${priorityBorder} bg-surface-950 p-3 transition-all hover:border-surface-700 hover:-translate-y-0.5 hover:shadow-lg`}
+      className="cursor-pointer rounded-lg border border-surface-800 bg-surface-950 p-3 transition-all hover:border-surface-700 hover:-translate-y-0.5 hover:shadow-lg"
     >
       <p className="text-sm font-medium">{task.title}</p>
       <div className="mt-2 flex items-center gap-2">

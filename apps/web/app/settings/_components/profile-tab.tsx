@@ -63,6 +63,10 @@ export function ProfileTab() {
         <p className="mt-1 text-right text-xs text-surface-500">{name.length}/50</p>
       </Section>
 
+      <Section title="Email">
+        <p className="text-sm text-surface-400">{profile?.email || '—'}</p>
+      </Section>
+
       <Section title="Bio">
         <textarea
           value={bio}

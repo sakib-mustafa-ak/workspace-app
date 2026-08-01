@@ -1,10 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import type {
-  WorkspaceRow,
-  WorkspaceMemberRow,
-  InvitationRow,
-} from '@repo/database';
+import type { WorkspaceRow, InvitationRow } from '@repo/database';
 
+import type { WorkspaceMemberWithUser } from '../repositories/workspace-members.repository';
 import { WorkspacesService } from '../services/workspaces.service';
 import { WorkspacesController } from './workspaces.controller';
 
@@ -24,7 +21,7 @@ const mockWorkspace: WorkspaceRow = {
   deletedAt: null,
 };
 
-const mockMember: WorkspaceMemberRow = {
+const mockMember: WorkspaceMemberWithUser = {
   id: 'm1',
   workspaceId: 'w1',
   userId: 'u2',
@@ -33,6 +30,7 @@ const mockMember: WorkspaceMemberRow = {
   joinedAt: new Date(),
   deletedAt: null,
   invitationId: null,
+  user: null,
   createdAt: new Date(),
   updatedAt: new Date(),
 };
@@ -67,7 +65,7 @@ describe('WorkspacesController', () => {
           provide: WorkspacesService,
           useValue: {
             create: jest.fn(),
-            listByUser: jest.fn(),
+            listByUserWithStats: jest.fn(),
             getById: jest.fn(),
             update: jest.fn(),
             archive: jest.fn(),
@@ -102,7 +100,9 @@ describe('WorkspacesController', () => {
   });
 
   it('listMyWorkspaces returns array', async () => {
-    service.listByUser.mockResolvedValue([mockWorkspace]);
+    service.listByUserWithStats.mockResolvedValue([
+      { ...mockWorkspace, memberCount: 1, boardCount: 1 },
+    ]);
 
     const result = await controller.listMyWorkspaces({ id: 'u1' } as never);
     expect(result).toHaveLength(1);

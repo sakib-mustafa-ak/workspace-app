@@ -73,14 +73,14 @@ export function EmailVerificationBanner() {
         </div>
       )}
 
-      <div className="mb-6 rounded-xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-amber-600/5 p-4 backdrop-blur-sm">
+      <div className="mb-6 rounded-xl border border-amber-500/30 bg-transparent p-3.5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/20">
-              <Mail size={16} className="text-amber-400" />
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-amber-500/30 text-amber-400">
+              <Mail size={14} />
             </div>
             <div>
-              <p className="text-sm font-medium text-amber-300">Verify your email</p>
+              <p className="text-sm font-medium text-amber-400">Verify your email</p>
               <p className="mt-0.5 text-xs text-amber-400/70">
                 Please verify your email address ({user.email}) to access all features.
               </p>
@@ -96,7 +96,7 @@ export function EmailVerificationBanner() {
               <button
                 onClick={handleSend}
                 disabled={sending}
-                className="flex items-center gap-1.5 rounded-lg bg-amber-500/20 px-3.5 py-2 text-xs font-medium text-amber-300 transition-colors hover:bg-amber-500/30 disabled:opacity-50"
+                className="flex items-center gap-1.5 rounded-lg border border-amber-500/30 px-3.5 py-2 text-xs font-medium text-amber-400 transition-colors hover:bg-amber-500/10 disabled:opacity-50"
               >
                 {sending ? (
                   <Loader2 size={14} className="animate-spin" />
@@ -108,7 +108,7 @@ export function EmailVerificationBanner() {
             )}
             <button
               onClick={() => setDismissed(true)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-amber-400/50 transition-colors hover:bg-amber-500/10 hover:text-amber-300"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-amber-400/50 transition-colors hover:bg-amber-500/10 hover:text-amber-400"
             >
               <X size={14} />
             </button>

@@ -13,11 +13,7 @@ import {
 import { useAuth } from '@/contexts/auth-context';
 import { workspacesApi, type Invitation, type Workspace } from '@/lib/workspaces';
 import { EmailVerificationBanner } from '@/components/email-verification-banner';
-import { getRecentBoards } from '@/lib/recent-activity';
-
-function generateSlug(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-}
+import { getRecentBoards, type RecentBoard } from '@/lib/recent-activity';
 
 function CreateWorkspaceForm({
   onCreated,
@@ -54,12 +50,8 @@ function CreateWorkspaceForm({
         <input
           placeholder="Workspace name"
           value={name}
-          onChange={(e) => {
-            const newName = e.target.value;
-            setName(newName);
-            if (!slugModified.current) setSlug(generateSlug(newName));
-          }}
-          className="w-full rounded-lg border border-surface-700 bg-surface-900/50 px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-surface-500 focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50"
+          onChange={(e) => setName(e.target.value)}
+          className="w-full rounded-lg border border-surface-700 bg-surface-900/50 px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-surface-500 focus:border-primary-500/50"
           required
         />
         <input
@@ -69,7 +61,7 @@ function CreateWorkspaceForm({
             setSlug(e.target.value);
             slugModified.current = true;
           }}
-          className="w-full rounded-lg border border-surface-700 bg-surface-900/50 px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-surface-500 focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50"
+          className="w-full rounded-lg border border-surface-700 bg-surface-900/50 px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-surface-500 focus:border-primary-500/50"
           required
         />
         <div className="flex gap-2">
@@ -99,6 +91,7 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [pendingInvites, setPendingInvites] = useState<Invitation[]>([]);
+  const [recentBoards, setRecentBoards] = useState<RecentBoard[]>([]);
 
   useEffect(() => {
     workspacesApi
@@ -114,29 +107,31 @@ function DashboardContent() {
       .catch(() => {});
   }, []);
 
-  const recentBoards = getRecentBoards();
+  useEffect(() => {
+    setRecentBoards(getRecentBoards());
+  }, []);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
       <EmailVerificationBanner />
 
       {/* Welcome header */}
-      <div className="relative mb-8 overflow-hidden rounded-2xl border border-surface-800/50 bg-gradient-to-br from-surface-900 via-surface-900 to-primary-950/20 p-6 sm:p-8">
+      <div className="relative mb-8 overflow-hidden rounded-2xl border border-surface-800/50 bg-gradient-to-br from-surface-900 via-surface-900 to-primary-900/20 p-6 sm:p-8">
         <div className="pointer-events-none absolute -right-20 -top-20 h-60 w-60 rounded-full bg-primary-600/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-primary-500/5 blur-2xl" />
         <div className="relative">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-                Hello, <span className="bg-gradient-to-r from-primary-300 to-primary-500 bg-clip-text text-transparent">{user?.displayName || 'there'}</span>
+              <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
+                Hello, <span className="text-primary-400">{user?.displayName || 'there'}</span>
               </h1>
               <p className="mt-1.5 text-sm text-surface-400">
-                {workspaces.length} workspace{workspaces.length !== 1 ? 's' : ''} \u00B7 {user?.email}
+                {workspaces.length} workspace{workspaces.length !== 1 ? 's' : ''} · {user?.email}
               </p>
             </div>
             <button
               onClick={() => setShowCreate(true)}
-              className="flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-500 hover:shadow-primary-500/30 active:scale-[0.98]"
+              className="flex items-center gap-2 rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-500 hover:shadow-primary-500/30 active:scale-[0.98]"
             >
               <Plus size={16} />
               New workspace
@@ -147,7 +142,7 @@ function DashboardContent() {
 
       {/* Invitations banner */}
       {pendingInvites.length > 0 && (
-        <div className="mb-6 animate-slideIn rounded-xl border border-yellow-700/30 bg-yellow-900/10 px-4 py-3 text-sm text-yellow-400">
+        <div className="mb-6 animate-slideIn rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
           You have {pendingInvites.length} pending invitation{pendingInvites.length > 1 ? 's' : ''}
         </div>
       )}
@@ -167,7 +162,7 @@ function DashboardContent() {
       {/* Recent boards */}
       {recentBoards.length > 0 && (
         <div className="mb-8">
-          <h2 className="mb-3 text-sm font-semibold text-surface-300">Recent boards</h2>
+          <h2 className="mb-3 font-display text-sm font-semibold tracking-tight text-surface-300">Recent boards</h2>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
             {recentBoards.map((rb) => (
               <Link
@@ -199,7 +194,7 @@ function DashboardContent() {
           </div>
           <h3 className="mt-6 text-lg font-semibold text-surface-300">No workspaces yet</h3>
           <p className="mt-1 text-sm text-surface-500">Create your first workspace to get started</p>
-          <button onClick={() => setShowCreate(true)} className="mt-6 flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-primary-600/20 hover:bg-primary-500">
+          <button onClick={() => setShowCreate(true)} className="mt-6 flex items-center gap-2 rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-primary-600/20 hover:bg-primary-500">
             <Plus size={16} />
             Create workspace
           </button>
@@ -232,9 +227,9 @@ function DashboardContent() {
                 </p>
                 <div className="mt-3 flex items-center gap-3 text-[11px] text-surface-600">
                   <span className="flex items-center gap-1"><Users size={11} />{ws.memberCount ?? 1}</span>
-                  <span className="text-surface-700">\u00B7</span>
+                  <span className="text-surface-700">·</span>
                   <span className="flex items-center gap-1"><LayoutGrid size={11} />{ws.boardCount ?? 0}</span>
-                  <span className="text-surface-700">\u00B7</span>
+                  <span className="text-surface-700">·</span>
                   <span>/{ws.slug}</span>
                 </div>
               </Link>

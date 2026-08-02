@@ -57,6 +57,3 @@ I should also mention the development process itself: much of the implementation
 - **Production hardening** — role-based access control on admin routes (the user directory currently isn't gated), deployment to a static IP with HTTPS, and containerized Docker infrastructure
 - **OAuth/SSO login** as an optional auth path
 
-## 7. Closing
-
-To summarize: a full authentication system, team workspaces, kanban boards, notifications, audit tracking, and a canvas editor — all with a polished, documented design system and a tested backend. The foundation is solid; the remaining work is integration, real-time polish, and deployment. Thank you — I'm happy to take questions.

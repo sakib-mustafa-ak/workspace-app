@@ -13,7 +13,9 @@ describe('CanvasGateway', () => {
         {
           provide: UsersService,
           useValue: {
-            getProfile: jest.fn().mockResolvedValue({ displayName: 'Test User' }),
+            getProfile: jest
+              .fn()
+              .mockResolvedValue({ displayName: 'Test User' }),
           },
         },
       ],
@@ -64,15 +66,26 @@ describe('CanvasGateway', () => {
       to,
     } as unknown as AuthenticatedSocket;
 
-    gateway.handleObjectLock(client, { boardId: 'b-1', objectId: 'o-1' } as never);
+    gateway.handleObjectLock(client, {
+      boardId: 'b-1',
+      objectId: 'o-1',
+    } as never);
 
     expect(to).toHaveBeenCalledWith('board:b-1');
   });
 
   it('denies a lock held by another user and notifies the requester', () => {
     const emit = jest.fn();
-    const a = { userId: 'u-1', displayName: 'Alice', to: jest.fn().mockReturnValue({ emit: jest.fn() }) } as unknown as AuthenticatedSocket;
-    const b = { userId: 'u-2', displayName: 'Bob', emit } as unknown as AuthenticatedSocket;
+    const a = {
+      userId: 'u-1',
+      displayName: 'Alice',
+      to: jest.fn().mockReturnValue({ emit: jest.fn() }),
+    } as unknown as AuthenticatedSocket;
+    const b = {
+      userId: 'u-2',
+      displayName: 'Bob',
+      emit,
+    } as unknown as AuthenticatedSocket;
 
     gateway.handleObjectLock(a, { boardId: 'b-1', objectId: 'o-1' } as never);
     gateway.handleObjectLock(b, { boardId: 'b-1', objectId: 'o-1' } as never);
@@ -86,7 +99,11 @@ describe('CanvasGateway', () => {
   it('releases a lock on unlock and broadcasts object:unlocked', () => {
     const emit = jest.fn();
     const to = jest.fn().mockReturnValue({ emit });
-    const a = { userId: 'u-1', displayName: 'Alice', to } as unknown as AuthenticatedSocket;
+    const a = {
+      userId: 'u-1',
+      displayName: 'Alice',
+      to,
+    } as unknown as AuthenticatedSocket;
 
     gateway.handleObjectLock(a, { boardId: 'b-1', objectId: 'o-1' } as never);
     gateway.handleObjectUnlock(a, { boardId: 'b-1', objectId: 'o-1' } as never);

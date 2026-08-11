@@ -13,7 +13,10 @@ import { jwtVerify } from 'jose';
 import { TextEncoder } from 'node:util';
 
 import { UsersService } from '../../users/services/users.service';
-import type { PresenceUser, ObjectLock } from '../interfaces/presence.interface';
+import type {
+  PresenceUser,
+  ObjectLock,
+} from '../interfaces/presence.interface';
 
 export interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -185,7 +188,8 @@ export class CanvasGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private getBoardLocks(boardId: string): Map<string, ObjectLock> {
     const now = Date.now();
-    const locks = this.objectLocks.get(boardId) ?? new Map<string, ObjectLock>();
+    const locks =
+      this.objectLocks.get(boardId) ?? new Map<string, ObjectLock>();
     for (const [objectId, lock] of locks) {
       if (lock.expiresAt <= now) locks.delete(objectId);
     }

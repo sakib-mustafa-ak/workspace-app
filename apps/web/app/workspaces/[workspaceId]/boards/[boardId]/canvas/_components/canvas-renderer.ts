@@ -79,7 +79,7 @@ function drawGrid(ctx: CanvasRenderingContext2D, state: CanvasState, gridColor: 
   ctx.globalAlpha = 1;
 }
 
-function renderObject(ctx: CanvasRenderingContext2D, obj: CanvasObject) {
+export function renderObject(ctx: CanvasRenderingContext2D, obj: CanvasObject) {
   switch (obj.type) {
     case 'rectangle':
       ctx.fillStyle = obj.fill;
@@ -116,6 +116,25 @@ function renderObject(ctx: CanvasRenderingContext2D, obj: CanvasObject) {
         ctx.stroke();
       }
       break;
+    case 'path': {
+      const pts = obj.points ?? [];
+      if (pts.length === 0) break;
+      ctx.strokeStyle = obj.stroke;
+      ctx.lineWidth = obj.strokeWidth;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(pts[0]!.x, pts[0]!.y);
+      for (const p of pts) ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      if (pts.length === 1) {
+        ctx.beginPath();
+        ctx.arc(pts[0]!.x, pts[0]!.y, Math.max(obj.strokeWidth / 2, 1), 0, Math.PI * 2);
+        ctx.fillStyle = obj.stroke;
+        ctx.fill();
+      }
+      break;
+    }
     case 'text':
       ctx.font = '16px sans-serif';
       ctx.fillStyle = obj.fill;
@@ -172,6 +191,7 @@ function drawSelectionOverlay(ctx: CanvasRenderingContext2D, state: CanvasState,
   if (state.selectedIds.length === 0) return;
   for (const obj of state.objects) {
     if (!state.selectedIds.includes(obj.id)) continue;
+    if (obj.type === 'path') continue;
     ctx.save();
     ctx.translate(obj.x, obj.y);
     ctx.rotate((obj.rotation * Math.PI) / 180);

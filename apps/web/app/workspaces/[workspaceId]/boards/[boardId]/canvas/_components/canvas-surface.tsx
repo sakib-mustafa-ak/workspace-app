@@ -4,7 +4,7 @@ import { useRef, useEffect, useCallback, useState } from 'react';
 import { useCanvas, type ToolType, type CanvasObject } from '../_context/canvas-state';
 import { useCanvasSync } from '../_context/canvas-sync';
 import { getStoredUser } from '@/lib/auth';
-import { renderFrame } from './canvas-renderer';
+import { renderFrame, renderObject } from './canvas-renderer';
 import { hitTest, hitTestHandle, handleResize } from './selection-manager';
 import { ContextMenu } from './context-menu';
 import { LayerPanel } from './layer-panel';
@@ -28,6 +28,12 @@ export function CanvasSurface() {
   const moveIdsRef = useRef<string[]>([]);
   const moveStartRef = useRef<{ x: number; y: number } | null>(null);
   const selectedSnapshot = useRef<Map<string, { x: number; y: number }>>(new Map());
+  const dragFlushRef = useRef<number | null>(null);
+  const dragWorkRef = useRef<(() => void) | null>(null);
+  const strokeBufferRef = useRef<{ x: number; y: number }[]>([]);
+  const dragStatsRef = useRef({ events: 0, frames: 0 });
+  const livePaintRef = useRef<number | null>(null);
+  const liveDrawRef = useRef<{ id: string; type: CanvasObject['type']; from: { x: number; y: number }; to: { x: number; y: number } } | null>(null);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -125,29 +131,25 @@ export function CanvasSurface() {
   }
 
   useEffect(() => {
-    const cvs = canvasRef.current!;
-    const ctx = cvs.getContext('2d')!;
-    let rafId: number;
-    let lastW = 0;
-    let lastH = 0;
+    const cvs = canvasRef.current;
+    const container = containerRef.current;
+    if (!cvs || !container) return;
+    const ctx = cvs.getContext('2d');
+    if (!ctx) return;
 
-    function loop() {
-      const container = containerRef.current;
-      if (container) {
-        const w = container.clientWidth;
-        const h = container.clientHeight;
-        if (w !== lastW || h !== lastH) {
-          cvs.width = w;
-          cvs.height = h;
-          lastW = w;
-          lastH = h;
-        }
+    const draw = () => {
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      if (w !== cvs.width || h !== cvs.height) {
+        cvs.width = w;
+        cvs.height = h;
       }
       renderFrame(ctx, state);
-      rafId = requestAnimationFrame(loop);
-    }
-    loop();
-    return () => cancelAnimationFrame(rafId);
+    };
+
+    draw();
+    window.addEventListener('resize', draw);
+    return () => window.removeEventListener('resize', draw);
   }, [state]);
 
   const screenToCanvas = useCallback(
@@ -226,6 +228,30 @@ export function CanvasSurface() {
 
     const id = crypto.randomUUID();
     dispatch({ type: 'SNAPSHOT' });
+    if (state.activeTool === 'path') {
+      const newPath: CanvasObject = {
+        id,
+        type: 'path',
+        x: pos.x,
+        y: pos.y,
+        width: 0,
+        height: 0,
+        rotation: 0,
+        fill: state.fillColor,
+        stroke: state.strokeColor,
+        strokeWidth: state.strokeWidth,
+        opacity: state.opacity / 100,
+        points: [{ x: pos.x, y: pos.y }],
+        zIndex: state.objects.length,
+      };
+      dispatch({ type: 'ADD_OBJECT', payload: newPath, batch: true });
+      drawingRef.current = id;
+      originRef.current = pos;
+      dragMode.current = 'draw';
+      liveDrawRef.current = { id, type: 'path', from: pos, to: pos };
+      startLivePaint();
+      return;
+    }
     const newObj: CanvasObject = {
       id,
       type: state.activeTool as CanvasObject['type'],
@@ -245,6 +271,111 @@ export function CanvasSurface() {
     drawingRef.current = id;
     originRef.current = pos;
     dragMode.current = 'draw';
+    if (state.activeTool === 'rectangle' || state.activeTool === 'ellipse' || state.activeTool === 'line' || state.activeTool === 'arrow') {
+      liveDrawRef.current = { id, type: state.activeTool, from: pos, to: pos };
+      startLivePaint();
+    }
+  }
+
+  function flushDragNow() {
+    if (dragFlushRef.current !== null) {
+      cancelAnimationFrame(dragFlushRef.current);
+      dragFlushRef.current = null;
+    }
+    const work = dragWorkRef.current;
+    dragWorkRef.current = null;
+    work?.();
+  }
+
+  function drawLiveStroke(ctx: CanvasRenderingContext2D) {
+    const st = stateRef.current;
+    const ld = liveDrawRef.current;
+    if (!ld) return;
+    ctx.save();
+    ctx.translate(st.pan.x, st.pan.y);
+    ctx.scale(st.zoom, st.zoom);
+    try {
+      const obj = st.objects.find(o => o.id === ld.id);
+      if (ld.type === 'path') {
+        const committed = obj?.points ?? [];
+        const tail = strokeBufferRef.current;
+        const pts = [...committed, ...tail];
+        if (pts.length === 1) {
+          ctx.beginPath();
+          ctx.arc(pts[0]!.x, pts[0]!.y, Math.max((obj?.strokeWidth ?? st.strokeWidth) / 2, 1), 0, Math.PI * 2);
+          ctx.fillStyle = obj?.stroke ?? st.strokeColor;
+          ctx.fill();
+        } else if (pts.length >= 2) {
+          ctx.strokeStyle = obj?.stroke ?? st.strokeColor;
+          ctx.lineWidth = obj?.strokeWidth ?? st.strokeWidth;
+          ctx.globalAlpha = obj?.opacity ?? 1;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.beginPath();
+          ctx.moveTo(pts[0]!.x, pts[0]!.y);
+          for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i]!.x, pts[i]!.y);
+          ctx.stroke();
+        }
+      } else if (obj) {
+        const x = Math.min(ld.from.x, ld.to.x);
+        const y = Math.min(ld.from.y, ld.to.y);
+        const w = Math.abs(ld.to.x - ld.from.x);
+        const h = Math.abs(ld.to.y - ld.from.y);
+        ctx.globalAlpha = obj.opacity;
+        renderObject(ctx, { ...obj, x, y, width: w, height: h });
+      }
+    } finally {
+      ctx.restore();
+    }
+  }
+
+  function paintOnce() {
+    const cvs = canvasRef.current;
+    const container = containerRef.current;
+    if (!cvs || !container) return;
+    const ctx = cvs.getContext('2d');
+    if (!ctx) return;
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    if (w !== cvs.width || h !== cvs.height) {
+      cvs.width = w;
+      cvs.height = h;
+    }
+    renderFrame(ctx, stateRef.current);
+    drawLiveStroke(ctx);
+  }
+
+  function startLivePaint() {
+    if (livePaintRef.current !== null) return;
+    const tick = () => {
+      if (livePaintRef.current === null) return;
+      paintOnce();
+      livePaintRef.current = requestAnimationFrame(tick);
+    };
+    livePaintRef.current = requestAnimationFrame(tick);
+  }
+
+  function stopLivePaint() {
+    if (livePaintRef.current !== null) {
+      cancelAnimationFrame(livePaintRef.current);
+      livePaintRef.current = null;
+    }
+    paintOnce();
+    liveDrawRef.current = null;
+  }
+
+  function scheduleDragFlush(work: () => void) {
+    dragWorkRef.current = work;
+    if (dragFlushRef.current !== null) return;
+    dragFlushRef.current = requestAnimationFrame(() => {
+      dragFlushRef.current = null;
+      const pending = dragWorkRef.current;
+      dragWorkRef.current = null;
+      if (pending) {
+        dragStatsRef.current.frames++;
+        pending();
+      }
+    });
   }
 
   function handlePointerMove(e: React.PointerEvent) {
@@ -259,6 +390,7 @@ export function CanvasSurface() {
 
     const pos = screenToCanvas(sx, sy);
     emitCursor(pos.x, pos.y);
+    dragStatsRef.current.events++;
 
     if (dragMode.current === 'move' && moveStartRef.current) {
       const dx = pos.x - moveStartRef.current.x;
@@ -268,57 +400,121 @@ export function CanvasSurface() {
         x: (selectedSnapshot.current.get(id)?.x || 0) + dx,
         y: (selectedSnapshot.current.get(id)?.y || 0) + dy,
       }));
-      dispatch({ type: 'UPDATE_OBJECTS', payload: updates, batch: true });
+      scheduleDragFlush(() => {
+        dispatch({ type: 'UPDATE_OBJECTS', payload: updates, batch: true });
+      });
       return;
     }
 
     if (dragMode.current === 'resize' && originRef.current) {
-      const obj = state.objects.find(o => o.id === resizeIdRef.current);
+      const obj = stateRef.current.objects.find(o => o.id === resizeIdRef.current);
       if (obj && resizeHandle.current) {
         const result = handleResize(obj, resizeHandle.current, originRef.current, pos);
-        dispatch({
-          type: 'RESIZE_OBJECT',
-          payload: { id: obj.id, ...result },
-          batch: true,
+        scheduleDragFlush(() => {
+          dispatch({
+            type: 'RESIZE_OBJECT',
+            payload: { id: obj.id, ...result },
+            batch: true,
+          });
         });
       }
       return;
     }
 
     if (dragMode.current !== 'draw' || !drawingRef.current || !originRef.current) return;
-    dispatch({
-      type: 'UPDATE_OBJECT',
-      payload: { id: drawingRef.current, width: pos.x - originRef.current.x, height: pos.y - originRef.current.y },
-      batch: true,
+    const drawing = stateRef.current.objects.find(o => o.id === drawingRef.current);
+    if (drawing?.type === 'path') {
+      const flushed = drawing.points ?? [];
+      const buffered = strokeBufferRef.current;
+      const last = buffered.length > 0 ? buffered[buffered.length - 1] : flushed[flushed.length - 1];
+      if (last && (Math.abs(pos.x - last.x) >= 2 / state.zoom || Math.abs(pos.y - last.y) >= 2 / state.zoom)) {
+        buffered.push({ x: pos.x, y: pos.y });
+        if (liveDrawRef.current) liveDrawRef.current.to = pos;
+        scheduleDragFlush(() => {
+          const d = stateRef.current.objects.find(o => o.id === drawingRef.current);
+          if (!d || strokeBufferRef.current.length === 0) return;
+          const pts = [...(d.points ?? []), ...strokeBufferRef.current];
+          strokeBufferRef.current = [];
+          dispatch({
+            type: 'UPDATE_OBJECT',
+            payload: { id: d.id, points: pts },
+            batch: true,
+          });
+        });
+      }
+      return;
+    }
+    const drawId = drawingRef.current;
+    const ox = originRef.current.x;
+    const oy = originRef.current.y;
+    if (liveDrawRef.current) liveDrawRef.current.to = pos;
+    scheduleDragFlush(() => {
+      dispatch({
+        type: 'UPDATE_OBJECT',
+        payload: { id: drawId, width: pos.x - ox, height: pos.y - oy },
+        batch: true,
+      });
     });
   }
 
   function handlePointerUp(e: React.PointerEvent) {
+    flushDragNow();
+    const stats = dragStatsRef.current;
+    dragStatsRef.current = { events: 0, frames: 0 };
+    if (stats.events > 30) {
+      console.debug(`[canvas] drag: ${stats.events} events -> ${stats.frames} frames`);
+    }
     const current = stateRef.current;
     if (dragMode.current === 'draw' && drawingRef.current && originRef.current) {
+      stopLivePaint();
       const obj = current.objects.find(o => o.id === drawingRef.current);
       if (obj) {
-        const tiny = Math.abs(obj.width) < 3 && Math.abs(obj.height) < 3;
-        const isNote = obj.type === 'text' || obj.type === 'stickyNote';
-        if (tiny && !isNote) {
-          dispatch({ type: 'DELETE_OBJECTS', payload: [drawingRef.current] });
-        } else {
-          const normalized = tiny
-            ? {
-                ...obj,
-                width: obj.type === 'stickyNote' ? 160 : 20,
-                height: obj.type === 'stickyNote' ? 100 : 20,
-              }
-            : obj;
-          if (tiny) {
-            dispatch({
-              type: 'UPDATE_OBJECT',
-              payload: { id: obj.id, width: normalized.width, height: normalized.height },
-            });
+        if (obj.type === 'path') {
+          const pts = obj.points ?? [];
+          if (pts.length < 2) {
+            dispatch({ type: 'DELETE_OBJECTS', payload: [drawingRef.current] });
+          } else {
+            const xs = pts.map(p => p.x);
+            const ys = pts.map(p => p.y);
+            const minX = Math.min(...xs);
+            const minY = Math.min(...ys);
+            const maxX = Math.max(...xs);
+            const maxY = Math.max(...ys);
+            const normalized: CanvasObject = {
+              ...obj,
+              x: minX,
+              y: minY,
+              width: maxX - minX,
+              height: maxY - minY,
+              points: pts.map(p => ({ x: p.x - minX, y: p.y - minY })),
+            };
+            dispatch({ type: 'UPDATE_OBJECT', payload: normalized });
+            dispatch({ type: 'SELECT', payload: [normalized.id] });
+            void persistCreate(normalized, { batch: true });
           }
-          dispatch({ type: 'SELECT', payload: [normalized.id] });
-          void persistCreate(normalized, { batch: true });
-          if (obj.type === 'text') startTextEdit(normalized.id);
+        } else {
+          const tiny = Math.abs(obj.width) < 3 && Math.abs(obj.height) < 3;
+          const isNote = obj.type === 'text' || obj.type === 'stickyNote';
+          if (tiny && !isNote) {
+            dispatch({ type: 'DELETE_OBJECTS', payload: [drawingRef.current] });
+          } else {
+            const normalized = tiny
+              ? {
+                  ...obj,
+                  width: obj.type === 'stickyNote' ? 160 : 20,
+                  height: obj.type === 'stickyNote' ? 100 : 20,
+                }
+              : obj;
+            if (tiny) {
+              dispatch({
+                type: 'UPDATE_OBJECT',
+                payload: { id: obj.id, width: normalized.width, height: normalized.height },
+              });
+            }
+            dispatch({ type: 'SELECT', payload: [normalized.id] });
+            void persistCreate(normalized, { batch: true });
+            if (obj.type === 'text') startTextEdit(normalized.id);
+          }
         }
       }
     } else if (dragMode.current === 'move' && moveIdsRef.current.length > 0) {
@@ -372,7 +568,7 @@ export function CanvasSurface() {
       if (!e.ctrlKey && !e.metaKey && !e.altKey) {
         const tool: Record<string, ToolType> = {
           v: 'select', r: 'rectangle', o: 'ellipse', l: 'line',
-          a: 'arrow', t: 'text', n: 'stickyNote', c: 'connector',
+          a: 'arrow', p: 'path', t: 'text', n: 'stickyNote', c: 'connector',
         };
         const next = tool[e.key.toLowerCase()];
         if (next) dispatch({ type: 'SET_ACTIVE_TOOL', payload: next });
@@ -422,6 +618,7 @@ export function CanvasSurface() {
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
           onContextMenu={handleContextMenu}
           onDoubleClick={handleDoubleClick}
         />
@@ -429,7 +626,7 @@ export function CanvasSurface() {
           <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-2">
             <p className="text-xs text-surface-500">Pick a tool and draw on the canvas</p>
             <p className="text-[10px] tracking-wide text-surface-600">
-              V select · R rect · O ellipse · L line · A arrow · T text · N note · C connector — Ctrl+scroll to zoom, Space to pan
+              V select · R rect · O ellipse · L line · A arrow · P pencil · T text · N note · C connector — Ctrl+scroll to zoom, Space to pan
             </p>
           </div>
         )}

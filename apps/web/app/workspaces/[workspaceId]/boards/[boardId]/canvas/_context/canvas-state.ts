@@ -1,10 +1,10 @@
 import { createContext, useContext, type Dispatch } from 'react';
 
-export type ToolType = 'select' | 'rectangle' | 'ellipse' | 'line' | 'arrow' | 'text' | 'stickyNote' | 'connector';
+export type ToolType = 'select' | 'rectangle' | 'ellipse' | 'line' | 'arrow' | 'path' | 'text' | 'stickyNote' | 'connector';
 
 export type CanvasObject = {
   id: string;
-  type: 'rectangle' | 'ellipse' | 'line' | 'arrow' | 'text' | 'stickyNote' | 'connector' | 'image';
+  type: 'rectangle' | 'ellipse' | 'line' | 'arrow' | 'path' | 'text' | 'stickyNote' | 'connector' | 'image';
   x: number;
   y: number;
   width: number;
@@ -15,6 +15,7 @@ export type CanvasObject = {
   strokeWidth: number;
   opacity: number;
   text?: string;
+  points?: { x: number; y: number }[];
   zIndex: number;
   imageData?: string;
   sourceId?: string;

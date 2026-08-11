@@ -2,7 +2,7 @@
 
 import React from 'react';
 import {
-  MousePointer2, Square, Circle, Minus, ArrowRight, Type, StickyNote,
+  MousePointer2, Square, Circle, Minus, ArrowRight, Pencil, Type, NotebookPen,
   GitBranch, Undo2, Redo2, Grid3x3, AlignStartVertical, AlignCenterVertical,
   AlignEndVertical, AlignStartHorizontal, AlignCenterHorizontal, AlignEndHorizontal,
   Layers, ImageIcon, ZoomIn, ZoomOut, Trash2, X,
@@ -25,7 +25,7 @@ const toolGroups: { label: string; tools: { type: ToolType; title: string; icon:
     label: 'Text',
     tools: [
       { type: 'text', title: 'Text (T)', icon: Type },
-      { type: 'stickyNote', title: 'Sticky note (N)', icon: StickyNote },
+      { type: 'stickyNote', title: 'Sticky note (N)', icon: NotebookPen },
     ],
   },
   {
@@ -130,6 +130,24 @@ export function Toolbar() {
 
         {divider}
 
+      {/* Pencil tool */}
+      <span className="flex shrink-0 items-center">
+        {divider}
+        <button
+          type="button"
+          title="Pencil (P)"
+          aria-label="Pencil (P)"
+          aria-pressed={state.activeTool === 'path'}
+          onClick={() => dispatch({ type: 'SET_ACTIVE_TOOL', payload: 'path' })}
+          className={`${iconBtn} ${
+            state.activeTool === 'path'
+              ? 'bg-primary-600 text-white'
+              : 'text-surface-400 hover:bg-surface-800 hover:text-surface-200'
+          }`}
+        >
+          <Pencil size={16} />
+        </button>
+      </span>
         {toolGroups.map((group, gi) => (
           <span key={group.label} className="flex shrink-0 items-center">
             {gi > 0 && divider}

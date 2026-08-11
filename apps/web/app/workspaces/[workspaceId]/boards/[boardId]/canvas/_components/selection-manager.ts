@@ -28,6 +28,8 @@ export function hitTest(
     case 'line':
     case 'arrow':
       return distanceToSegment(point, { x: obj.x, y: obj.y }, { x: obj.x + obj.width, y: obj.y + obj.height }) < 8 / zoom;
+    case 'path':
+      return distanceToPolyline({ x: localX, y: localY }, obj.points ?? []) < 8 / zoom;
     case 'text':
       return localX >= 0 && localX <= Math.max(Math.abs(obj.width), 200) && localY >= -16 && localY <= 24;
     default:
@@ -45,11 +47,23 @@ function distanceToSegment(p: { x: number; y: number }, a: { x: number; y: numbe
   return Math.hypot(p.x - (a.x + t * abx), p.y - (a.y + t * aby));
 }
 
+function distanceToPolyline(p: { x: number; y: number }, points: { x: number; y: number }[]) {
+  if (points.length === 0) return Infinity;
+  if (points.length === 1) return Math.hypot(p.x - points[0]!.x, p.y - points[0]!.y);
+  let min = Infinity;
+  for (let i = 0; i < points.length - 1; i++) {
+    const d = distanceToSegment(p, points[i]!, points[i + 1]!);
+    if (d < min) min = d;
+  }
+  return min;
+}
+
 export function hitTestHandle(
   point: { x: number; y: number },
   obj: CanvasObject,
   zoom = 1,
 ): string | null {
+  if (obj.type === 'path') return null;
   const threshold = 10 / zoom;
   const corners: { key: string; x: number; y: number }[] = [
     { key: 'nw', x: obj.x, y: obj.y },

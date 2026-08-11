@@ -32,6 +32,7 @@ const LOCAL_TO_SERVER_TYPE: Record<CanvasObject['type'], CanvasObjectType> = {
   ellipse: 'ELLIPSE',
   line: 'LINE',
   arrow: 'ARROW',
+  path: 'PATH',
   text: 'TEXT',
   stickyNote: 'STICKY_NOTE',
   connector: 'CONNECTOR',
@@ -43,11 +44,11 @@ const SERVER_TO_LOCAL_TYPE: Record<string, CanvasObject['type']> = {
   ELLIPSE: 'ellipse',
   LINE: 'line',
   ARROW: 'arrow',
+  PATH: 'path',
   TEXT: 'text',
   STICKY_NOTE: 'stickyNote',
   CONNECTOR: 'connector',
   IMAGE: 'image',
-  PATH: 'line',
   FRAME: 'rectangle',
 };
 
@@ -70,6 +71,7 @@ function toServerObject(obj: CanvasObject): CreateCanvasObjectData {
       imageData: obj.imageData,
       sourceId: obj.sourceId,
       targetId: obj.targetId,
+      points: obj.points,
     },
   };
 }
@@ -99,6 +101,7 @@ function toLocalObject(server: ServerCanvasObject): CanvasObject {
     imageData: (data.imageData as string | undefined) ?? undefined,
     sourceId: (data.sourceId as string | undefined) ?? undefined,
     targetId: (data.targetId as string | undefined) ?? undefined,
+    points: Array.isArray(data.points) ? data.points as { x: number; y: number }[] : undefined,
   };
 }
 
@@ -123,6 +126,7 @@ function toServerShape(obj: CanvasObject): ServerCanvasObject {
       imageData: obj.imageData,
       sourceId: obj.sourceId,
       targetId: obj.targetId,
+      points: obj.points,
     },
     createdById: '',
     createdAt: '',

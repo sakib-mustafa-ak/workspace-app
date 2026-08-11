@@ -1,25 +1,21 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CanvasGateway } from './canvas.gateway';
-import { CanvasEventBus } from '../../canvas/events/canvas.events';
+import type { AuthenticatedSocket } from './canvas.gateway';
+import { UsersService } from '../../users/services/users.service';
 
 describe('CanvasGateway', () => {
   let gateway: CanvasGateway;
-  let eventBus: jest.Mocked<CanvasEventBus>;
 
   beforeEach(async () => {
-    eventBus = {
-      onObjectCreated: jest.fn(),
-      onObjectUpdated: jest.fn(),
-      onObjectDeleted: jest.fn(),
-      publishObjectCreated: jest.fn(),
-      publishObjectUpdated: jest.fn(),
-      publishObjectDeleted: jest.fn(),
-    } as unknown as jest.Mocked<CanvasEventBus>;
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CanvasGateway,
-        { provide: CanvasEventBus, useValue: eventBus },
+        {
+          provide: UsersService,
+          useValue: {
+            getProfile: jest.fn().mockResolvedValue({ displayName: 'Test User' }),
+          },
+        },
       ],
     }).compile();
 
@@ -30,11 +26,75 @@ describe('CanvasGateway', () => {
     expect(gateway).toBeDefined();
   });
 
-  it('should subscribe to all three canvas events on afterInit', () => {
-    gateway.afterInit();
+  it('relays object:created passthrough to the board room', () => {
+    const emit = jest.fn();
+    const to = jest.fn().mockReturnValue({ emit });
+    const client = { to } as unknown as AuthenticatedSocket;
+    const object = { id: 'obj-1', boardId: 'b-1' };
 
-    expect(eventBus.onObjectCreated).toHaveBeenCalled();
-    expect(eventBus.onObjectUpdated).toHaveBeenCalled();
-    expect(eventBus.onObjectDeleted).toHaveBeenCalled();
+    gateway.handleObjectCreated(client, {
+      boardId: 'b-1',
+      object,
+    } as never);
+
+    expect(to).toHaveBeenCalledWith('board:b-1');
+    expect(emit).toHaveBeenCalledWith('object:created', object);
+  });
+
+  it('relays object:updated passthrough to the board room', () => {
+    const emit = jest.fn();
+    const to = jest.fn().mockReturnValue({ emit });
+    const client = { to } as unknown as AuthenticatedSocket;
+    const object = { id: 'obj-1', x: 10 };
+
+    gateway.handleObjectUpdated(client, {
+      boardId: 'b-1',
+      object,
+    } as never);
+
+    expect(to).toHaveBeenCalledWith('board:b-1');
+    expect(emit).toHaveBeenCalledWith('object:updated', object);
+  });
+
+  it('grants a lock and broadcasts object:locked to the room', () => {
+    const to = jest.fn().mockReturnValue({ emit: jest.fn() });
+    const client = {
+      userId: 'u-1',
+      displayName: 'Test User',
+      to,
+    } as unknown as AuthenticatedSocket;
+
+    gateway.handleObjectLock(client, { boardId: 'b-1', objectId: 'o-1' } as never);
+
+    expect(to).toHaveBeenCalledWith('board:b-1');
+  });
+
+  it('denies a lock held by another user and notifies the requester', () => {
+    const emit = jest.fn();
+    const a = { userId: 'u-1', displayName: 'Alice', to: jest.fn().mockReturnValue({ emit: jest.fn() }) } as unknown as AuthenticatedSocket;
+    const b = { userId: 'u-2', displayName: 'Bob', emit } as unknown as AuthenticatedSocket;
+
+    gateway.handleObjectLock(a, { boardId: 'b-1', objectId: 'o-1' } as never);
+    gateway.handleObjectLock(b, { boardId: 'b-1', objectId: 'o-1' } as never);
+
+    expect(emit).toHaveBeenCalledWith('object:lock:denied', {
+      objectId: 'o-1',
+      displayName: 'Alice',
+    });
+  });
+
+  it('releases a lock on unlock and broadcasts object:unlocked', () => {
+    const emit = jest.fn();
+    const to = jest.fn().mockReturnValue({ emit });
+    const a = { userId: 'u-1', displayName: 'Alice', to } as unknown as AuthenticatedSocket;
+
+    gateway.handleObjectLock(a, { boardId: 'b-1', objectId: 'o-1' } as never);
+    gateway.handleObjectUnlock(a, { boardId: 'b-1', objectId: 'o-1' } as never);
+
+    expect(to).toHaveBeenCalledWith('board:b-1');
+    expect(emit).toHaveBeenCalledWith('object:unlocked', {
+      objectId: 'o-1',
+      userId: 'u-1',
+    });
   });
 });

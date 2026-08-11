@@ -55,20 +55,21 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
           <Sidebar />
         </div>
 
-        <main className="relative flex min-w-0 flex-1 flex-col overflow-auto pb-16 lg:pb-0">
-          <div className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-surface-800 bg-surface-950/80 px-4 backdrop-blur-md lg:hidden">
+<main className="relative flex min-w-0 flex-1 flex-col overflow-auto pb-16 lg:pb-0">
+          <div className="tb-x-3 sticky top-0 z-30 flex flex-col items-center justify-center border-b border-surface-800/70 bg-surface-950/70 px-4 backdrop-blur-xl lg:hidden">
+            <style>{`
+              .tb-x-3 { height: 5rem; }
+              .tb-x-3-name { font-size: 1.25rem; letter-spacing: 0.26em; }
+              .tb-x-3-sub { font-size: 0.6875rem; letter-spacing: 0.26em; margin-top: 0.4375rem; }
+            `}</style>
             <button
               onClick={() => setSidebarOpen(true)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-surface-400 transition-colors hover:bg-surface-800 hover:text-white"
+              className="absolute left-5 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-surface-800 bg-surface-900 text-surface-300 transition-colors hover:bg-surface-800 hover:text-white"
             >
-              <Menu size={18} />
+              <Menu size={22} />
             </button>
-            <div className="flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded bg-gradient-to-br from-primary-500 to-primary-700 text-[10px] font-bold text-white">
-                W
-              </div>
-              <span className="text-sm font-semibold">Workspace OS</span>
-            </div>
+            <span className="tb-x-3-name text-xl font-bold uppercase tracking-[0.26em] text-surface-100">Workspace</span>
+            <span className="tb-x-3-sub mt-1.5 text-[11px] font-medium uppercase tracking-[0.26em] text-surface-500">OS</span>
           </div>
 
           <ErrorBoundary>{children}</ErrorBoundary>

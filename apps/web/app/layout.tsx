@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
-import { Space_Grotesk } from 'next/font/google';
 import Script from 'next/script';
 import { cookies } from 'next/headers';
 import './globals.css';
@@ -15,12 +14,6 @@ const geistSans = localFont({
 const geistMono = localFont({
   src: './fonts/GeistMonoVF.woff',
   variable: '--font-geist-mono',
-});
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  variable: '--font-space-grotesk',
-  weight: ['500', '600', '700'],
 });
 
 export const metadata: Metadata = {
@@ -51,7 +44,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} ${themeClass}`.trim()}
+      className={`${geistSans.variable} ${geistMono.variable} ${themeClass}`.trim()}
     >
       <body className="min-h-screen bg-surface-950 text-surface-100 antialiased font-sans">
         <Script
@@ -61,12 +54,7 @@ export default async function RootLayout({
         />
         <LoadingBar />
         <ToastProvider>{children}</ToastProvider>
-      {/* eslint-disable @next/next/no-sync-scripts */}
-      {/* impeccable-live-start */}
-<script src="http://localhost:8400/live.js?token=0cfa52cf-5b54-45dd-bd57-fbc63b81b77c"></script>
-{/* impeccable-live-end */}
-      {/* eslint-enable @next/next/no-sync-scripts */}
-</body>
+      </body>
     </html>
   );
 }

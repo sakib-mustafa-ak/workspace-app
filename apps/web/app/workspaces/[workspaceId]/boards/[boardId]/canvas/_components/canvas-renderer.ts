@@ -2,17 +2,24 @@ import type { CanvasState, CanvasObject } from '../_context/canvas-state';
 
 const imageCache = new Map<string, HTMLImageElement>();
 
+let themeCache: { key: string; colors: { bg: string; grid: string; accent: string } } | null = null;
+
 function themeColors(): { bg: string; grid: string; accent: string } {
   if (typeof window === 'undefined') {
     return { bg: '#020617', grid: 'rgba(148,163,184,0.15)', accent: '#4d96ff' };
   }
-  const cs = getComputedStyle(document.documentElement);
+  const root = document.documentElement;
+  const key = root.className;
+  if (themeCache && themeCache.key === key) return themeCache.colors;
+  const cs = getComputedStyle(root);
   const get = (name: string, fallback: string) => cs.getPropertyValue(name).trim() || fallback;
-  return {
+  const colors = {
     bg: get('--color-surface-950', '#020617'),
     grid: get('--color-surface-700', '#334155'),
     accent: get('--color-primary-500', '#3b82f6'),
   };
+  themeCache = { key, colors };
+  return colors;
 }
 
 export function renderFrame(ctx: CanvasRenderingContext2D, state: CanvasState) {

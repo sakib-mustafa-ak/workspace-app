@@ -14,6 +14,7 @@ export function configuration() {
     app: {
       nodeEnv: env.NODE_ENV,
       port: Number(env.PORT),
+      publicBaseUrl: env.APP_PUBLIC_BASE_URL,
     },
 
     database: {

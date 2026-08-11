@@ -5,9 +5,15 @@ import {
   IsObject,
   IsOptional,
   IsString,
+  IsUUID,
 } from 'class-validator';
 
 export class CreateCanvasObjectDto {
+  @ApiPropertyOptional({ format: 'uuid' })
+  @IsOptional()
+  @IsUUID()
+  id?: string;
+
   @ApiProperty({
     enum: [
       'RECTANGLE',

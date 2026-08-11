@@ -27,7 +27,6 @@ export interface CanvasState {
   zoom: number;
   pan: { x: number; y: number };
   gridVisible: boolean;
-  snapToGrid: boolean;
   layersOpen: boolean;
   activeTool: ToolType;
   fillColor: string;
@@ -40,24 +39,23 @@ export interface CanvasState {
 }
 
 export type CanvasAction =
-  | { type: 'ZOOM_IN' }
-  | { type: 'ZOOM_OUT' }
   | { type: 'SET_ZOOM'; payload: number }
+  | { type: 'ZOOM_AT'; payload: { scale: number; cx: number; cy: number } }
   | { type: 'SET_PAN'; payload: { x: number; y: number } }
   | { type: 'TOGGLE_GRID' }
-  | { type: 'SET_SNAP'; payload: boolean }
   | { type: 'TOGGLE_LAYERS' }
   | { type: 'SET_ACTIVE_TOOL'; payload: ToolType }
   | { type: 'SET_FILL_COLOR'; payload: string }
   | { type: 'SET_STROKE_COLOR'; payload: string }
   | { type: 'SET_STROKE_WIDTH'; payload: number }
   | { type: 'SET_OPACITY'; payload: number }
-  | { type: 'ADD_OBJECT'; payload: CanvasObject }
-  | { type: 'UPDATE_OBJECT'; payload: Partial<CanvasObject> & { id: string } }
-  | { type: 'UPDATE_OBJECTS'; payload: Partial<CanvasObject>[] }
+  | { type: 'ADD_OBJECT'; payload: CanvasObject; batch?: boolean }
+  | { type: 'SNAPSHOT' }
+  | { type: 'LOAD_OBJECTS'; payload: CanvasObject[] }
+  | { type: 'UPDATE_OBJECT'; payload: Partial<CanvasObject> & { id: string }; batch?: boolean }
+  | { type: 'UPDATE_OBJECTS'; payload: Partial<CanvasObject>[]; batch?: boolean }
   | { type: 'DELETE_OBJECTS'; payload: string[] }
-  | { type: 'MOVE_OBJECTS'; payload: { ids: string[]; dx: number; dy: number } }
-  | { type: 'RESIZE_OBJECT'; payload: { id: string; x: number; y: number; width: number; height: number } }
+  | { type: 'RESIZE_OBJECT'; payload: { id: string; x: number; y: number; width: number; height: number }; batch?: boolean }
   | { type: 'SELECT'; payload: string[] }
   | { type: 'CLEAR_SELECTION' }
   | { type: 'BRING_TO_FRONT'; payload: string[] }
@@ -74,18 +72,24 @@ function captureHistory(state: CanvasState): CanvasHistory {
 
 export function canvasReducer(state: CanvasState, action: CanvasAction): CanvasState {
   switch (action.type) {
-    case 'ZOOM_IN':
-      return { ...state, zoom: Math.min(4, +(state.zoom * 1.1).toFixed(2)) };
-    case 'ZOOM_OUT':
-      return { ...state, zoom: Math.max(0.25, +(state.zoom * 0.9).toFixed(2)) };
     case 'SET_ZOOM':
       return { ...state, zoom: Math.min(4, Math.max(0.25, action.payload)) };
+    case 'ZOOM_AT': {
+      const scale = Math.min(4, Math.max(0.25, action.payload.scale));
+      const { cx, cy } = action.payload;
+      return {
+        ...state,
+        zoom: scale,
+        pan: {
+          x: cx - (cx - state.pan.x) * (scale / state.zoom),
+          y: cy - (cy - state.pan.y) * (scale / state.zoom),
+        },
+      };
+    }
     case 'SET_PAN':
       return { ...state, pan: action.payload };
     case 'TOGGLE_GRID':
       return { ...state, gridVisible: !state.gridVisible };
-    case 'SET_SNAP':
-      return { ...state, snapToGrid: action.payload };
     case 'TOGGLE_LAYERS':
       return { ...state, layersOpen: !state.layersOpen };
     case 'SET_ACTIVE_TOOL':
@@ -102,20 +106,29 @@ export function canvasReducer(state: CanvasState, action: CanvasAction): CanvasS
       return {
         ...state,
         objects: [...state.objects, action.payload],
-        history: captureHistory(state),
+        history: action.batch ? state.history : captureHistory(state),
+      };
+    case 'SNAPSHOT':
+      return { ...state, history: captureHistory(state) };
+    case 'LOAD_OBJECTS':
+      return {
+        ...state,
+        objects: action.payload,
+        selectedIds: [],
+        history: { past: [], future: [] },
       };
     case 'UPDATE_OBJECT':
       return {
         ...state,
         objects: state.objects.map(o => o.id === action.payload.id ? { ...o, ...action.payload } : o),
-        history: captureHistory(state),
+        history: action.batch ? state.history : captureHistory(state),
       };
     case 'UPDATE_OBJECTS': {
       const updateMap = new Map(action.payload.map(u => [u.id, u]));
       return {
         ...state,
         objects: state.objects.map(o => updateMap.has(o.id) ? { ...o, ...updateMap.get(o.id) } : o),
-        history: captureHistory(state),
+        history: action.batch ? state.history : captureHistory(state),
       };
     }
     case 'DELETE_OBJECTS':
@@ -125,21 +138,13 @@ export function canvasReducer(state: CanvasState, action: CanvasAction): CanvasS
         selectedIds: state.selectedIds.filter(id => !action.payload.includes(id)),
         history: captureHistory(state),
       };
-    case 'MOVE_OBJECTS':
-      return {
-        ...state,
-        objects: state.objects.map(o =>
-          action.payload.ids.includes(o.id) ? { ...o, x: o.x + action.payload.dx, y: o.y + action.payload.dy } : o
-        ),
-        history: captureHistory(state),
-      };
     case 'RESIZE_OBJECT':
       return {
         ...state,
         objects: state.objects.map(o =>
           o.id === action.payload.id ? { ...o, x: action.payload.x, y: action.payload.y, width: action.payload.width, height: action.payload.height } : o
         ),
-        history: captureHistory(state),
+        history: action.batch ? state.history : captureHistory(state),
       };
     case 'SELECT':
       return { ...state, selectedIds: action.payload };
@@ -196,7 +201,6 @@ export const initialState: CanvasState = {
   zoom: 1,
   pan: { x: 0, y: 0 },
   gridVisible: true,
-  snapToGrid: false,
   layersOpen: false,
   activeTool: 'select',
   fillColor: '#ffffff',

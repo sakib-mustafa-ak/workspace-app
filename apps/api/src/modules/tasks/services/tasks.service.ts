@@ -37,6 +37,7 @@ export class TasksService {
       status?: TaskRow['status'];
       priority?: TaskRow['priority'];
       assigneeId?: string;
+      dueDate?: string | null;
       position?: number;
     },
   ): Promise<TaskRow> {
@@ -59,6 +60,7 @@ export class TasksService {
       status: input.status ?? 'TODO',
       priority: input.priority ?? 'NONE',
       assigneeId: input.assigneeId ?? null,
+      dueDate: input.dueDate ? new Date(input.dueDate) : null,
       createdById: userId,
       position: input.position ?? 0,
     });
@@ -113,8 +115,8 @@ export class TasksService {
       status?: TaskRow['status'];
       priority?: TaskRow['priority'];
       assigneeId?: string | null;
+      dueDate?: string | null;
       position?: number;
-      dueDate?: Date | null;
     },
   ): Promise<TaskRow> {
     const task = await this.tasksRepo.findById(taskId);
@@ -127,9 +129,15 @@ export class TasksService {
 
     await this.requireRole(task.workspaceId, userId, 'EDITOR');
 
+    const { dueDate, ...rest } = input;
+
     const updateData: Parameters<typeof this.tasksRepo.update>[1] = {
-      ...input,
+      ...rest,
     };
+
+    if (dueDate !== undefined) {
+      updateData.dueDate = dueDate ? new Date(dueDate) : null;
+    }
 
     if (input.status === 'DONE' && task.status !== 'DONE') {
       updateData.completedAt = new Date();

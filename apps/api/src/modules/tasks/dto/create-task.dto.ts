@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEnum,
+  IsISO8601,
   IsOptional,
   IsString,
   MaxLength,
@@ -43,6 +44,11 @@ export class CreateTaskDto {
   @IsOptional()
   @IsEnum(['NONE', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const)
   priority?: TaskPriority;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsISO8601()
+  dueDate?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()

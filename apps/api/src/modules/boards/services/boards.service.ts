@@ -232,10 +232,12 @@ export class BoardsService {
       );
     }
 
+    const existing = await this.columnsRepo.listByBoard(boardId);
+    const nextPosition = existing.length;
     const column = await this.columnsRepo.create({
       boardId,
       name: input.name,
-      position: input.position ?? 0,
+      position: input.position ?? nextPosition,
     });
 
     this.events.publishColumnCreated({

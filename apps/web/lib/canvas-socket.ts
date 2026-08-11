@@ -1,6 +1,11 @@
 import { io, Socket } from 'socket.io-client';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+const API_ORIGIN =
+  typeof window !== 'undefined'
+    ? `${window.location.protocol}//${window.location.hostname}`
+    : 'http://localhost';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || `${API_ORIGIN}:4000/api/v1`;
 const SOCKET_URL = API_URL.replace('/api/v1', '');
 
 export function createCanvasSocket(boardId: string): Socket {

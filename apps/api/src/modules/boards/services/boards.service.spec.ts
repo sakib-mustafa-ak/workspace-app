@@ -297,10 +297,14 @@ describe('BoardsService', () => {
       boardsRepo.findById.mockResolvedValue(mockBoard);
       mockDbSelect([mockMembership]);
       policy.isAtLeast.mockReturnValue(true);
+      columnsRepo.listByBoard.mockResolvedValue([mockColumn]);
       columnsRepo.create.mockResolvedValue(mockColumn);
 
       const result = await service.createColumn('b1', 'u1', { name: 'To Do' });
       expect(result.id).toBe('c1');
+      expect(columnsRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ position: 1 }),
+      );
       expect(events.publishColumnCreated).toHaveBeenCalled();
     });
 

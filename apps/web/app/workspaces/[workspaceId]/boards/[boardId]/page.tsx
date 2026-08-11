@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft, Plus, MessageSquare, Layout, Settings, Pencil, Archive,
-  Trash2, X, Check, FileText, Sparkles,
+  Trash2, X, Check, FileText, Sparkles, Calendar,
 } from 'lucide-react';
 import {
   DndContext, closestCorners, KeyboardSensor,
@@ -24,6 +24,7 @@ import { BoardUploadButton } from '@/components/board-upload-button';
 import { BoardFileSidebar } from '@/components/board-file-sidebar';
 import { AiSummarizePanel } from '@/components/ai-summarize-panel';
 import { AiIdeasDialog } from '@/components/ai-ideas-dialog';
+import { CalendarView } from '@/components/calendar-view';
 import { addRecentBoard } from '@/lib/recent-activity';
 
 type ModalState =
@@ -46,6 +47,7 @@ export default function BoardDetailPage() {
   const [showAiSummary, setShowAiSummary] = useState(false);
   const [showAiIdeas, setShowAiIdeas] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
   const [modal, setModal] = useState<ModalState>(null);
 
   const [editingBoard, setEditingBoard] = useState(false);
@@ -302,6 +304,17 @@ export default function BoardDetailPage() {
             Canvas
           </Link>
           <button
+            onClick={() => setShowCalendar(!showCalendar)}
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs transition-colors ${
+              showCalendar
+                ? 'bg-primary-600/20 text-primary-400'
+                : 'text-surface-400 hover:bg-surface-800 hover:text-surface-200'
+            }`}
+          >
+            <Calendar size={14} />
+            Calendar
+          </button>
+          <button
             onClick={() => setShowComments(!showComments)}
             className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs transition-colors ${
               showComments
@@ -346,6 +359,15 @@ export default function BoardDetailPage() {
       </header>
 
       <div className="flex flex-1">
+        {showCalendar ? (
+          <div className="flex-1 overflow-y-auto p-6">
+            <CalendarView
+              tasks={tasks}
+              columns={columns}
+              onEditTask={(task) => setModal({ type: 'edit', task })}
+            />
+          </div>
+        ) : (
         <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div className="flex flex-1 gap-4 overflow-x-auto p-6 scroll-smooth">
           {sortedColumns.map((col) => {
@@ -450,7 +472,7 @@ export default function BoardDetailPage() {
           </div>
         </div>
         </DndContext>
-
+        )}
         {showFiles && (
           <BoardFileSidebar workspaceId={workspaceId} boardId={boardId} onClose={() => setShowFiles(false)} />
         )}

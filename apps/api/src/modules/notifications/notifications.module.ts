@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 
+import { BoardsModule } from '../boards/boards.module';
 import { BoardsRepository } from '../boards/repositories/boards.repository';
+import { CommentsModule } from '../comments/comments.module';
+import { TasksModule } from '../tasks/tasks.module';
+import { UploadsModule } from '../uploads/uploads.module';
+import { WorkspacesModule } from '../workspaces/workspaces.module';
 import { WorkspaceMembersRepository } from '../workspaces/repositories/workspace-members.repository';
-import { BoardsEventBus } from '../boards/events/boards.events';
-import { CommentsEventBus } from '../comments/events/comments.events';
-import { TasksEventBus } from '../tasks/events/tasks.events';
-import { WorkspacesEventBus } from '../workspaces/events/workspaces.events';
-import { UploadsEventBus } from '../uploads/events/uploads.events';
 
 import { NotificationsController } from './controllers/notifications.controller';
 import { NotificationsEventBus } from './events/notifications.events';
@@ -16,6 +16,13 @@ import { NotificationsRepository } from './repositories/notifications.repository
 import { NotificationsService } from './services/notifications.service';
 
 @Module({
+  imports: [
+    BoardsModule,
+    TasksModule,
+    CommentsModule,
+    WorkspacesModule,
+    UploadsModule,
+  ],
   controllers: [NotificationsController],
   providers: [
     NotificationsService,
@@ -25,11 +32,6 @@ import { NotificationsService } from './services/notifications.service';
     NotificationHandler,
     BoardsRepository,
     WorkspaceMembersRepository,
-    BoardsEventBus,
-    CommentsEventBus,
-    TasksEventBus,
-    WorkspacesEventBus,
-    UploadsEventBus,
   ],
   exports: [NotificationsService, NotificationsEventBus],
 })

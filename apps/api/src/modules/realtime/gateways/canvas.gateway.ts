@@ -4,7 +4,6 @@ import {
   SubscribeMessage,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  OnGatewayInit,
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
@@ -13,15 +12,10 @@ import { Server, Socket } from 'socket.io';
 import { jwtVerify } from 'jose';
 import { TextEncoder } from 'node:util';
 
-import type { PresenceUser } from '../interfaces/presence.interface';
-import { CanvasEventBus } from '../../canvas/events/canvas.events';
-import type {
-  ObjectCreatedPayload,
-  ObjectUpdatedPayload,
-  ObjectDeletedPayload,
-} from '../../canvas/events/canvas.events';
+import { UsersService } from '../../users/services/users.service';
+import type { PresenceUser, ObjectLock } from '../interfaces/presence.interface';
 
-interface AuthenticatedSocket extends Socket {
+export interface AuthenticatedSocket extends Socket {
   userId?: string;
   displayName?: string;
 }
@@ -31,37 +25,17 @@ interface AuthenticatedSocket extends Socket {
   cors: { origin: '*', credentials: true },
   namespace: '/canvas',
 })
-export class CanvasGateway
-  implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
-{
+export class CanvasGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server;
 
   private boardRooms = new Map<string, Map<string, PresenceUser>>();
 
-  constructor(
-    @Inject(CanvasEventBus) private readonly canvasEventBus: CanvasEventBus,
-  ) {}
+  private objectLocks = new Map<string, Map<string, ObjectLock>>();
 
-  afterInit(): void {
-    this.canvasEventBus.onObjectCreated((payload: ObjectCreatedPayload) => {
-      this.server
-        .to(`board:${payload.boardId}`)
-        .emit('object:created', payload);
-    });
+  private static readonly LOCK_TTL_MS = 30_000;
 
-    this.canvasEventBus.onObjectUpdated((payload: ObjectUpdatedPayload) => {
-      this.server
-        .to(`board:${payload.boardId}`)
-        .emit('object:updated', payload);
-    });
-
-    this.canvasEventBus.onObjectDeleted((payload: ObjectDeletedPayload) => {
-      this.server
-        .to(`board:${payload.boardId}`)
-        .emit('object:deleted', payload);
-    });
-  }
+  constructor(@Inject(UsersService) private readonly users: UsersService) {}
 
   async handleConnection(client: AuthenticatedSocket): Promise<void> {
     const token = String(
@@ -78,11 +52,35 @@ export class CanvasGateway
       }
       const secret = new TextEncoder().encode(jwtSecret);
       const { payload } = await jwtVerify(token, secret);
-      client.userId = payload.sub as string;
-      client.displayName =
-        (payload as { displayName?: string }).displayName || 'Unknown';
+      const userId = payload.sub as string;
+      client.userId = userId;
+      client.displayName = await this.resolveDisplayName(userId);
+      this.syncStaleName(client);
     } catch {
       client.disconnect();
+    }
+  }
+
+  private async resolveDisplayName(userId: string): Promise<string> {
+    try {
+      const user = await this.users.getProfile(userId);
+      return user.displayName || 'Unknown';
+    } catch {
+      return 'Unknown';
+    }
+  }
+
+  private syncStaleName(client: AuthenticatedSocket): void {
+    if (!client.userId || !client.displayName) return;
+    for (const [boardId, users] of this.boardRooms) {
+      const entry = users.get(client.userId);
+      if (entry && entry.displayName !== client.displayName) {
+        entry.displayName = client.displayName;
+        this.boardRooms.set(boardId, users);
+        this.server
+          .to(`board:${boardId}`)
+          .emit('presence:update', Array.from(users.values()));
+      }
     }
   }
 
@@ -96,6 +94,7 @@ export class CanvasGateway
             .emit('presence:update', Array.from(users.values()));
         }
       }
+      this.releaseUserLocks(client.userId);
     }
   }
 
@@ -105,20 +104,26 @@ export class CanvasGateway
     @MessageBody() data: { boardId: string },
   ): void {
     if (!client.userId) return;
-    void client.join(`board:${data.boardId}`);
-    if (!this.boardRooms.has(data.boardId)) {
-      this.boardRooms.set(data.boardId, new Map());
-    }
-    const users = this.boardRooms.get(data.boardId)!;
-    users.set(client.userId, {
-      userId: client.userId,
-      displayName: client.displayName || 'Unknown',
-      joinedAt: new Date(),
-    });
-    client.emit('presence:update', Array.from(users.values()));
-    client
-      .to(`board:${data.boardId}`)
-      .emit('presence:update', Array.from(users.values()));
+    const userId = client.userId;
+    void (async () => {
+      if (!client.displayName) {
+        client.displayName = await this.resolveDisplayName(userId);
+      }
+      await client.join(`board:${data.boardId}`);
+      if (!this.boardRooms.has(data.boardId)) {
+        this.boardRooms.set(data.boardId, new Map());
+      }
+      const users = this.boardRooms.get(data.boardId)!;
+      users.set(client.userId!, {
+        userId: client.userId!,
+        displayName: client.displayName || 'Unknown',
+        joinedAt: new Date(),
+      });
+      client.emit('presence:update', Array.from(users.values()));
+      client
+        .to(`board:${data.boardId}`)
+        .emit('presence:update', Array.from(users.values()));
+    })();
   }
 
   @SubscribeMessage('board:leave')
@@ -176,5 +181,78 @@ export class CanvasGateway
     @MessageBody() data: { boardId: string; objectId: string },
   ): void {
     client.to(`board:${data.boardId}`).emit('object:deleted', data.objectId);
+  }
+
+  private getBoardLocks(boardId: string): Map<string, ObjectLock> {
+    const now = Date.now();
+    const locks = this.objectLocks.get(boardId) ?? new Map<string, ObjectLock>();
+    for (const [objectId, lock] of locks) {
+      if (lock.expiresAt <= now) locks.delete(objectId);
+    }
+    this.objectLocks.set(boardId, locks);
+    return locks;
+  }
+
+  private releaseUserLocks(userId: string): void {
+    for (const [boardId, locks] of this.objectLocks) {
+      for (const [objectId, lock] of locks) {
+        if (lock.userId !== userId) continue;
+        locks.delete(objectId);
+        this.server.to(`board:${boardId}`).emit('object:unlocked', {
+          objectId,
+          userId,
+        });
+      }
+      if (locks.size === 0) this.objectLocks.delete(boardId);
+    }
+  }
+
+  @SubscribeMessage('object:lock')
+  handleObjectLock(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: { boardId: string; objectId: string },
+  ): void {
+    if (!client.userId || !data.objectId) return;
+    const locks = this.getBoardLocks(data.boardId);
+    const held = locks.get(data.objectId);
+    if (held && held.userId !== client.userId) {
+      client.emit('object:lock:denied', {
+        objectId: data.objectId,
+        displayName: held.displayName,
+      });
+      return;
+    }
+    if (held) held.expiresAt = Date.now() + CanvasGateway.LOCK_TTL_MS;
+    else {
+      locks.set(data.objectId, {
+        objectId: data.objectId,
+        userId: client.userId,
+        displayName: client.displayName || 'Unknown',
+        expiresAt: Date.now() + CanvasGateway.LOCK_TTL_MS,
+      });
+    }
+    client.to(`board:${data.boardId}`).emit('object:locked', {
+      objectId: data.objectId,
+      userId: client.userId,
+      displayName: client.displayName || 'Unknown',
+    });
+  }
+
+  @SubscribeMessage('object:unlock')
+  handleObjectUnlock(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: { boardId: string; objectId: string },
+  ): void {
+    if (!client.userId) return;
+    const locks = this.getBoardLocks(data.boardId);
+    const held = locks.get(data.objectId);
+    if (held && held.userId === client.userId) {
+      locks.delete(data.objectId);
+      if (locks.size === 0) this.objectLocks.delete(data.boardId);
+      client.to(`board:${data.boardId}`).emit('object:unlocked', {
+        objectId: data.objectId,
+        userId: client.userId,
+      });
+    }
   }
 }

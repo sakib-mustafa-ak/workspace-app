@@ -43,7 +43,7 @@ function CreateWorkspaceForm({
   return (
     <form
       onSubmit={handleCreate}
-      className="rounded-xl border border-surface-700/50 bg-gradient-to-br from-surface-800 to-surface-800/50 p-5 sm:p-6"
+      className="rounded-xl border border-surface-800 bg-surface-900 p-5 sm:p-6"
     >
       <h2 className="mb-4 text-sm font-semibold text-surface-200">Create workspace</h2>
       <div className="space-y-3">
@@ -116,28 +116,23 @@ function DashboardContent() {
       <EmailVerificationBanner />
 
       {/* Welcome header */}
-      <div className="relative mb-8 overflow-hidden rounded-2xl border border-surface-800/50 bg-gradient-to-br from-surface-900 via-surface-900 to-primary-900/20 p-6 sm:p-8">
-        <div className="pointer-events-none absolute -right-20 -top-20 h-60 w-60 rounded-full bg-primary-600/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-primary-500/5 blur-2xl" />
-        <div className="relative">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
-                Hello, <span className="text-primary-400">{user?.displayName || 'there'}</span>
-              </h1>
-              <p className="mt-1.5 text-sm text-surface-400">
-                {workspaces.length} workspace{workspaces.length !== 1 ? 's' : ''} · {user?.email}
-              </p>
-            </div>
-            <button
-              onClick={() => setShowCreate(true)}
-              className="flex items-center gap-2 rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-500 hover:shadow-primary-500/30 active:scale-[0.98]"
-            >
-              <Plus size={16} />
-              New workspace
-            </button>
-          </div>
+      <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="mb-1.5 text-label text-surface-500">Workspace OS</p>
+          <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
+            Hello, <span className="text-primary-400">{user?.displayName || 'there'}</span>
+          </h1>
+          <p className="mt-2 text-sm text-surface-500">
+            {workspaces.length} workspace{workspaces.length !== 1 ? 's' : ''} · {user?.email}
+          </p>
         </div>
+        <button
+          onClick={() => setShowCreate(true)}
+          className="flex shrink-0 items-center gap-2 rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-500 hover:shadow-primary-500/30 active:scale-[0.98]"
+        >
+          <Plus size={16} />
+          New workspace
+        </button>
       </div>
 
       {/* Invitations banner */}
@@ -162,7 +157,7 @@ function DashboardContent() {
       {/* Recent boards */}
       {recentBoards.length > 0 && (
         <div className="mb-8">
-          <h2 className="mb-3 font-display text-sm font-semibold tracking-tight text-surface-300">Recent boards</h2>
+          <h2 className="mb-3 text-label text-surface-500">Recent boards</h2>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
             {recentBoards.map((rb) => (
               <Link
@@ -201,13 +196,13 @@ function DashboardContent() {
         </div>
       ) : (
         <div>
-          <h2 className="mb-3 text-sm font-semibold text-surface-300">All workspaces</h2>
+          <h2 className="mb-3 text-label text-surface-500">All workspaces</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {workspaces.map((ws, i) => (
               <Link
                 key={ws.id}
                 href={`/workspaces/${ws.id}`}
-                className="group relative overflow-hidden rounded-xl border border-surface-800 bg-gradient-to-br from-surface-900 to-surface-900/50 p-5 transition-all hover:border-surface-700 hover:shadow-lg hover:shadow-primary-600/5 animate-fadeIn"
+                className="group relative overflow-hidden rounded-xl border border-surface-800 bg-surface-900 p-5 transition-all hover:border-surface-700 hover:bg-surface-800/50 animate-fadeIn"
                 style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'backwards' }}
               >
                 <div className="flex items-start justify-between">

@@ -36,6 +36,7 @@ export type Canvas = {
 };
 
 export type CreateCanvasObjectData = {
+  id?: string;
   type: CanvasObjectType;
   x?: number;
   y?: number;

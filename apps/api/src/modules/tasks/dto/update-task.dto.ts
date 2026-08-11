@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEnum,
+  IsISO8601,
   IsOptional,
   IsString,
   MaxLength,
@@ -49,6 +50,11 @@ export class UpdateTaskDto {
   @IsOptional()
   @IsString()
   assigneeId?: string | null;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsISO8601()
+  dueDate?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()

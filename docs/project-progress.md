@@ -115,31 +115,30 @@ A full-stack collaborative workspace SaaS platform with a NestJS backend, Next.j
 - Theme toggle (light/dark) with hydration-safe cookie persistence
 
 ### 🔶 Partially Complete
-- **Canvas** — object CRUD backend, surface/renderer/selection frontend, WebSocket sync scaffolded but not E2E tested
-- **Realtime** — Socket.IO gateway scaffolded, presence interfaces defined
+- **Canvas** — object CRUD backend, surface/renderer/selection frontend, WebSocket sync live (create/update/delete relay verified)
+- **Realtime** — Socket.IO gateway live: presence names resolved via DB, live cursors relayed, per-object locking with TTL + deny (E2E verified)
 - **Uploads** — file upload backend + local storage provider, frontend upload button and file sidebar
 - **AI** — provider interface + Gemini implementation, frontend dialog + summarize panel scaffolded
 - **Notifications push** — notification table + API handlers done, push subscription layer removed (waiting on infrastructure decision)
+- **Calendar view** — board page toggle (Board/Calendar), month grid with per-day task pills, Overdue / No due date / Upcoming sections, month nav + Today (initial state only; no visual polish pass yet)
 
 ### ⬜ Not Started
 - OAuth/SSO login
 - Docker Compose for production
 - Cloudflare R2 storage integration
-- Live cursor / presence indicators
 - Collaborative document editing
 - AI search / diagram generation
-- Calendar view for tasks
 - E2E testing
 
 ## Known Issues
 
-1. **Notification handler `onModuleInit()`** — handlers registered 0 times in dev server log. All 7 handlers query `listByWorkspace()` which filters `deletedAt IS NULL`. Only TASK_ASSIGNED delivers in E2E.
+1. ~~**Notification handler `onModuleInit()`**~~ — FIXED & verified E2E (Aug 2026): all 7 handlers register ("Notification handlers registered" in logs); MEMBER_ADDED, INVITATION_ACCEPTED, BOARD_SHARED, TASK_ASSIGNED all deliver correctly.
 
-2. **`@Public()` + `@CurrentUser()`** conflict on `workspaces.controller.ts:acceptInvitation` — `@Public()` skips auth guard but `@CurrentUser()` returns `undefined`. Needs userId passed via DTO or guard refactor.
+2. **`@Public()` + `@CurrentUser()`** conflict on `workspaces.controller.ts:acceptInvitation` — FIXED earlier; invitations accept via `POST /workspaces/invitations/accept` with `{selector, verifier}` (verified E2E with real invite flow).
 
-3. **Canvas/Realtime/Uploads modules** — backend scaffolded but not integrated into app flow, no E2E coverage.
+3. **Create column bug** — FIXED: `createColumn` defaulted position to 0, violating `columns_board_position_unique` on boards with seeded default columns (3 columns at positions 0-2) → 500. Now defaults to `existing.length` (next free position).
 
-4. **Most doc files are empty** — `docs/features/*.md`, `docs/database/schema.md`, `docs/api/routes.md`, `docs/architecture/system-overview.md` are all 0-byte stubs.
+4. ~~**Most doc files are empty**~~ — FIXED (Aug 2026): `docs/features/*.md` (8), `docs/database/schema.md`, `docs/api/routes.md`, `docs/architecture/system-overview.md` all filled; routes/schema verified against controllers + Drizzle schema.
 
 ## What To Do Next (Priority Order)
 
@@ -151,10 +150,10 @@ A full-stack collaborative workspace SaaS platform with a NestJS backend, Next.j
 5. **Write E2E tests** for critical paths: auth flow, workspace CRUD, board CRUD, task lifecycle, comment flow
 
 ### Priority 2 — Real-Time Collaboration
-6. **Live cursors** — broadcast cursor positions via Socket.IO, render remote cursors on canvas
-7. **Object locking** — prevent conflicting edits on the same canvas object
-8. **Presence indicators** — show who's viewing the same board/workspace
-9. **Undo/redo** — command pattern with history stack
+6. ~~**Live cursors**~~ — broadcast cursor positions via Socket.IO, render remote cursors on canvas — ✅ done & verified
+7. ~~**Object locking**~~ — prevent conflicting edits on the same canvas object — ✅ done & verified (lock/deny/unlock/handoff E2E)
+8. ~~**Presence indicators**~~ — show who's viewing the same board/workspace — ✅ done & verified (displayName from DB, multi-user smoke test)
+9. ~~**Undo/redo**~~ — command pattern with history stack — ✅ present (Ctrl+Z / Ctrl+Shift+Z on surface)
 
 ### Priority 3 — Deployment & Infrastructure
 10. **Docker Compose** — containerize API + web + Postgres + Redis for one-command startup
@@ -163,10 +162,10 @@ A full-stack collaborative workspace SaaS platform with a NestJS backend, Next.j
 
 ### Priority 4 — Feature Completeness
 13. **OAuth/SSO** — Google, GitHub login providers
-14. **AI features** — wire the AI dialog to generate diagrams/boards, AI summarize on boards, AI search
-15. **Calendar view** — task due dates on a calendar
+14. **AI features** — SKIPPED by product decision (Aug 2026): not wiring AI until after launch; endpoints + provider seam stay, `summarize` still feeds sample data (see `docs/features/ai.md`)
+15. **Calendar view** — DONE (Aug 2026): board-page toggle renders month grid with tasks by due date, Overdue/No due date/Upcoming lists, month nav + Today. Verified E2E in browser with real test tasks.
 16. **Push notifications** — service worker + Web Push API (infrastructure decision needed first)
-17. **Fill doc stubs** — write `docs/features/*.md`, `docs/database/schema.md`, `docs/api/routes.md`, `docs/architecture/system-overview.md`
+17. ~~**Fill doc stubs**~~ — DONE (Aug 2026): all 11 doc stubs written from live source evidence (controllers, schema, gateway, services).
 
 ### Priority 5 — Polish & Scale
 18. **Performance** — pagination/infinite scroll on all list views, query optimization, bundle analysis

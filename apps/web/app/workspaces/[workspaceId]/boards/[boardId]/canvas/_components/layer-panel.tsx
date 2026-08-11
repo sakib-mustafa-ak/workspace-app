@@ -2,6 +2,17 @@
 
 import { useCanvas } from '../_context/canvas-state';
 
+const typeLabels: Record<string, string> = {
+  rectangle: 'Rectangle',
+  ellipse: 'Ellipse',
+  line: 'Line',
+  arrow: 'Arrow',
+  text: 'Text',
+  stickyNote: 'Note',
+  connector: 'Connector',
+  image: 'Image',
+};
+
 export function LayerPanel() {
   const { state, dispatch } = useCanvas();
 
@@ -17,6 +28,9 @@ export function LayerPanel() {
         <h3 className="text-xs font-semibold uppercase tracking-wider text-surface-400">Layers</h3>
       </div>
       <div className="space-y-0.5 p-2">
+        {sorted.length === 0 && (
+          <p className="py-4 text-center text-xs text-surface-500">No objects</p>
+        )}
         {sorted.map((obj) => (
           <button
             key={obj.id}
@@ -27,13 +41,13 @@ export function LayerPanel() {
                 : 'text-surface-400 hover:bg-surface-800 hover:text-surface-200'
             }`}
           >
-            <span className="truncate">{obj.type}{obj.text ? `: ${obj.text}` : ''}</span>
-            <span className="ml-auto text-surface-600">z:{obj.zIndex}</span>
+            <span className="truncate">
+              {typeLabels[obj.type] ?? obj.type}
+              {obj.text ? `: ${obj.text}` : ''}
+            </span>
+            <span className="ml-auto shrink-0 text-[10px] tabular-nums text-surface-600">z:{obj.zIndex}</span>
           </button>
         ))}
-        {sorted.length === 0 && (
-          <p className="py-4 text-center text-xs text-surface-500">No objects</p>
-        )}
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import type { CanvasObject } from '../_context/canvas-state';
 export function hitTest(
   point: { x: number; y: number },
   obj: CanvasObject,
+  zoom = 1,
 ): boolean {
   const HalfPI = Math.PI / 180;
   const cos = Math.cos(-obj.rotation * HalfPI);
@@ -26,9 +27,9 @@ export function hitTest(
     }
     case 'line':
     case 'arrow':
-      return distanceToSegment(point, { x: obj.x, y: obj.y }, { x: obj.x + obj.width, y: obj.y + obj.height }) < 8;
+      return distanceToSegment(point, { x: obj.x, y: obj.y }, { x: obj.x + obj.width, y: obj.y + obj.height }) < 8 / zoom;
     case 'text':
-      return localX >= 0 && localX <= 200 && localY >= -16 && localY <= 4;
+      return localX >= 0 && localX <= Math.max(Math.abs(obj.width), 200) && localY >= -16 && localY <= 24;
     default:
       return false;
   }
@@ -47,8 +48,9 @@ function distanceToSegment(p: { x: number; y: number }, a: { x: number; y: numbe
 export function hitTestHandle(
   point: { x: number; y: number },
   obj: CanvasObject,
+  zoom = 1,
 ): string | null {
-  const threshold = 10;
+  const threshold = 10 / zoom;
   const corners: { key: string; x: number; y: number }[] = [
     { key: 'nw', x: obj.x, y: obj.y },
     { key: 'n', x: obj.x + obj.width / 2, y: obj.y },

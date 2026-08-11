@@ -97,6 +97,7 @@ export class CanvasService {
     }
 
     const object = await this.canvasRepo.createObject({
+      ...(dto.id ? { id: dto.id } : {}),
       canvasId: canvasRow.id,
       type: dto.type as
         | 'RECTANGLE'

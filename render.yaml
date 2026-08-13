@@ -1,0 +1,27 @@
+# Render Blueprint — deploys the NestJS API from the repo root
+#
+# Import in Render dashboard: New -> Blueprint -> this repo.
+# See DEPLOYMENT.md for the full walkthrough.
+services:
+  - type: web
+    name: workspace-api
+    runtime: node
+    plan: free
+    rootDir: apps/api
+    healthCheckPath: /api/v1/health
+    buildCommand: pnpm install --frozen-lockfile && pnpm build
+    preDeployCommand: pnpm --filter @repo/database migrate
+    startCommand: node --import tsx/esm dist/main.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "4000"
+      - key: APP_PUBLIC_BASE_URL
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true

@@ -21,7 +21,7 @@ export const envSchema = z.object({
     .string()
     .min(1, 'DATABASE_URL is required to connect to PostgreSQL.'),
 
-  REDIS_HOST: z.string().min(1, 'REDIS_HOST is required to connect to Redis.'),
+  REDIS_HOST: z.string().default('localhost'),
 
   REDIS_PORT: z.string().default('6379'),
 

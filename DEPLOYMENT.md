@@ -35,8 +35,8 @@ speaks the same `postgresql://` URL the Drizzle driver already uses.
    - `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` → Render generated them
      (check they exist; each ≥16 chars).
    - Save → **Manual Deploy → Latest commit** if a build already started.
-5. The service URL is `https://workspace-api.onrender.com`. Verify:
-   `curl https://workspace-api.onrender.com/api/v1/health` → 200.
+5. The service URL is `https://workspace-api-m9q7.onrender.com`. Verify:
+   `curl https://workspace-api-m9q7.onrender.com/api/v1/health` → 200.
 
 ### 4. Vercel (web)
 1. https://vercel.com → Sign in (GitHub) → **Add New Project** →
@@ -44,7 +44,7 @@ speaks the same `postgresql://` URL the Drizzle driver already uses.
 2. **Danger zone setting**: under Settings → General → Root Directory,
    select **`apps/web`** (the monorepo).
 3. Environment Variables (add `NEXT_PUBLIC_API_URL`):
-   `https://workspace-api.onrender.com/api/v1`
+   `https://workspace-api-m9q7.onrender.com/api/v1`
 4. Deploy. The site comes up at `https://workspace-app.vercel.app`.
 
 ### 5. Smoke test
@@ -61,7 +61,7 @@ speaks the same `postgresql://` URL the Drizzle driver already uses.
 | `APP_PUBLIC_BASE_URL` | Render | `https://<app>.vercel.app` |
 | `JWT_ACCESS_SECRET` | Render (generated) | random ≥16 chars |
 | `JWT_REFRESH_SECRET` | Render (generated) | random ≥16 chars |
-| `NEXT_PUBLIC_API_URL` | Vercel | `https://workspace-api.onrender.com/api/v1` |
+| `NEXT_PUBLIC_API_URL` | Vercel | `https://workspace-api-m9q7.onrender.com/api/v1` |
 | `REDIS_HOST` / `REDIS_PORT` | optional | defaults `localhost`/`6379`; the Redis module is a no-op placeholder — no client connects yet |
 
 ## Known limits (free-tier demo)

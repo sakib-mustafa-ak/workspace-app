@@ -18,7 +18,7 @@ export function InvitationsTab({
   onRevoke,
 }: Props) {
   const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState('MEMBER');
+  const [inviteRole, setInviteRole] = useState('EDITOR');
   const [inviteResult, setInviteResult] = useState('');
   const [inviteToken, setInviteToken] = useState('');
   const [copied, setCopied] = useState(false);
@@ -63,8 +63,10 @@ export function InvitationsTab({
             onChange={(e) => setInviteRole(e.target.value)}
             className="rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm outline-none"
           >
-            <option value="MEMBER">Member</option>
+            <option value="EDITOR">Editor</option>
             <option value="ADMIN">Admin</option>
+            <option value="COMMENTER">Commenter</option>
+            <option value="VIEWER">Viewer</option>
           </select>
         </div>
         <button

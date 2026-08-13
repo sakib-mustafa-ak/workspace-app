@@ -14,7 +14,8 @@ type Props = {
 
 const ROLE_STYLES: Record<string, string> = {
   ADMIN: 'bg-red-500/10 text-red-400 border-red-500/20',
-  MEMBER: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  EDITOR: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  COMMENTER: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
   VIEWER: 'bg-surface-500/10 text-surface-400 border-surface-500/20',
   OWNER: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
 };
@@ -84,7 +85,8 @@ export function MembersTab({
           >
             <option value="">Change role...</option>
             <option value="ADMIN">Admin</option>
-            <option value="MEMBER">Member</option>
+            <option value="EDITOR">Editor</option>
+            <option value="COMMENTER">Commenter</option>
             <option value="VIEWER">Viewer</option>
           </select>
           <button
@@ -138,9 +140,10 @@ export function MembersTab({
                     onChange={(e) => onChangeRole(m.id, m.userId, e.target.value)}
                     className="rounded border border-surface-700 bg-surface-800 px-2 py-1 text-xs outline-none"
                   >
-                    <option value="MEMBER">Member</option>
+                    <option value="EDITOR">Editor</option>
                     <option value="ADMIN">Admin</option>
-                    <option value="OWNER">Owner</option>
+                    <option value="COMMENTER">Commenter</option>
+                    <option value="VIEWER">Viewer</option>
                   </select>
                   <button
                     onClick={() => onRemoveMember(m.userId)}

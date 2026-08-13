@@ -317,15 +317,11 @@ export function CanvasSurface() {
           ctx.stroke();
         }
       } else if (obj) {
-        const x = Math.min(ld.from.x, ld.to.x);
-        const y = Math.min(ld.from.y, ld.to.y);
-        const w = Math.abs(ld.to.x - ld.from.x);
-        const h = Math.abs(ld.to.y - ld.from.y);
         ctx.save();
-        ctx.translate(x, y);
+        ctx.translate(obj.x, obj.y);
         ctx.rotate((obj.rotation * Math.PI) / 180);
         ctx.globalAlpha = obj.opacity;
-        renderObject(ctx, { ...obj, x: 0, y: 0, width: w, height: h });
+        renderObject(ctx, { ...obj, x: 0, y: 0 });
         ctx.restore();
       }
     } finally {

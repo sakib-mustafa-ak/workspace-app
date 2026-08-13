@@ -9,7 +9,7 @@ services:
     plan: free
     rootDir: apps/api
     healthCheckPath: /api/v1/health
-    buildCommand: pnpm install --frozen-lockfile && pnpm build
+    buildCommand: NODE_ENV=development pnpm install --frozen-lockfile && pnpm build
     startCommand: pnpm --filter @repo/database migrate && node --import tsx/esm dist/main.js
     envVars:
       - key: NODE_ENV

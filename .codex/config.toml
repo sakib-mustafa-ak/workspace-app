@@ -1,0 +1,7 @@
+[shell_environment_policy]
+inherit = "core"
+
+[shell_environment_policy.set]
+ANTHROPIC_BASE_URL = "https://api.moonshot.ai/v1/"
+ANTHROPIC_API_KEY = "sk-proj-7mQxL9vN2pRt4KjY8aBcD3eFgH6nPqWsX1zMvL5tRuC8yJi0"
+MODEL = "kimi-k2.7-code"

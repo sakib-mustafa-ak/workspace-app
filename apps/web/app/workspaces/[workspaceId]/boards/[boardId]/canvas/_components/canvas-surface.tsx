@@ -232,8 +232,8 @@ export function CanvasSurface() {
       const newPath: CanvasObject = {
         id,
         type: 'path',
-        x: pos.x,
-        y: pos.y,
+        x: 0,
+        y: 0,
         width: 0,
         height: 0,
         rotation: 0,

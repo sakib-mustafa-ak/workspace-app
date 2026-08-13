@@ -321,8 +321,12 @@ export function CanvasSurface() {
         const y = Math.min(ld.from.y, ld.to.y);
         const w = Math.abs(ld.to.x - ld.from.x);
         const h = Math.abs(ld.to.y - ld.from.y);
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate((obj.rotation * Math.PI) / 180);
         ctx.globalAlpha = obj.opacity;
-        renderObject(ctx, { ...obj, x, y, width: w, height: h });
+        renderObject(ctx, { ...obj, x: 0, y: 0, width: w, height: h });
+        ctx.restore();
       }
     } finally {
       ctx.restore();

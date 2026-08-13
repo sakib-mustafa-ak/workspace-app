@@ -45,6 +45,8 @@ export class NotificationsService {
       notificationId: notification.id,
       userId,
       type: input.type,
+      title: notification.title,
+      body: notification.body,
     });
 
     return notification;

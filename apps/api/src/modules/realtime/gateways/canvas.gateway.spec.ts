@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CanvasGateway } from './canvas.gateway';
 import type { AuthenticatedSocket } from './canvas.gateway';
 import { UsersService } from '../../users/services/users.service';
+import { NotificationsEventBus } from '../../notifications/events/notifications.events';
 
 describe('CanvasGateway', () => {
   let gateway: CanvasGateway;
@@ -16,6 +17,12 @@ describe('CanvasGateway', () => {
             getProfile: jest
               .fn()
               .mockResolvedValue({ displayName: 'Test User' }),
+          },
+        },
+        {
+          provide: NotificationsEventBus,
+          useValue: {
+            onNotificationCreated: jest.fn(),
           },
         },
       ],

@@ -22,7 +22,11 @@ function themeColors(): { bg: string; grid: string; accent: string } {
   return colors;
 }
 
-export function renderFrame(ctx: CanvasRenderingContext2D, state: CanvasState) {
+export function renderFrame(
+  ctx: CanvasRenderingContext2D,
+  state: CanvasState,
+  onImageReady?: (dataUrl: string) => void,
+) {
   const { width, height } = ctx.canvas;
   const colors = themeColors();
 
@@ -44,7 +48,7 @@ export function renderFrame(ctx: CanvasRenderingContext2D, state: CanvasState) {
     ctx.globalAlpha = obj.opacity;
     ctx.translate(obj.x, obj.y);
     ctx.rotate((obj.rotation * Math.PI) / 180);
-    renderObject(ctx, obj);
+    renderObject(ctx, obj, onImageReady);
     ctx.restore();
   }
 
@@ -79,7 +83,11 @@ function drawGrid(ctx: CanvasRenderingContext2D, state: CanvasState, gridColor: 
   ctx.globalAlpha = 1;
 }
 
-export function renderObject(ctx: CanvasRenderingContext2D, obj: CanvasObject) {
+export function renderObject(
+  ctx: CanvasRenderingContext2D,
+  obj: CanvasObject,
+  onImageReady?: (dataUrl: string) => void,
+) {
   switch (obj.type) {
     case 'rectangle':
       ctx.fillStyle = obj.fill;
@@ -154,6 +162,7 @@ export function renderObject(ctx: CanvasRenderingContext2D, obj: CanvasObject) {
         if (!img) {
           img = new Image();
           img.src = obj.imageData;
+          img.onload = () => onImageReady?.(obj.imageData!);
           imageCache.set(obj.imageData, img);
         }
         if (img.complete && img.naturalWidth > 0) {

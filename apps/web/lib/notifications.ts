@@ -28,6 +28,14 @@ export type NotificationsListResponse = {
   total: number;
 };
 
+export type NotificationCreatedSocketPayload = {
+  notificationId: string;
+  userId: string;
+  type: string;
+  title: string;
+  body: string | null;
+};
+
 export const notificationsApi = {
   list: (params?: { limit?: number; offset?: number; filter?: string }) =>
     api.get<NotificationsListResponse>(`/notifications${buildQuery(params as Record<string, string | number | undefined>)}`),

@@ -144,7 +144,10 @@ export function CanvasSurface() {
         cvs.width = w;
         cvs.height = h;
       }
-      renderFrame(ctx, state);
+      renderFrame(ctx, state, () => {
+        if (!canvasRef.current) return;
+        requestAnimationFrame(() => renderFrame(ctx, stateRef.current));
+      });
     };
 
     draw();

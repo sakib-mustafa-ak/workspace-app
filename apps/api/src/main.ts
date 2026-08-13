@@ -21,6 +21,8 @@ async function bootstrap(): Promise<void> {
     bufferLogs: true,
   });
 
+  app.useBodyParser('json', { limit: '10mb' });
+
   app.use(helmet());
   app.enableCors();
 

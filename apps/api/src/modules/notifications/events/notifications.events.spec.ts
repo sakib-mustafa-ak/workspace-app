@@ -14,6 +14,8 @@ describe('NotificationsEventBus', () => {
       notificationId: 'n1',
       userId: 'u1',
       type: 'COMMENT_ADDED',
+      title: 'New comment on board',
+      body: null,
     };
     bus.publishNotificationCreated(payload);
     expect(fn).toHaveBeenCalledWith(payload);
@@ -29,6 +31,8 @@ describe('NotificationsEventBus', () => {
       notificationId: 'n1',
       userId: 'u1',
       type: 'COMMENT_ADDED',
+      title: 'New comment on board',
+      body: null,
     });
     expect(a).toHaveBeenCalledTimes(1);
     expect(b).toHaveBeenCalledTimes(1);

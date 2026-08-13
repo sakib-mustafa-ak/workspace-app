@@ -7,12 +7,13 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { jwtVerify } from 'jose';
 import { TextEncoder } from 'node:util';
 
 import { UsersService } from '../../users/services/users.service';
+import { NotificationsEventBus } from '../../notifications/events/notifications.events';
 import type {
   PresenceUser,
   ObjectLock,
@@ -28,7 +29,9 @@ export interface AuthenticatedSocket extends Socket {
   cors: { origin: '*', credentials: true },
   namespace: '/canvas',
 })
-export class CanvasGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class CanvasGateway
+  implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
+{
   @WebSocketServer()
   server!: Server;
 
@@ -38,7 +41,19 @@ export class CanvasGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private static readonly LOCK_TTL_MS = 30_000;
 
-  constructor(@Inject(UsersService) private readonly users: UsersService) {}
+  constructor(
+    @Inject(UsersService) private readonly users: UsersService,
+    @Inject(NotificationsEventBus)
+    private readonly notificationsBus: NotificationsEventBus,
+  ) {}
+
+  onModuleInit(): void {
+    this.notificationsBus.onNotificationCreated((payload) => {
+      this.server
+        .to(`user:${payload.userId}`)
+        .emit('notification:created', payload);
+    });
+  }
 
   async handleConnection(client: AuthenticatedSocket): Promise<void> {
     const token = String(
@@ -58,6 +73,7 @@ export class CanvasGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const userId = payload.sub as string;
       client.userId = userId;
       client.displayName = await this.resolveDisplayName(userId);
+      await client.join(`user:${userId}`);
       this.syncStaleName(client);
     } catch {
       client.disconnect();

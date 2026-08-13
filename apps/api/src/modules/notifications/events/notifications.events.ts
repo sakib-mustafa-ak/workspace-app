@@ -5,6 +5,8 @@ export type NotificationCreatedPayload = {
   notificationId: string;
   userId: string;
   type: string;
+  title: string;
+  body: string | null;
 };
 
 export type NotificationDeliveredPayload = {

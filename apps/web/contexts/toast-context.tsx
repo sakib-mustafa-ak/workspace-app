@@ -16,7 +16,7 @@ type ToastContextType = {
   toasts: Toast[];
   success: (message: string, undo?: Toast['undo']) => void;
   error: (message: string) => void;
-  info: (message: string) => void;
+  info: (message: string, durationMs?: number) => void;
   dismiss: (id: string) => void;
 };
 
@@ -26,10 +26,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastCounter = useRef(0);
 
-  const addToast = useCallback((type: ToastType, message: string, undo?: Toast['undo']) => {
+  const addToast = useCallback((type: ToastType, message: string, undo?: Toast['undo'], durationMs?: number) => {
     const id = String(++toastCounter.current);
     setToasts(prev => [...prev, { id, type, message, undo }]);
-    const duration = type === 'error' ? 8000 : 4000;
+    const duration = durationMs ?? (type === 'error' ? 8000 : 4000);
     setTimeout(() => { setToasts(prev => prev.filter(t => t.id !== id)); }, duration);
   }, []);
 
@@ -42,7 +42,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       toasts,
       success: (m, u) => addToast('success', m, u),
       error: (m) => addToast('error', m),
-      info: (m) => addToast('info', m),
+      info: (m, d) => addToast('info', m, undefined, d),
       dismiss,
     }}>
       {children}

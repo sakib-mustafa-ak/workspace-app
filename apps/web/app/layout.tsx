@@ -4,6 +4,7 @@ import Script from 'next/script';
 import { cookies } from 'next/headers';
 import './globals.css';
 import { ToastProvider } from '@/contexts/toast-context';
+import { NotificationListener } from '@/components/notification-listener';
 import LoadingBar from './loading-bar';
 
 const geistSans = localFont({
@@ -53,7 +54,10 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: themeScript }}
         />
         <LoadingBar />
-        <ToastProvider>{children}</ToastProvider>
+        <ToastProvider>
+          {children}
+          <NotificationListener />
+        </ToastProvider>
       </body>
     </html>
   );

@@ -107,7 +107,7 @@ export function Toolbar() {
   const divider = <div className="mx-1 h-5 w-px shrink-0 bg-surface-700" />;
 
   return (
-    <div className="pointer-events-none absolute left-1/2 top-12 z-50 max-w-[calc(100vw-1rem)] -translate-x-1/2">
+    <div className="pointer-events-none absolute left-1/2 top-12 z-30 max-w-[calc(100vw-1rem)] -translate-x-1/2">
       <div className="pointer-events-auto flex max-w-full items-center gap-0.5 overflow-x-auto rounded-xl border border-surface-700 bg-surface-900/95 p-1 shadow-xl backdrop-blur-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <button
           title="Undo (Ctrl+Z)"

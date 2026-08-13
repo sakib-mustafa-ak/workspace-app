@@ -10,8 +10,7 @@ services:
     rootDir: apps/api
     healthCheckPath: /api/v1/health
     buildCommand: pnpm install --frozen-lockfile && pnpm build
-    preDeployCommand: pnpm --filter @repo/database migrate
-    startCommand: node --import tsx/esm dist/main.js
+    startCommand: pnpm --filter @repo/database migrate && node --import tsx/esm dist/main.js
     envVars:
       - key: NODE_ENV
         value: production

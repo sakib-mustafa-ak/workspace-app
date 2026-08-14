@@ -1,0 +1,1 @@
+ALTER TYPE "public"."notification_type" ADD VALUE 'TASK_UNASSIGNED' BEFORE 'FILE_UPLOADED';

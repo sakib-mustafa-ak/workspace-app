@@ -32,6 +32,20 @@ describe('TasksEventBus', () => {
     expect(fn).toHaveBeenCalled();
   });
 
+  it('emits TaskUpdated with title and assignee diff', () => {
+    const fn = jest.fn();
+    bus.onTaskUpdated(fn);
+    const payload = {
+      taskId: 't1',
+      updatedBy: 'u1',
+      title: 'Set up CI/CD',
+      previousAssigneeId: 'u2',
+      assigneeId: 'u3',
+    };
+    bus.publishTaskUpdated(payload);
+    expect(fn).toHaveBeenCalledWith(payload);
+  });
+
   it('supports multiple listeners', () => {
     const a = jest.fn();
     const b = jest.fn();

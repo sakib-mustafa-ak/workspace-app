@@ -7,11 +7,15 @@ export type TaskCreatedPayload = {
   columnId: string;
   createdBy: string;
   assigneeId?: string;
+  title: string;
 };
 
 export type TaskUpdatedPayload = {
   taskId: string;
   updatedBy: string;
+  title: string;
+  previousAssigneeId: string | null;
+  assigneeId: string | null;
 };
 
 export type TaskMovedPayload = {
@@ -53,6 +57,10 @@ export class TasksEventBus {
 
   publishTaskUpdated(payload: TaskUpdatedPayload): void {
     this.emit(TASKS_EVENTS.taskUpdated, payload);
+  }
+
+  onTaskUpdated(listener: (payload: TaskUpdatedPayload) => void): void {
+    this.emitter.on(TASKS_EVENTS.taskUpdated, listener);
   }
 
   publishTaskMoved(payload: TaskMovedPayload): void {

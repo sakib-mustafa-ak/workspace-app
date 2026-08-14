@@ -71,6 +71,7 @@ export class TasksService {
       columnId,
       createdBy: userId,
       assigneeId: task.assigneeId ?? undefined,
+      title: task.title,
     });
 
     return task;
@@ -146,7 +147,13 @@ export class TasksService {
     }
 
     const updated = await this.tasksRepo.update(taskId, updateData);
-    this.events.publishTaskUpdated({ taskId, updatedBy: userId });
+    this.events.publishTaskUpdated({
+      taskId,
+      updatedBy: userId,
+      title: updated.title,
+      previousAssigneeId: task.assigneeId,
+      assigneeId: updated.assigneeId,
+    });
     return updated;
   }
 

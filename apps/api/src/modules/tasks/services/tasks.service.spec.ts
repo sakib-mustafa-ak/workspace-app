@@ -148,6 +148,7 @@ describe('TasksService', () => {
         boardId: 'b1',
         columnId: 'c1',
         createdBy: 'u1',
+        title: 'Set up CI/CD',
       });
     });
 
@@ -220,6 +221,25 @@ describe('TasksService', () => {
 
       expect(result.title).toBe('Updated');
       expect(events.publishTaskUpdated).toHaveBeenCalled();
+    });
+
+    it('publishes assignee diff in TaskUpdated', async () => {
+      const previouslyAssigned = { ...mockTask, assigneeId: 'u2' };
+      const reassigned = { ...mockTask, assigneeId: 'u3' };
+      tasksRepo.findById.mockResolvedValue(previouslyAssigned);
+      mockDbSelect([mockMembership]);
+      policy.isAtLeast.mockReturnValue(true);
+      tasksRepo.update.mockResolvedValue(reassigned);
+
+      await service.update('t1', 'u1', { assigneeId: 'u3' });
+
+      expect(events.publishTaskUpdated).toHaveBeenCalledWith({
+        taskId: 't1',
+        updatedBy: 'u1',
+        title: 'Set up CI/CD',
+        previousAssigneeId: 'u2',
+        assigneeId: 'u3',
+      });
     });
 
     it('sets completedAt when status changes to DONE', async () => {

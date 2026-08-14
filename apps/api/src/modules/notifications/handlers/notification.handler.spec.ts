@@ -145,6 +145,125 @@ describe('NotificationHandler', () => {
     expect(notificationsService.createAndDeliver).not.toHaveBeenCalled();
   });
 
+  it('should deliver TASK_ASSIGNED and TASK_UNASSIGNED on reassign', async () => {
+    tasksEventBus.publishTaskUpdated({
+      taskId: 't-1',
+      updatedBy: 'user-1',
+      title: 'Fix login bug',
+      previousAssigneeId: 'user-2',
+      assigneeId: 'user-3',
+    });
+
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(notificationsService.createAndDeliver).toHaveBeenCalledWith(
+      'user-3',
+      {
+        type: 'TASK_ASSIGNED',
+        title: 'You were assigned a task',
+        body: 'Fix login bug',
+        resourceType: 'task',
+        resourceId: 't-1',
+      },
+    );
+    expect(notificationsService.createAndDeliver).toHaveBeenCalledWith(
+      'user-2',
+      {
+        type: 'TASK_UNASSIGNED',
+        title: 'You were unassigned from a task',
+        body: 'Fix login bug',
+        resourceType: 'task',
+        resourceId: 't-1',
+      },
+    );
+  });
+
+  it('should deliver TASK_UNASSIGNED only when assignee is removed', async () => {
+    tasksEventBus.publishTaskUpdated({
+      taskId: 't-1',
+      updatedBy: 'user-1',
+      title: 'Fix login bug',
+      previousAssigneeId: 'user-2',
+      assigneeId: null,
+    });
+
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(notificationsService.createAndDeliver).toHaveBeenCalledTimes(1);
+    expect(notificationsService.createAndDeliver).toHaveBeenCalledWith(
+      'user-2',
+      {
+        type: 'TASK_UNASSIGNED',
+        title: 'You were unassigned from a task',
+        body: 'Fix login bug',
+        resourceType: 'task',
+        resourceId: 't-1',
+      },
+    );
+  });
+
+  it('should deliver nothing when assignee is unchanged', async () => {
+    tasksEventBus.publishTaskUpdated({
+      taskId: 't-1',
+      updatedBy: 'user-1',
+      title: 'Fix login bug',
+      previousAssigneeId: 'user-2',
+      assigneeId: 'user-2',
+    });
+
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(notificationsService.createAndDeliver).not.toHaveBeenCalled();
+  });
+
+  it('should not notify the updater when they reassign to themselves', async () => {
+    tasksEventBus.publishTaskUpdated({
+      taskId: 't-1',
+      updatedBy: 'user-3',
+      title: 'Fix login bug',
+      previousAssigneeId: 'user-2',
+      assigneeId: 'user-3',
+    });
+
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(notificationsService.createAndDeliver).toHaveBeenCalledTimes(1);
+    expect(notificationsService.createAndDeliver).toHaveBeenCalledWith(
+      'user-2',
+      {
+        type: 'TASK_UNASSIGNED',
+        title: 'You were unassigned from a task',
+        body: 'Fix login bug',
+        resourceType: 'task',
+        resourceId: 't-1',
+      },
+    );
+  });
+
+  it('should deliver TASK_ASSIGNED when a task becomes assigned', async () => {
+    tasksEventBus.publishTaskUpdated({
+      taskId: 't-1',
+      updatedBy: 'user-1',
+      title: 'Fix login bug',
+      previousAssigneeId: null,
+      assigneeId: 'user-2',
+    });
+
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(notificationsService.createAndDeliver).toHaveBeenCalledTimes(1);
+    expect(notificationsService.createAndDeliver).toHaveBeenCalledWith(
+      'user-2',
+      {
+        type: 'TASK_ASSIGNED',
+        title: 'You were assigned a task',
+        body: 'Fix login bug',
+        resourceType: 'task',
+        resourceId: 't-1',
+      },
+    );
+  });
+
   it('should deliver MEMBER_ADDED notification on MemberAdded', async () => {
     workspacesEventBus.publishMemberAdded({
       workspaceId: 'ws-1',

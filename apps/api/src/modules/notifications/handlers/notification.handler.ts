@@ -4,7 +4,10 @@ import type { BoardCreatedPayload } from '../../boards/events/boards.events';
 import { BoardsEventBus } from '../../boards/events/boards.events';
 import type { CommentCreatedPayload } from '../../comments/events/comments.events';
 import { CommentsEventBus } from '../../comments/events/comments.events';
-import type { TaskCreatedPayload } from '../../tasks/events/tasks.events';
+import type {
+  TaskCreatedPayload,
+  TaskUpdatedPayload,
+} from '../../tasks/events/tasks.events';
 import { TasksEventBus } from '../../tasks/events/tasks.events';
 import type {
   MemberAddedPayload,
@@ -49,6 +52,9 @@ export class NotificationHandler implements OnModuleInit {
     });
     this.tasksEventBus.onTaskCreated((p) => {
       void this.handleTaskCreated(p);
+    });
+    this.tasksEventBus.onTaskUpdated((p) => {
+      void this.handleTaskUpdated(p);
     });
     this.workspacesEventBus.onMemberAdded((p) => {
       void this.handleMemberAdded(p);
@@ -145,6 +151,35 @@ export class NotificationHandler implements OnModuleInit {
       });
     } catch (err) {
       this.logger.error('Failed to handle TaskCreated', err);
+    }
+  }
+
+  private async handleTaskUpdated(payload: TaskUpdatedPayload): Promise<void> {
+    if (payload.assigneeId === payload.previousAssigneeId) return;
+    try {
+      if (payload.assigneeId && payload.assigneeId !== payload.updatedBy) {
+        await this.notifications.createAndDeliver(payload.assigneeId, {
+          type: 'TASK_ASSIGNED',
+          title: 'You were assigned a task',
+          body: payload.title,
+          resourceType: 'task',
+          resourceId: payload.taskId,
+        });
+      }
+      if (
+        payload.previousAssigneeId &&
+        payload.previousAssigneeId !== payload.updatedBy
+      ) {
+        await this.notifications.createAndDeliver(payload.previousAssigneeId, {
+          type: 'TASK_UNASSIGNED',
+          title: 'You were unassigned from a task',
+          body: payload.title,
+          resourceType: 'task',
+          resourceId: payload.taskId,
+        });
+      }
+    } catch (err) {
+      this.logger.error('Failed to handle TaskUpdated', err);
     }
   }
 

@@ -152,7 +152,10 @@ export function Sidebar() {
       </div>
 
       <div className="border-t border-surface-800 p-3">
-        <div className="group mb-2 flex items-center gap-2.5 rounded-lg px-3 py-2 transition-colors hover:bg-surface-800/50">
+        <Link
+          href="/settings"
+          className="group mb-2 flex items-center gap-2.5 rounded-lg px-3 py-2 transition-colors hover:bg-surface-800/50"
+        >
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-surface-600 to-surface-700 text-xs font-medium text-surface-200 shadow-sm">
             {user?.displayName?.charAt(0)?.toUpperCase() || 'U'}
           </div>
@@ -163,7 +166,7 @@ export function Sidebar() {
             <p className="hidden truncate text-xs text-surface-500 group-hover:block">{user?.email}</p>
           </div>
           <ChevronRight size={14} className="text-surface-600" />
-        </div>
+        </Link>
         <div role="group" aria-label="Theme" className="flex items-center justify-between gap-1 px-1">
           <button
             onClick={() => setTheme('dark')}

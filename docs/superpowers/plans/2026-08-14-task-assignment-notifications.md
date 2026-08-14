@@ -638,3 +638,26 @@ If clean, nothing to commit.
 - API: manual Render deploy — `startCommand` runs `pnpm --filter @repo/database migrate` on boot, which applies the new migration (adds `TASK_UNASSIGNED` to the live enum), then restarts with the new handler code.
 - Web: no deploy needed (no client changes).
 - Manual smoke test: create task assigned to member B → B's toast shows "You were assigned a task / <title>"; reassign to C → B gets unassigned toast, C gets assigned toast; unassign → B gets unassigned toast; self-assign → no notification.
+
+---
+
+### Task 7 (post-review follow-up): Validate assignee is an ACTIVE workspace member
+
+**Rationale:** Final review finding — `TasksService.create`/`update` never validate `input.assigneeId`; an editor could assign a task to any user id, leaking the task title via the new notifications. Fix before deploy.
+
+**Files:**
+- Modify: `apps/api/src/modules/tasks/services/tasks.service.ts` + `tasks.service.spec.ts`
+
+- [ ] **Step 1: Write failing tests** (TDD)
+  - Add helper `mockDbSelectSequential(resolved: unknown[][])` next to `mockDbSelect`: builds the same `.select().from().where().limit()` chain per call via `mockReturnValueOnce`, so the first query (requireRole) and second query (assignee check) can resolve differently.
+  - New tests:
+    - `create` throws `'not an active member'` when assigneeId is not a member (sequential: `[[mockMembership], []]`).
+    - `create` succeeds when assigneeId is a member (sequential: `[[mockMembership], [mockMembership]]`) — assert `tasksRepo.create` called with the assigneeId.
+    - `update` throws `'not an active member'` when assigneeId is a non-member (sequential: `[[mockMembership], []]`).
+    - `update` succeeds with `assigneeId: null` (unassign) — existing `mockDbSelect([mockMembership])` pattern works (no second query).
+- [ ] **Step 2: Run tests → verify RED**
+- [ ] **Step 3: Implement**
+  - New private method `requireAssigneeIsMember(workspaceId: string, userId: string)`: same `.select().from(workspaceMembers).where(and(eq(workspaceId), eq(userId), eq(status, 'ACTIVE'))).limit(1)` query as `requireRole`; throws `TasksException(NOT_A_MEMBER, 'Cannot assign to a user who is not an active member of this workspace.')` when no row.
+  - `create`: after `requireRole(...)` and before `tasksRepo.create`, `if (input.assigneeId) await this.requireAssigneeIsMember(workspaceId, input.assigneeId);`
+  - `update`: after `requireRole(...)`, `if (typeof input.assigneeId === 'string') await this.requireAssigneeIsMember(task.workspaceId, input.assigneeId);` (null = unassign → skip)
+- [ ] **Step 4: Run tests → GREEN; `pnpm --filter api exec tsc --noEmit` → 0 errors; full suite; commit** `fix(api): validate assignee is an active workspace member`

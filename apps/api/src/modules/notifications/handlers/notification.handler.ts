@@ -134,12 +134,12 @@ export class NotificationHandler implements OnModuleInit {
   }
 
   private async handleTaskCreated(payload: TaskCreatedPayload): Promise<void> {
-    if (!payload.assigneeId) return;
+    if (!payload.assigneeId || payload.assigneeId === payload.createdBy) return;
     try {
       await this.notifications.createAndDeliver(payload.assigneeId, {
         type: 'TASK_ASSIGNED',
         title: 'You were assigned a task',
-        body: undefined,
+        body: payload.title,
         resourceType: 'task',
         resourceId: payload.taskId,
       });

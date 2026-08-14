@@ -113,6 +113,7 @@ describe('NotificationHandler', () => {
       columnId: 'c-1',
       createdBy: 'user-1',
       assigneeId: 'user-2',
+      title: 'Fix login bug',
     });
 
     await new Promise((r) => setTimeout(r, 10));
@@ -122,11 +123,26 @@ describe('NotificationHandler', () => {
       {
         type: 'TASK_ASSIGNED',
         title: 'You were assigned a task',
-        body: undefined,
+        body: 'Fix login bug',
         resourceType: 'task',
         resourceId: 't-1',
       },
     );
+  });
+
+  it('should skip TASK_ASSIGNED when assignee is the creator', async () => {
+    tasksEventBus.publishTaskCreated({
+      taskId: 't-1',
+      boardId: 'b-1',
+      columnId: 'c-1',
+      createdBy: 'user-1',
+      assigneeId: 'user-1',
+      title: 'My own task',
+    });
+
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(notificationsService.createAndDeliver).not.toHaveBeenCalled();
   });
 
   it('should deliver MEMBER_ADDED notification on MemberAdded', async () => {

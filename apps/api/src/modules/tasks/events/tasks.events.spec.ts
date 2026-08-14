@@ -15,6 +15,7 @@ describe('TasksEventBus', () => {
       boardId: 'b1',
       columnId: 'c1',
       createdBy: 'u1',
+      title: 'Task title',
     };
     bus.publishTaskCreated(payload);
     expect(fn).toHaveBeenCalledWith(payload);
@@ -28,6 +29,7 @@ describe('TasksEventBus', () => {
       boardId: 'b1',
       columnId: 'c1',
       createdBy: 'u1',
+      title: 'Task title',
     });
     expect(fn).toHaveBeenCalled();
   });
@@ -57,6 +59,7 @@ describe('TasksEventBus', () => {
       boardId: 'b1',
       columnId: 'c1',
       createdBy: 'u1',
+      title: 'Task title',
     });
     expect(a).toHaveBeenCalledTimes(1);
     expect(b).toHaveBeenCalledTimes(1);

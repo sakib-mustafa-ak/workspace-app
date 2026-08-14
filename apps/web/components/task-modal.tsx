@@ -210,7 +210,7 @@ export function TaskModal({
               <option value="">Unassigned</option>
               {members.map((m) => (
                 <option key={m.id} value={m.userId}>
-                  {m.userId}
+                  {m.user?.displayName || m.user?.email || m.userId}
                 </option>
               ))}
             </select>

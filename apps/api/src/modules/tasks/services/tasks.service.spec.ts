@@ -68,6 +68,20 @@ function mockDbSelect(resolved: unknown[]): void {
   });
 }
 
+function mockDbSelectSequential(resolved: unknown[][]): void {
+  const select = jest.fn();
+  for (const rows of resolved) {
+    select.mockReturnValueOnce({
+      from: jest.fn().mockReturnValue({
+        where: jest.fn().mockReturnValue({
+          limit: jest.fn().mockResolvedValue(rows),
+        }),
+      }),
+    });
+  }
+  db.select = select;
+}
+
 describe('TasksService', () => {
   let service: TasksService;
   let tasksRepo: jest.Mocked<TasksRepository>;
@@ -169,6 +183,35 @@ describe('TasksService', () => {
         service.create('c1', 'b1', 'w1', 'u1', { title: 'Task' }),
       ).rejects.toThrow('Column not found');
     });
+
+    it('throws when assignee is not an active member', async () => {
+      mockDbSelectSequential([[mockMembership], []]);
+      policy.isAtLeast.mockReturnValue(true);
+
+      await expect(
+        service.create('c1', 'b1', 'w1', 'u1', {
+          title: 'Task',
+          assigneeId: 'u9',
+        }),
+      ).rejects.toThrow('not an active member');
+    });
+
+    it('creates a task when assignee is an active member', async () => {
+      mockDbSelectSequential([[mockMembership], [mockMembership]]);
+      policy.isAtLeast.mockReturnValue(true);
+      tasksRepo.findColumnById.mockResolvedValue(mockColumn);
+      tasksRepo.create.mockResolvedValue({ ...mockTask, assigneeId: 'u2' });
+
+      const result = await service.create('c1', 'b1', 'w1', 'u1', {
+        title: 'Task',
+        assigneeId: 'u2',
+      });
+
+      expect(tasksRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ assigneeId: 'u2' }),
+      );
+      expect(result.assigneeId).toBe('u2');
+    });
   });
 
   describe('getById', () => {
@@ -240,6 +283,28 @@ describe('TasksService', () => {
         previousAssigneeId: 'u2',
         assigneeId: 'u3',
       });
+    });
+
+    it('throws when assignee is not an active member', async () => {
+      tasksRepo.findById.mockResolvedValue(mockTask);
+      mockDbSelectSequential([[mockMembership], []]);
+      policy.isAtLeast.mockReturnValue(true);
+
+      await expect(
+        service.update('t1', 'u1', { assigneeId: 'u9' }),
+      ).rejects.toThrow('not an active member');
+    });
+
+    it('unassigns without a member check when assigneeId is null', async () => {
+      tasksRepo.findById.mockResolvedValue({ ...mockTask, assigneeId: 'u2' });
+      mockDbSelect([mockMembership]);
+      policy.isAtLeast.mockReturnValue(true);
+      tasksRepo.update.mockResolvedValue({ ...mockTask, assigneeId: null });
+
+      const result = await service.update('t1', 'u1', { assigneeId: null });
+
+      expect(result.assigneeId).toBeNull();
+      expect(tasksRepo.update).toHaveBeenCalled();
     });
 
     it('sets completedAt when status changes to DONE', async () => {

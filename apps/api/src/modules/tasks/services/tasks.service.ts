@@ -42,6 +42,9 @@ export class TasksService {
     },
   ): Promise<TaskRow> {
     await this.requireRole(workspaceId, userId, 'EDITOR');
+    if (input.assigneeId) {
+      await this.requireAssigneeIsMember(workspaceId, input.assigneeId);
+    }
 
     const column = await this.tasksRepo.findColumnById(columnId);
     if (!column) {
@@ -129,6 +132,9 @@ export class TasksService {
     }
 
     await this.requireRole(task.workspaceId, userId, 'EDITOR');
+    if (typeof input.assigneeId === 'string') {
+      await this.requireAssigneeIsMember(task.workspaceId, input.assigneeId);
+    }
 
     const { dueDate, ...rest } = input;
 
@@ -209,6 +215,30 @@ export class TasksService {
     await this.requireRole(task.workspaceId, userId, 'EDITOR');
     await this.tasksRepo.softDelete(taskId);
     this.events.publishTaskDeleted({ taskId, deletedBy: userId });
+  }
+
+  private async requireAssigneeIsMember(
+    workspaceId: string,
+    userId: string,
+  ): Promise<void> {
+    const [membership] = await this.db
+      .select()
+      .from(workspaceMembers)
+      .where(
+        and(
+          eq(workspaceMembers.workspaceId, workspaceId),
+          eq(workspaceMembers.userId, userId),
+          eq(workspaceMembers.status, 'ACTIVE'),
+        ),
+      )
+      .limit(1);
+
+    if (!membership) {
+      throw new TasksException(
+        TasksErrorCode.NOT_A_MEMBER,
+        'Cannot assign to a user who is not an active member of this workspace.',
+      );
+    }
   }
 
   private async requireRole(

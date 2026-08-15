@@ -1,6 +1,6 @@
 import { createContext, useContext, type Dispatch } from 'react';
 
-export type ToolType = 'select' | 'rectangle' | 'ellipse' | 'line' | 'arrow' | 'path' | 'text' | 'stickyNote' | 'connector';
+export type ToolType = 'select' | 'rectangle' | 'ellipse' | 'line' | 'arrow' | 'path' | 'text' | 'stickyNote' | 'connector' | 'eraser';
 
 export type CanvasObject = {
   id: string;
@@ -55,7 +55,7 @@ export type CanvasAction =
   | { type: 'LOAD_OBJECTS'; payload: CanvasObject[] }
   | { type: 'UPDATE_OBJECT'; payload: Partial<CanvasObject> & { id: string }; batch?: boolean }
   | { type: 'UPDATE_OBJECTS'; payload: Partial<CanvasObject>[]; batch?: boolean }
-  | { type: 'DELETE_OBJECTS'; payload: string[] }
+  | { type: 'DELETE_OBJECTS'; payload: string[]; batch?: boolean }
   | { type: 'RESIZE_OBJECT'; payload: { id: string; x: number; y: number; width: number; height: number }; batch?: boolean }
   | { type: 'SELECT'; payload: string[] }
   | { type: 'CLEAR_SELECTION' }
@@ -137,7 +137,7 @@ export function canvasReducer(state: CanvasState, action: CanvasAction): CanvasS
         ...state,
         objects: state.objects.filter(o => !action.payload.includes(o.id)),
         selectedIds: state.selectedIds.filter(id => !action.payload.includes(id)),
-        history: captureHistory(state),
+        history: action.batch ? state.history : captureHistory(state),
       };
     case 'RESIZE_OBJECT':
       return {

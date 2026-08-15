@@ -22,7 +22,7 @@ export function CanvasSurface() {
   const panOriginRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const spaceRef = useRef(false);
 
-  const dragMode = useRef<'none' | 'draw' | 'move' | 'resize'>('none');
+  const dragMode = useRef<'none' | 'draw' | 'move' | 'resize' | 'eraser'>('none');
   const resizeHandle = useRef<string | null>(null);
   const resizeIdRef = useRef<string | null>(null);
   const moveIdsRef = useRef<string[]>([]);
@@ -34,6 +34,7 @@ export function CanvasSurface() {
   const dragStatsRef = useRef({ events: 0, frames: 0 });
   const livePaintRef = useRef<number | null>(null);
   const liveDrawRef = useRef<{ id: string; type: CanvasObject['type']; from: { x: number; y: number }; to: { x: number; y: number } } | null>(null);
+  const eraserRef = useRef<Set<string>>(new Set());
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -225,6 +226,24 @@ export function CanvasSurface() {
       }
 
       dispatch({ type: 'CLEAR_SELECTION' });
+      return;
+    }
+
+    if (state.activeTool === 'eraser') {
+      dispatch({ type: 'CLEAR_SELECTION' });
+      dispatch({ type: 'SNAPSHOT' });
+      eraserRef.current = new Set();
+      dragMode.current = 'eraser';
+      const sorted = [...state.objects].sort((a, b) => b.zIndex - a.zIndex);
+      for (const obj of sorted) {
+        if (lockedObjectIds.current.has(obj.id)) continue;
+        if (hitTest(pos, obj, state.zoom)) {
+          eraserRef.current.add(obj.id);
+          dispatch({ type: 'DELETE_OBJECTS', payload: [obj.id], batch: true });
+          void persistDelete([obj.id]);
+          break;
+        }
+      }
       return;
     }
 
@@ -424,6 +443,20 @@ export function CanvasSurface() {
       return;
     }
 
+    if (dragMode.current === 'eraser') {
+      const sorted = [...stateRef.current.objects].sort((a, b) => b.zIndex - a.zIndex);
+      for (const obj of sorted) {
+        if (eraserRef.current.has(obj.id)) continue;
+        if (lockedObjectIds.current.has(obj.id)) continue;
+        if (hitTest(pos, obj, state.zoom)) {
+          eraserRef.current.add(obj.id);
+          dispatch({ type: 'DELETE_OBJECTS', payload: [obj.id], batch: true });
+          void persistDelete([obj.id]);
+        }
+      }
+      return;
+    }
+
     if (dragMode.current !== 'draw' || !drawingRef.current || !originRef.current) return;
     const drawing = stateRef.current.objects.find(o => o.id === drawingRef.current);
     if (drawing?.type === 'path') {
@@ -542,6 +575,7 @@ export function CanvasSurface() {
     panningRef.current = false;
     containerRef.current?.classList.remove('cursor-grabbing');
     dragMode.current = 'none';
+    eraserRef.current = new Set();
     resizeHandle.current = null;
     resizeIdRef.current = null;
     moveIdsRef.current = [];
@@ -583,7 +617,7 @@ export function CanvasSurface() {
       if (!e.ctrlKey && !e.metaKey && !e.altKey) {
         const tool: Record<string, ToolType> = {
           v: 'select', r: 'rectangle', o: 'ellipse', l: 'line',
-          a: 'arrow', p: 'path', t: 'text', n: 'stickyNote', c: 'connector',
+          a: 'arrow', p: 'path', t: 'text', n: 'stickyNote', c: 'connector', e: 'eraser',
         };
         const next = tool[e.key.toLowerCase()];
         if (next) dispatch({ type: 'SET_ACTIVE_TOOL', payload: next });
@@ -641,7 +675,7 @@ export function CanvasSurface() {
           <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-2">
             <p className="text-xs text-surface-500">Pick a tool and draw on the canvas</p>
             <p className="text-[10px] tracking-wide text-surface-600">
-              V select · R rect · O ellipse · L line · A arrow · P pencil · T text · N note · C connector — Ctrl+scroll to zoom, Space to pan
+              V select · R rect · O ellipse · L line · A arrow · P pencil · T text · N note · C connector · E eraser — Ctrl+scroll to zoom, Space to pan
             </p>
           </div>
         )}

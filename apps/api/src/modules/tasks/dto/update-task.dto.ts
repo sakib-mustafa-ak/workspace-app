@@ -1,9 +1,11 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEnum,
+  IsInt,
   IsISO8601,
   IsOptional,
   IsString,
+  IsUUID,
   MaxLength,
   MinLength,
 } from 'class-validator';
@@ -48,7 +50,7 @@ export class UpdateTaskDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsString()
+  @IsUUID()
   assigneeId?: string | null;
 
   @ApiPropertyOptional()
@@ -58,5 +60,6 @@ export class UpdateTaskDto {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @IsInt()
   position?: number;
 }

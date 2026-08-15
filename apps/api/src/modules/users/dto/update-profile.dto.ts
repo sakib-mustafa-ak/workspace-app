@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsUrl,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 import {
   MAX_BIO_LENGTH,
@@ -23,7 +29,7 @@ export class UpdateProfileDto {
     nullable: true,
   })
   @IsOptional()
-  @IsString()
+  @IsUrl()
   avatarUrl?: string | null;
 
   @ApiProperty({

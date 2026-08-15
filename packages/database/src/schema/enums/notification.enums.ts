@@ -9,6 +9,7 @@ export const notificationTypeEnum = pgEnum('notification_type', [
   'INVITATION_ACCEPTED',
   'TASK_ASSIGNED',
   'TASK_UNASSIGNED',
+  'TASK_DELETED',
   'FILE_UPLOADED',
 ]);
 

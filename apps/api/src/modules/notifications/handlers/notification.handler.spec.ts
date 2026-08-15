@@ -264,6 +264,41 @@ describe('NotificationHandler', () => {
     );
   });
 
+  it('should deliver TASK_DELETED notification when a task is deleted', async () => {
+    tasksEventBus.publishTaskDeleted({
+      taskId: 't-1',
+      deletedBy: 'user-1',
+      title: 'Fix login bug',
+      assigneeId: 'user-2',
+    });
+
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(notificationsService.createAndDeliver).toHaveBeenCalledWith(
+      'user-2',
+      {
+        type: 'TASK_DELETED',
+        title: 'A task you were assigned was deleted',
+        body: 'Fix login bug',
+        resourceType: 'task',
+        resourceId: 't-1',
+      },
+    );
+  });
+
+  it('should skip TASK_DELETED when the assignee deleted the task themselves', async () => {
+    tasksEventBus.publishTaskDeleted({
+      taskId: 't-1',
+      deletedBy: 'user-2',
+      title: 'Fix login bug',
+      assigneeId: 'user-2',
+    });
+
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(notificationsService.createAndDeliver).not.toHaveBeenCalled();
+  });
+
   it('should deliver MEMBER_ADDED notification on MemberAdded', async () => {
     workspacesEventBus.publishMemberAdded({
       workspaceId: 'ws-1',

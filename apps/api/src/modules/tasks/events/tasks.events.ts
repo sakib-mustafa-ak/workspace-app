@@ -28,6 +28,8 @@ export type TaskMovedPayload = {
 export type TaskDeletedPayload = {
   taskId: string;
   deletedBy: string;
+  title: string;
+  assigneeId: string | null;
 };
 
 export const TASKS_EVENTS = {
@@ -69,6 +71,10 @@ export class TasksEventBus {
 
   publishTaskDeleted(payload: TaskDeletedPayload): void {
     this.emit(TASKS_EVENTS.taskDeleted, payload);
+  }
+
+  onTaskDeleted(listener: (payload: TaskDeletedPayload) => void): void {
+    this.emitter.on(TASKS_EVENTS.taskDeleted, listener);
   }
 
   private emit(name: TasksEventName, payload: unknown): void {

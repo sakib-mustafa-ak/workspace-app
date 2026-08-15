@@ -59,4 +59,16 @@ export class AuditRepository {
           : null,
     };
   }
+
+  public async listByUser(
+    userId: string,
+    limit: number,
+  ): Promise<AuditEventRow[]> {
+    return this.db
+      .select()
+      .from(auditEvents)
+      .where(eq(auditEvents.userId, userId))
+      .orderBy(desc(auditEvents.createdAt))
+      .limit(limit);
+  }
 }

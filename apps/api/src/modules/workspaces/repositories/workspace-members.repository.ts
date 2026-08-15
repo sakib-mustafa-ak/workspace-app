@@ -10,6 +10,7 @@ import {
   type WorkspaceMemberRow,
   users,
   workspaceMembers,
+  workspaces,
 } from '@repo/database';
 
 export type WorkspaceMemberWithUser = WorkspaceMemberRow & {
@@ -92,6 +93,37 @@ export class WorkspaceMembersRepository {
       )
       .orderBy(workspaceMembers.joinedAt);
     return rows.map((r) => ({ ...r.member, user: r.user }));
+  }
+
+  /**
+   * Memberships for a user, with the workspace display name joined in —
+   * used by the user profile's "Workspace memberships" section.
+   */
+  public async listByUserWithWorkspace(userId: string): Promise<
+    Array<{
+      workspaceId: string;
+      workspaceName: string;
+      role: WorkspaceMemberRow['role'];
+      joinedAt: Date | null;
+    }>
+  > {
+    return this.db
+      .select({
+        workspaceId: workspaceMembers.workspaceId,
+        workspaceName: workspaces.name,
+        role: workspaceMembers.role,
+        joinedAt: workspaceMembers.joinedAt,
+      })
+      .from(workspaceMembers)
+      .innerJoin(workspaces, eq(workspaceMembers.workspaceId, workspaces.id))
+      .where(
+        and(
+          eq(workspaceMembers.userId, userId),
+          sql`${workspaceMembers.deletedAt} IS NULL`,
+          sql`${workspaces.deletedAt} IS NULL`,
+        ),
+      )
+      .orderBy(workspaceMembers.joinedAt);
   }
 
   public async updateRole(

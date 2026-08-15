@@ -70,23 +70,66 @@ export class UsersController {
     return toUserProfile(profile);
   }
 
+  @Get(':id/memberships')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'List workspace memberships for a user' })
+  @ApiOkResponse({ description: 'Workspace memberships.' })
+  public async getUserMemberships(@Param('id') id: string) {
+    return this.users.getUserMemberships(id);
+  }
+
+  @Get(':id/activity')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Recent audit activity authored by a user' })
+  @ApiOkResponse({ description: 'Recent activity events.' })
+  public async getUserActivity(@Param('id') id: string) {
+    return this.users.getUserActivity(id);
+  }
+
   @Get()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'List all users' })
   @ApiOkResponse({ type: UserListResponseDto })
   @ApiQuery({ name: 'limit', required: false, example: 20 })
   @ApiQuery({ name: 'offset', required: false, example: 0 })
+  @ApiQuery({ name: 'page', required: false, example: 1 })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({
+    name: 'sortBy',
+    required: false,
+    enum: ['displayName', 'email', 'createdAt'],
+  })
+  @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'] })
   public async listUsers(
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
+    @Query('page') page?: string,
+    @Query('search') search?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortOrder') sortOrder?: string,
   ): Promise<UserListResponseDto> {
+    const parsedLimit = Math.min(Math.max(Number(limit ?? 20) || 20, 1), 100);
+    const parsedPage = Math.max(Number(page ?? 1) || 1, 1);
+    const parsedOffset =
+      offset !== undefined
+        ? Math.max(Number(offset) || 0, 0)
+        : (parsedPage - 1) * parsedLimit;
     const result = await this.users.listUsers({
-      limit: limit ? Number(limit) : 20,
-      offset: offset ? Number(offset) : 0,
+      limit: parsedLimit,
+      offset: parsedOffset,
+      search: search?.trim() || undefined,
+      sortBy:
+        sortBy === 'displayName' || sortBy === 'email' || sortBy === 'createdAt'
+          ? sortBy
+          : undefined,
+      sortOrder: sortOrder === 'desc' ? 'desc' : 'asc',
     });
     return {
       users: result.users.map(toUserProfile),
       total: result.total,
+      page: parsedPage,
+      limit: parsedLimit,
+      totalPages: Math.max(Math.ceil(result.total / parsedLimit), 1),
     };
   }
 

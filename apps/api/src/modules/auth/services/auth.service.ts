@@ -294,6 +294,7 @@ export class AuthService {
       email: user.email,
       displayName: user.displayName,
       status: user.status,
+      emailVerifiedAt: user.emailVerifiedAt,
     };
   }
 

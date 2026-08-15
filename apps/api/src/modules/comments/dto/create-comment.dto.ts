@@ -1,5 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 import { COMMENT_CONTENT_MIN_LENGTH } from '@repo/database';
 
@@ -14,6 +20,6 @@ export class CreateCommentDto {
     description: 'Parent comment ID for threaded replies',
   })
   @IsOptional()
-  @IsString()
+  @IsUUID()
   parentId?: string;
 }

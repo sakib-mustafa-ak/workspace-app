@@ -7,6 +7,7 @@ import { CommentsEventBus } from '../../comments/events/comments.events';
 import type {
   TaskCreatedPayload,
   TaskUpdatedPayload,
+  TaskDeletedPayload,
 } from '../../tasks/events/tasks.events';
 import { TasksEventBus } from '../../tasks/events/tasks.events';
 import type {
@@ -55,6 +56,9 @@ export class NotificationHandler implements OnModuleInit {
     });
     this.tasksEventBus.onTaskUpdated((p) => {
       void this.handleTaskUpdated(p);
+    });
+    this.tasksEventBus.onTaskDeleted((p) => {
+      void this.handleTaskDeleted(p);
     });
     this.workspacesEventBus.onMemberAdded((p) => {
       void this.handleMemberAdded(p);
@@ -180,6 +184,23 @@ export class NotificationHandler implements OnModuleInit {
       }
     } catch (err) {
       this.logger.error('Failed to handle TaskUpdated', err);
+    }
+  }
+
+  private async handleTaskDeleted(payload: TaskDeletedPayload): Promise<void> {
+    // The assignee should hear about a task disappearing, unless they
+    // deleted it themselves.
+    if (!payload.assigneeId || payload.assigneeId === payload.deletedBy) return;
+    try {
+      await this.notifications.createAndDeliver(payload.assigneeId, {
+        type: 'TASK_DELETED',
+        title: 'A task you were assigned was deleted',
+        body: payload.title,
+        resourceType: 'task',
+        resourceId: payload.taskId,
+      });
+    } catch (err) {
+      this.logger.error('Failed to handle TaskDeleted', err);
     }
   }
 

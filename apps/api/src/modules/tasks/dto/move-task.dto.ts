@@ -1,13 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsInt, IsOptional, IsUUID } from 'class-validator';
 
 export class MoveTaskDto {
   @ApiProperty({ description: 'Target column ID' })
-  @IsString()
+  @IsUUID()
   columnId!: string;
 
   @ApiProperty({ required: false })
   @IsOptional()
-  @IsNumber()
+  @IsInt()
   position?: number;
 }

@@ -1,9 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEnum,
+  IsInt,
   IsISO8601,
   IsOptional,
   IsString,
+  IsUUID,
   MaxLength,
   MinLength,
 } from 'class-validator';
@@ -52,10 +54,11 @@ export class CreateTaskDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsString()
+  @IsUUID()
   assigneeId?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
+  @IsInt()
   position?: number;
 }

@@ -1,11 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { BoardsRepository } from '../../boards/repositories/boards.repository';
+import { TasksRepository } from '../../tasks/repositories/tasks.repository';
 import { WorkspaceMembersRepository } from '../../workspaces/repositories/workspace-members.repository';
 
 @Injectable()
 export class SearchService {
   constructor(
     @Inject(BoardsRepository) private readonly boardsRepo: BoardsRepository,
+    @Inject(TasksRepository) private readonly tasksRepo: TasksRepository,
     @Inject(WorkspaceMembersRepository)
     private readonly membersRepo: WorkspaceMembersRepository,
   ) {}
@@ -27,6 +29,14 @@ export class SearchService {
       workspaceId: string;
       type: string;
     }> = [];
+    const matchingTasks: Array<{
+      id: string;
+      title: string;
+      boardId: string;
+      workspaceId: string;
+      type: string;
+    }> = [];
+
     for (const wsId of workspaceIds) {
       const boards = await this.boardsRepo.listByWorkspace(wsId);
       for (const b of boards) {
@@ -41,12 +51,26 @@ export class SearchService {
             type: 'board',
           });
         }
+        // Task titles inside each accessible board
+        const boardTasks = await this.tasksRepo.listByBoard(b.id);
+        for (const t of boardTasks) {
+          if (t.title.toLowerCase().includes(cleanQuery)) {
+            matchingTasks.push({
+              id: t.id,
+              title: t.title,
+              boardId: t.boardId,
+              workspaceId: b.workspaceId,
+              type: 'task',
+            });
+          }
+        }
       }
     }
 
     return {
       query: cleanQuery,
       boards: matchingBoards,
+      tasks: matchingTasks,
     };
   }
 }

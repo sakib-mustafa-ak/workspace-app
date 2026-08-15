@@ -149,7 +149,11 @@ export class BoardsService {
     }
 
     const updated = await this.boardsRepo.update(boardId, input);
-    this.events.publishBoardUpdated({ boardId, updatedBy: userId });
+    this.events.publishBoardUpdated({
+      boardId,
+      workspaceId: board.workspaceId,
+      updatedBy: userId,
+    });
     return updated;
   }
 
@@ -164,7 +168,11 @@ export class BoardsService {
 
     await this.requireRole(board.workspaceId, userId, 'ADMIN');
     await this.boardsRepo.archive(boardId);
-    this.events.publishBoardArchived({ boardId, archivedBy: userId });
+    this.events.publishBoardArchived({
+      boardId,
+      workspaceId: board.workspaceId,
+      archivedBy: userId,
+    });
   }
 
   public async unarchive(boardId: string, userId: string): Promise<void> {
@@ -191,7 +199,11 @@ export class BoardsService {
 
     await this.requireRole(board.workspaceId, userId, 'ADMIN');
     await this.boardsRepo.softDelete(boardId);
-    this.events.publishBoardDeleted({ boardId, deletedBy: userId });
+    this.events.publishBoardDeleted({
+      boardId,
+      workspaceId: board.workspaceId,
+      deletedBy: userId,
+    });
   }
 
   public async getColumns(
@@ -243,6 +255,7 @@ export class BoardsService {
     this.events.publishColumnCreated({
       columnId: column.id,
       boardId,
+      workspaceId: board.workspaceId,
       createdBy: userId,
     });
 
@@ -283,6 +296,7 @@ export class BoardsService {
     this.events.publishColumnUpdated({
       columnId,
       boardId: board.id,
+      workspaceId: board.workspaceId,
       updatedBy: userId,
     });
 
@@ -311,6 +325,7 @@ export class BoardsService {
     this.events.publishColumnArchived({
       columnId,
       boardId: board.id,
+      workspaceId: board.workspaceId,
       archivedBy: userId,
     });
   }

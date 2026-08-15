@@ -13,4 +13,5 @@ export interface CurrentUser {
   email: string;
   displayName: string;
   status: UserStatus;
+  emailVerifiedAt: Date | null;
 }

@@ -214,7 +214,12 @@ export class TasksService {
 
     await this.requireRole(task.workspaceId, userId, 'EDITOR');
     await this.tasksRepo.softDelete(taskId);
-    this.events.publishTaskDeleted({ taskId, deletedBy: userId });
+    this.events.publishTaskDeleted({
+      taskId,
+      deletedBy: userId,
+      title: task.title,
+      assigneeId: task.assigneeId,
+    });
   }
 
   private async requireAssigneeIsMember(

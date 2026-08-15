@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  IsNumber,
+  IsInt,
   IsOptional,
   IsString,
   MaxLength,
@@ -20,6 +20,6 @@ export class CreateChecklistDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
-  @IsNumber()
+  @IsInt()
   position?: number;
 }

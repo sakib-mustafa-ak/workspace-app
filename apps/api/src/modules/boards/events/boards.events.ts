@@ -9,34 +9,40 @@ export type BoardCreatedPayload = {
 
 export type BoardUpdatedPayload = {
   boardId: string;
+  workspaceId: string;
   updatedBy: string;
 };
 
 export type BoardArchivedPayload = {
   boardId: string;
+  workspaceId: string;
   archivedBy: string;
 };
 
 export type BoardDeletedPayload = {
   boardId: string;
+  workspaceId: string;
   deletedBy: string;
 };
 
 export type ColumnCreatedPayload = {
   columnId: string;
   boardId: string;
+  workspaceId: string;
   createdBy: string;
 };
 
 export type ColumnUpdatedPayload = {
   columnId: string;
   boardId: string;
+  workspaceId: string;
   updatedBy: string;
 };
 
 export type ColumnArchivedPayload = {
   columnId: string;
   boardId: string;
+  workspaceId: string;
   archivedBy: string;
 };
 

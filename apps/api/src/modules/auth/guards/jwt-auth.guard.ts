@@ -91,6 +91,7 @@ export class JwtAuthGuard implements CanActivate {
       email: user.email,
       displayName: user.displayName,
       status: user.status,
+      emailVerifiedAt: user.emailVerifiedAt,
     };
 
     (request as unknown as { user: CurrentUser }).user = current;

@@ -4,6 +4,10 @@
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
   "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
+    "^.+\\.(t|j)s$": ["ts-jest", { "tsconfig": "<rootDir>/../tsconfig.json" }]
+  },
+  "moduleNameMapper": {
+    "^@repo/database$": "<rootDir>/../src/__mocks__/@repo/database",
+    "^(\\.{1,2}/.*)\\.js$": "$1"
   }
 }

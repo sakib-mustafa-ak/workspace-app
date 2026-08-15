@@ -80,16 +80,53 @@ export class UsersRepository {
   }
 
   public async list(
-    opts: { limit?: number; offset?: number } = {},
+    opts: {
+      limit?: number;
+      offset?: number;
+      search?: string;
+      sortBy?: 'displayName' | 'email' | 'createdAt';
+      sortOrder?: 'asc' | 'desc';
+    } = {},
   ): Promise<UserRow[]> {
     const { limit = 20, offset = 0 } = opts;
+    const conditions = [sql`${users.deletedAt} IS NULL`];
+    if (opts.search) {
+      const like = `%${opts.search.toLowerCase()}%`;
+      conditions.push(
+        sql`(lower(${users.displayName}) LIKE ${like} OR lower(${users.email}) LIKE ${like})`,
+      );
+    }
+    const sortColumn =
+      opts.sortBy === 'displayName'
+        ? users.displayName
+        : opts.sortBy === 'email'
+          ? users.email
+          : users.createdAt;
+    const order = opts.sortOrder === 'desc' ? 'desc' : 'asc';
     return this.db
       .select()
       .from(users)
-      .where(sql`${users.deletedAt} IS NULL`)
-      .orderBy(users.createdAt)
+      .where(and(...conditions))
+      .orderBy(
+        order === 'desc' ? sql`${sortColumn} desc` : sql`${sortColumn} asc`,
+      )
       .limit(limit)
       .offset(offset);
+  }
+
+  public async countFiltered(search?: string): Promise<number> {
+    const conditions = [sql`${users.deletedAt} IS NULL`];
+    if (search) {
+      const like = `%${search.toLowerCase()}%`;
+      conditions.push(
+        sql`(lower(${users.displayName}) LIKE ${like} OR lower(${users.email}) LIKE ${like})`,
+      );
+    }
+    const [result] = await this.db
+      .select({ count: sql<number>`count(*)` })
+      .from(users)
+      .where(and(...conditions));
+    return Number(result.count);
   }
 
   public async count(): Promise<number> {

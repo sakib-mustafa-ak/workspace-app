@@ -24,7 +24,7 @@ export class BoardAuditHandler implements OnModuleInit {
 
     this.events.onBoardUpdated((p) => {
       void this.audit.record({
-        workspaceId: p.boardId,
+        workspaceId: p.workspaceId,
         userId: p.updatedBy,
         action: 'board.updated',
         resourceType: 'board',
@@ -35,7 +35,7 @@ export class BoardAuditHandler implements OnModuleInit {
 
     this.events.onBoardArchived((p) => {
       void this.audit.record({
-        workspaceId: p.boardId,
+        workspaceId: p.workspaceId,
         userId: p.archivedBy,
         action: 'board.archived',
         resourceType: 'board',
@@ -46,7 +46,7 @@ export class BoardAuditHandler implements OnModuleInit {
 
     this.events.onBoardDeleted((p) => {
       void this.audit.record({
-        workspaceId: p.boardId,
+        workspaceId: p.workspaceId,
         userId: p.deletedBy,
         action: 'board.deleted',
         resourceType: 'board',
@@ -57,7 +57,7 @@ export class BoardAuditHandler implements OnModuleInit {
 
     this.events.onColumnCreated((p) => {
       void this.audit.record({
-        workspaceId: p.boardId,
+        workspaceId: p.workspaceId,
         userId: p.createdBy,
         action: 'column.created',
         resourceType: 'column',
@@ -68,7 +68,7 @@ export class BoardAuditHandler implements OnModuleInit {
 
     this.events.onColumnUpdated((p) => {
       void this.audit.record({
-        workspaceId: p.boardId,
+        workspaceId: p.workspaceId,
         userId: p.updatedBy,
         action: 'column.updated',
         resourceType: 'column',
@@ -79,7 +79,7 @@ export class BoardAuditHandler implements OnModuleInit {
 
     this.events.onColumnArchived((p) => {
       void this.audit.record({
-        workspaceId: p.boardId,
+        workspaceId: p.workspaceId,
         userId: p.archivedBy,
         action: 'column.archived',
         resourceType: 'column',

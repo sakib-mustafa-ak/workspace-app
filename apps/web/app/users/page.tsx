@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usersApi, type UserProfile } from '@/lib/users';
-import { Search, Trash2, ChevronLeft, ChevronRight, Mail, Calendar } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Mail, Calendar } from 'lucide-react';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -32,15 +32,6 @@ export default function UsersPage() {
         u.email.toLowerCase().includes(search.toLowerCase())
       )
     : users;
-
-  async function handleDelete(id: string, name: string) {
-    if (!confirm(`Delete user "${name}"? This cannot be undone.`)) return;
-    try {
-      await usersApi.delete(id);
-      setUsers((prev) => prev.filter((u) => u.id !== id));
-      setTotal((prev) => prev - 1);
-    } catch { /* handled */ }
-  }
 
   const totalPages = Math.ceil(total / limit);
 
@@ -101,13 +92,6 @@ export default function UsersPage() {
                       </span>
                     </div>
                   </div>
-                  <button
-                    onClick={(e) => { e.preventDefault(); handleDelete(u.id, u.displayName); }}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-surface-600 opacity-0 transition-all hover:bg-red-500/10 hover:text-red-400 group-hover:opacity-100"
-                    title="Delete user"
-                  >
-                    <Trash2 size={14} />
-                  </button>
                 </Link>
               ))}
             </div>

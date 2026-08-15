@@ -61,7 +61,7 @@ function AlignButton({ icon: Icon, title, onClick }: { icon: React.ComponentType
 
 export function Toolbar() {
   const { state, dispatch } = useCanvas();
-  const { persistUpdateMany, persistDelete } = useCanvasSync();
+  const { persistUpdateMany, persistDelete, syncSnapshot } = useCanvasSync();
 
   function handleImageUpload() {
     window.dispatchEvent(new CustomEvent('canvas:upload-image'));
@@ -112,7 +112,12 @@ export function Toolbar() {
         <button
           title="Undo (Ctrl+Z)"
           aria-label="Undo (Ctrl+Z)"
-          onClick={() => dispatch({ type: 'UNDO' })}
+          onClick={() => {
+            const target = state.history.past[state.history.past.length - 1];
+            if (!target) return;
+            dispatch({ type: 'UNDO' });
+            void syncSnapshot(state.objects, target);
+          }}
           disabled={state.history.past.length === 0}
           className={`${iconBtn} text-surface-400 hover:bg-surface-800 hover:text-surface-200`}
         >
@@ -121,7 +126,12 @@ export function Toolbar() {
         <button
           title="Redo (Ctrl+Shift+Z)"
           aria-label="Redo (Ctrl+Shift+Z)"
-          onClick={() => dispatch({ type: 'REDO' })}
+          onClick={() => {
+            const target = state.history.future[0];
+            if (!target) return;
+            dispatch({ type: 'REDO' });
+            void syncSnapshot(state.objects, target);
+          }}
           disabled={state.history.future.length === 0}
           className={`${iconBtn} text-surface-400 hover:bg-surface-800 hover:text-surface-200`}
         >
@@ -188,9 +198,12 @@ export function Toolbar() {
             <button
               key={color}
               title={color}
-              aria-label={`Fill color ${color}`}
+              aria-label={`Color ${color}`}
               aria-pressed={state.fillColor === color}
-              onClick={() => dispatch({ type: 'SET_FILL_COLOR', payload: color })}
+              onClick={() => {
+                dispatch({ type: 'SET_FILL_COLOR', payload: color });
+                dispatch({ type: 'SET_STROKE_COLOR', payload: color });
+              }}
               className={`h-5 w-5 rounded-full border-2 transition-all ${
                 state.fillColor === color ? 'scale-110 border-primary-400' : 'border-surface-600'
               }`}

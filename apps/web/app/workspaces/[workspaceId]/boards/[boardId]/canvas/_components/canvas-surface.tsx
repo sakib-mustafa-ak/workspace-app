@@ -13,7 +13,7 @@ export function CanvasSurface() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { state, dispatch } = useCanvas();
-  const { persistCreate, persistUpdate, persistUpdateMany, persistDelete, remoteCursors, emitCursor, objectLocks, requestLock, releaseLock } =
+  const { persistCreate, persistUpdate, persistUpdateMany, persistDelete, syncSnapshot, remoteCursors, emitCursor, objectLocks, requestLock, releaseLock } =
     useCanvasSync();
 
   const drawingRef = useRef<string | null>(null);
@@ -126,7 +126,8 @@ export function CanvasSurface() {
   function startTextEdit(id: string) {
     const obj = stateRef.current.objects.find(o => o.id === id);
     if (!obj) return;
-    setEditingText({ id, text: obj.text || '' });
+    const baked = (obj.type === 'text' && obj.text === 'Text') || (obj.type === 'stickyNote' && obj.text === 'Note');
+    setEditingText({ id, text: baked ? '' : (obj.text || '') });
     requestLock(id);
   }
 
@@ -267,7 +268,6 @@ export function CanvasSurface() {
       stroke: state.strokeColor,
       strokeWidth: state.strokeWidth,
       opacity: state.opacity / 100,
-      text: state.activeTool === 'text' ? 'Text' : state.activeTool === 'stickyNote' ? 'Note' : undefined,
       zIndex: state.objects.length,
     };
     dispatch({ type: 'ADD_OBJECT', payload: newObj, batch: true });
@@ -565,8 +565,20 @@ export function CanvasSurface() {
           void persistDelete(state.selectedIds);
         }
       }
-      if (e.ctrlKey && e.key === 'z') { dispatch({ type: 'UNDO' }); }
-      if (e.ctrlKey && e.key === 'Z') { dispatch({ type: 'REDO' }); }
+      if (e.ctrlKey && e.key === 'z') {
+        const st = stateRef.current;
+        const target = st.history.past[st.history.past.length - 1];
+        if (!target) return;
+        dispatch({ type: 'UNDO' });
+        void syncSnapshot(st.objects, target);
+      }
+      if (e.ctrlKey && e.key === 'Z') {
+        const st = stateRef.current;
+        const target = st.history.future[0];
+        if (!target) return;
+        dispatch({ type: 'REDO' });
+        void syncSnapshot(st.objects, target);
+      }
       if (e.key === 'Escape') { dispatch({ type: 'CLEAR_SELECTION' }); }
       if (!e.ctrlKey && !e.metaKey && !e.altKey) {
         const tool: Record<string, ToolType> = {
@@ -589,7 +601,7 @@ export function CanvasSurface() {
       window.removeEventListener('keydown', handleKey);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [state.selectedIds, editingText, dispatch, persistDelete]);
+  }, [state.selectedIds, editingText, dispatch, persistDelete, syncSnapshot]);
 
   useEffect(() => {
     const cvs = canvasRef.current;

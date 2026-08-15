@@ -145,8 +145,13 @@ export function renderObject(
     }
     case 'text':
       ctx.font = '16px sans-serif';
-      ctx.fillStyle = obj.fill;
-      ctx.fillText(obj.text || '', 0, 16);
+      if (obj.text) {
+        ctx.fillStyle = obj.fill;
+        ctx.fillText(obj.text, 0, 16);
+      } else {
+        ctx.fillStyle = 'rgba(148, 163, 184, 0.45)';
+        ctx.fillText('Text', 0, 16);
+      }
       break;
     case 'stickyNote':
       ctx.fillStyle = obj.fill || '#ffd93d';
@@ -154,7 +159,12 @@ export function renderObject(
       ctx.fill();
       ctx.fillStyle = '#333';
       ctx.font = '14px sans-serif';
-      ctx.fillText(obj.text || '', 8, 20);
+      if (obj.text) {
+        ctx.fillText(obj.text, 8, 20);
+      } else {
+        ctx.fillStyle = 'rgba(51, 51, 51, 0.4)';
+        ctx.fillText('Note', 8, 20);
+      }
       break;
     case 'image':
       if (obj.imageData) {

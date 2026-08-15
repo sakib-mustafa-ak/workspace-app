@@ -173,6 +173,7 @@ export class CanvasGateway
       user.cursor = data.cursor;
       client.to(`board:${data.boardId}`).emit('cursor:moved', {
         userId: client.userId,
+        displayName: user.displayName || null,
         cursor: data.cursor,
       });
     }

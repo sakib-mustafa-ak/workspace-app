@@ -139,6 +139,7 @@ type CanvasSyncApi = {
   persistUpdate: (obj: CanvasObject) => Promise<void>;
   persistUpdateMany: (objs: CanvasObject[]) => Promise<void>;
   persistDelete: (objectIds: string[]) => Promise<void>;
+  syncSnapshot: (prev: CanvasObject[], next: CanvasObject[]) => Promise<void>;
   presence: RemotePresenceUser[];
   remoteCursors: RemoteCursor[];
   emitCursor: (x: number, y: number) => void;
@@ -229,7 +230,11 @@ export function CanvasSyncProvider({ boardId, children }: Props) {
       const others = list.filter((u) => u.userId !== selfIdRef.current);
       setPresence(others.map((u) => ({ userId: u.userId, displayName: u.displayName })));
       const present = new Set(others.map((u) => u.userId));
-      for (const [id] of cursorsRef.current) {
+      for (const [id, cur] of cursorsRef.current) {
+        const named = list.find((u) => u.userId === id);
+        if (named && named.displayName) {
+          cursorsRef.current.set(id, { ...cur, displayName: named.displayName });
+        }
         if (!present.has(id)) cursorsRef.current.delete(id);
       }
       setRemoteCursors(Array.from(cursorsRef.current.values()));
@@ -239,16 +244,17 @@ export function CanvasSyncProvider({ boardId, children }: Props) {
       setObjectLocks(new Map(objectLocksRef.current));
     });
 
-    socket.on('cursor:moved', (data: unknown) => {
-      const { userId, cursor } = (data ?? {}) as {
+socket.on('cursor:moved', (data: unknown) => {
+      const { userId, cursor, displayName } = (data ?? {}) as {
         userId: string;
         cursor?: { x: number; y: number };
+        displayName?: string | null;
       };
       if (!userId || userId === selfIdRef.current || !cursor) return;
       const existing = cursorsRef.current.get(userId);
       cursorsRef.current.set(userId, {
         userId,
-        displayName: existing?.displayName ?? 'Viewer',
+        displayName: existing?.displayName ?? displayName ?? 'Viewer',
         x: cursor.x,
         y: cursor.y,
       });
@@ -366,6 +372,53 @@ export function CanvasSyncProvider({ boardId, children }: Props) {
             boardId: boardIdRef.current,
             objectId,
           });
+        }
+      },
+      syncSnapshot: async (prev, next) => {
+        const prevMap = new Map(prev.map((o) => [o.id, o]));
+        const nextMap = new Map(next.map((o) => [o.id, o]));
+        const created = next.filter((o) => !prevMap.has(o.id));
+        const deleted = prev.filter((o) => !nextMap.has(o.id)).map((o) => o.id);
+        const updated = next.filter((o) => {
+          const p = prevMap.get(o.id);
+          return !!p && JSON.stringify(p) !== JSON.stringify(o);
+        });
+        if (created.length > 0) {
+          await Promise.all(
+            created.map((o) =>
+              canvasApi.createObject(boardIdRef.current, toServerObject(o)),
+            ),
+          );
+          for (const o of created) {
+            socketRef.current?.emit('object:created', {
+              boardId: boardIdRef.current,
+              object: toServerShape(o),
+            });
+          }
+        }
+        if (updated.length > 0) {
+          await Promise.all(
+            updated.map((o) =>
+              canvasApi.updateObject(boardIdRef.current, o.id, toServerUpdate(o)),
+            ),
+          );
+          for (const o of updated) {
+            socketRef.current?.emit('object:updated', {
+              boardId: boardIdRef.current,
+              object: toServerShape(o),
+            });
+          }
+        }
+        if (deleted.length > 0) {
+          await Promise.all(
+            deleted.map((id) => canvasApi.deleteObject(boardIdRef.current, id)),
+          );
+          for (const objectId of deleted) {
+            socketRef.current?.emit('object:deleted', {
+              boardId: boardIdRef.current,
+              objectId,
+            });
+          }
         }
       },
       presence,

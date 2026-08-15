@@ -73,7 +73,7 @@ describe('CommentsController', () => {
     it('returns a comment', async () => {
       commentsService.getById.mockResolvedValue(mockComment);
 
-      const result = await controller.getById('c1');
+      const result = await controller.getById({ id: 'u1' } as never, 'c1');
       expect(result.id).toBe('c1');
     });
   });

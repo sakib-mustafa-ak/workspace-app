@@ -96,9 +96,10 @@ export class TasksController {
   @ApiOkResponse({ type: TaskResponseDto })
   @ApiNotFoundResponse()
   public async getById(
+    @CurrentUser() user: CurrentUserModel,
     @Param('taskId') taskId: string,
   ): Promise<TaskResponseDto> {
-    const task = await this.tasks.getById(taskId);
+    const task = await this.tasks.getById(taskId, user.id);
     return toTaskResponse(task);
   }
 

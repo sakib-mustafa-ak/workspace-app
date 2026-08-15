@@ -193,12 +193,23 @@ export class EmailVerificationService {
     }
 
     return this.db.transaction(async (tx) => {
-      await tx
+      // The guard on consumedAt makes this a compare-and-swap: only the
+      // first concurrent request wins. Check affected rows so a lost race
+      // doesn't double-verify or double-fire the event.
+      const consumed = await tx
         .update(emailVerificationTokens)
         .set({ consumedAt: new Date() })
         .where(
           sql`${emailVerificationTokens.id} = ${row.id} AND ${emailVerificationTokens.consumedAt} IS NULL`,
+        )
+        .returning({ id: emailVerificationTokens.id });
+
+      if (consumed.length === 0) {
+        throw new AuthException(
+          AuthErrorCode.VERIFICATION_TOKEN_CONSUMED,
+          'Verification token has already been used.',
         );
+      }
 
       await tx
         .update(users)

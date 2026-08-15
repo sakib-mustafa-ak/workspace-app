@@ -88,7 +88,10 @@ export class CommentsService {
     return this.commentsRepo.findByBoard(boardId);
   }
 
-  public async getById(commentId: string): Promise<BoardCommentRow> {
+  public async getById(
+    commentId: string,
+    userId: string,
+  ): Promise<BoardCommentRow> {
     const comment = await this.commentsRepo.findById(commentId);
     if (!comment) {
       throw new CommentsException(
@@ -96,6 +99,9 @@ export class CommentsService {
         'Comment not found.',
       );
     }
+    // Comments are private to their workspace — non-members must not read
+    // arbitrary comments by id.
+    await this.requireRole(comment.workspaceId, userId, 'VIEWER');
     return comment;
   }
 

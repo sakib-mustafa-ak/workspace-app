@@ -7,9 +7,12 @@ import {
   HttpStatus,
   Inject,
   Param,
+  ParseFilePipe,
   Post,
   UploadedFile,
   UseInterceptors,
+  MaxFileSizeValidator,
+  FileTypeValidator,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Throttle } from '@nestjs/throttler';
@@ -40,7 +43,9 @@ export class UploadsController {
   @Throttle({ default: { limit: 30, ttl: 60_000 } })
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }),
+  )
   @ApiOperation({ summary: 'Upload a file' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -56,7 +61,20 @@ export class UploadsController {
   public async upload(
     @CurrentUser() user: CurrentUserModel,
     @Param('workspaceId') workspaceId: string,
-    @UploadedFile()
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          // Mirrors UploadsService.ALLOWED_MIME_TYPES — reject early so a
+          // missing file returns 400 instead of a 500, and oversize files
+          // are refused by multer before being buffered into memory.
+          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
+          new FileTypeValidator({
+            fileType:
+              /^(image\/(png|jpeg|gif|webp|svg\+xml)|application\/pdf|text\/(plain|markdown)|application\/json)$/,
+          }),
+        ],
+      }),
+    )
     file: {
       buffer: Buffer;
       originalname: string;

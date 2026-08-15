@@ -166,86 +166,77 @@ export class AuthService {
     refreshToken: string;
     meta: LoginMetadata;
   }): Promise<AuthenticatedSession> {
-    let sessionId: string | null = null;
-    try {
-      const verified = await this.tokens.verifyRefreshToken(input.refreshToken);
-      sessionId = verified.sid;
+    // Deliberately no blanket catch-and-revoke here: the session.id !==
+    // sessionId mismatch below (a genuine rotation-integrity breach) revokes
+    // the session, but revoking on any other error would log users out on
+    // transient DB/network hiccups.
+    const verified = await this.tokens.verifyRefreshToken(input.refreshToken);
+    const sessionId = verified.sid;
 
-      const storedHash = this.tokenHash.hash(input.refreshToken);
-      const session = await this.sessions.findByRefreshTokenHash(storedHash);
-      if (!session) {
-        throw new AuthException(
-          AuthErrorCode.INVALID_REFRESH_TOKEN,
-          'Refresh token is unknown.',
-        );
-      }
-      if (session.id !== sessionId) {
-        // Mismatch means the JWT `sid` does not match the hash bucket.
-        // Revoke what we have, keep the surface quiet.
-        await this.sessions.revoke(session.id);
-        throw new AuthException(
-          AuthErrorCode.INVALID_REFRESH_TOKEN,
-          'Refresh token is invalid.',
-        );
-      }
-      if (session.revokedAt !== null) {
-        throw new AuthException(
-          AuthErrorCode.REFRESH_TOKEN_REVOKED,
-          'Refresh token has been revoked.',
-        );
-      }
-      if (session.expiresAt.getTime() <= Date.now()) {
-        throw new AuthException(
-          AuthErrorCode.REFRESH_TOKEN_EXPIRED,
-          'Refresh token has expired.',
-        );
-      }
-
-      const user = await this.users.findByIdWithPassword(session.userId);
-      if (!user) {
-        throw new AuthException(
-          AuthErrorCode.UNAUTHENTICATED,
-          'Account is unavailable.',
-        );
-      }
-      const identity = await this.identities.findEmailIdentityForUser(user.id);
-      if (!identity) {
-        throw new AuthException(
-          AuthErrorCode.UNAUTHENTICATED,
-          'Identity is unavailable.',
-        );
-      }
-
-      // Rotate: mint the new pair FIRST, then revoke the previous session
-      // and replace its hash atomically.
-      const fresh = await this.sessionTokensFor(
-        user,
-        session.id,
-        this.sessionExpiresAtIn(session),
+    const storedHash = this.tokenHash.hash(input.refreshToken);
+    const session = await this.sessions.findByRefreshTokenHash(storedHash);
+    if (!session) {
+      throw new AuthException(
+        AuthErrorCode.INVALID_REFRESH_TOKEN,
+        'Refresh token is unknown.',
       );
-      await this.sessions.replaceRefreshToken(
-        session.id,
-        this.tokenHash.hash(fresh.refreshToken),
-      );
-      await this.sessions.touch(
-        session.id,
-        input.meta.ip,
-        input.meta.userAgent,
-      );
-      this.events.publishRefreshTokenRotated(user.id, session.id);
-      return {
-        user,
-        identity,
-        session,
-        tokens: fresh,
-      };
-    } catch (err) {
-      if (sessionId && err instanceof AuthException === false) {
-        // Best-effort pruning; never crash the request because of it.
-        await this.sessions.revoke(sessionId).catch(() => undefined);
-      }
-      throw err;
     }
+    if (session.id !== sessionId) {
+      // Mismatch means the JWT `sid` does not match the hash bucket.
+      // Revoke what we have, keep the surface quiet.
+      await this.sessions.revoke(session.id);
+      throw new AuthException(
+        AuthErrorCode.INVALID_REFRESH_TOKEN,
+        'Refresh token is invalid.',
+      );
+    }
+    if (session.revokedAt !== null) {
+      throw new AuthException(
+        AuthErrorCode.REFRESH_TOKEN_REVOKED,
+        'Refresh token has been revoked.',
+      );
+    }
+    if (session.expiresAt.getTime() <= Date.now()) {
+      throw new AuthException(
+        AuthErrorCode.REFRESH_TOKEN_EXPIRED,
+        'Refresh token has expired.',
+      );
+    }
+
+    const user = await this.users.findByIdWithPassword(session.userId);
+    if (!user) {
+      throw new AuthException(
+        AuthErrorCode.UNAUTHENTICATED,
+        'Account is unavailable.',
+      );
+    }
+    const identity = await this.identities.findEmailIdentityForUser(user.id);
+    if (!identity) {
+      throw new AuthException(
+        AuthErrorCode.UNAUTHENTICATED,
+        'Identity is unavailable.',
+      );
+    }
+
+    // Rotate: mint the new pair FIRST, then revoke the previous session
+    // and replace its hash atomically.
+    const fresh = await this.sessionTokensFor(
+      user,
+      session.id,
+      this.sessionExpiresAtIn(session),
+    );
+    await this.sessions.replaceRefreshToken(
+      session.id,
+      this.tokenHash.hash(fresh.refreshToken),
+    );
+    await this.sessions.touch(session.id, input.meta.ip, input.meta.userAgent);
+    this.events.publishRefreshTokenRotated(user.id, session.id);
+    return {
+      user,
+      identity,
+      session,
+      tokens: fresh,
+    };
   }
 
   /**

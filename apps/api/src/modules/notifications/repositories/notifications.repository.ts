@@ -5,6 +5,7 @@ import {
   DATABASE,
   desc,
   eq,
+  inArray,
   sql,
   type Db,
   type NewNotificationRow,
@@ -111,7 +112,9 @@ export class NotificationsRepository {
       .where(
         and(
           eq(notifications.userId, userId),
-          eq(notifications.status, 'DELIVERED'),
+          // CREATED rows (e.g. delivery not yet flushed) must be readable too —
+          // otherwise "mark all read" silently no-ops for them.
+          inArray(notifications.status, ['CREATED', 'DELIVERED']),
           sql`${notifications.readAt} IS NULL`,
           sql`${notifications.archivedAt} IS NULL`,
         ),

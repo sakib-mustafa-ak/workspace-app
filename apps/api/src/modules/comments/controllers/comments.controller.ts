@@ -66,9 +66,10 @@ export class CommentsController {
   @ApiOkResponse({ type: CommentResponseDto })
   @ApiNotFoundResponse()
   public async getById(
+    @CurrentUser() user: CurrentUserModel,
     @Param('commentId') commentId: string,
   ): Promise<CommentResponseDto> {
-    const comment = await this.comments.getById(commentId);
+    const comment = await this.comments.getById(commentId, user.id);
     return toCommentResponse(comment);
   }
 

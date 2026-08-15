@@ -80,7 +80,7 @@ export class TasksService {
     return task;
   }
 
-  public async getById(taskId: string): Promise<TaskRow> {
+  public async getById(taskId: string, userId: string): Promise<TaskRow> {
     const task = await this.tasksRepo.findById(taskId);
     if (!task) {
       throw new TasksException(
@@ -88,6 +88,9 @@ export class TasksService {
         'Task not found.',
       );
     }
+    // Tasks are private to their workspace — a member of any rank may view,
+    // but non-members must not read arbitrary tasks by id.
+    await this.requireRole(task.workspaceId, userId, 'VIEWER');
     return task;
   }
 
@@ -184,6 +187,16 @@ export class TasksService {
       throw new TasksException(
         TasksErrorCode.COLUMN_NOT_FOUND,
         'Target column not found.',
+      );
+    }
+
+    // A task must stay within its own board — moving to a column of a
+    // different board would leave board_id and column_id pointing at
+    // different boards (silent cross-board corruption).
+    if (column.boardId !== task.boardId) {
+      throw new TasksException(
+        TasksErrorCode.COLUMN_NOT_FOUND,
+        'Target column does not belong to this board.',
       );
     }
 

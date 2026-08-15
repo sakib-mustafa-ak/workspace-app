@@ -86,6 +86,16 @@ export class JwtAuthGuard implements CanActivate {
       );
     }
 
+    // Suspension must be enforced at the guard, not just at login — a
+    // suspended user's access token would otherwise keep working for the
+    // rest of its TTL.
+    if (user.status === 'SUSPENDED') {
+      throw new AuthException(
+        AuthErrorCode.UNAUTHENTICATED,
+        'Account is suspended.',
+      );
+    }
+
     const current: CurrentUser = {
       id: user.id,
       email: user.email,

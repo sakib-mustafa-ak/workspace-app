@@ -146,7 +146,7 @@ export class CanvasGateway
             .emit('presence:update', Array.from(users.values()));
         }
       }
-      this.releaseUserLocks(client.userId);
+      this.releaseUserLocks(client.userId, client.id);
     }
   }
 
@@ -263,10 +263,12 @@ export class CanvasGateway
     return locks;
   }
 
-  private releaseUserLocks(userId: string): void {
+  private releaseUserLocks(userId: string, socketId: string): void {
     for (const [boardId, locks] of this.objectLocks) {
       for (const [objectId, lock] of locks) {
-        if (lock.userId !== userId) continue;
+        // Only release locks held by THIS socket — a user with multiple
+        // tabs must keep the locks owned by their other connections.
+        if (lock.userId !== userId || lock.socketId !== socketId) continue;
         locks.delete(objectId);
         this.server.to(`board:${boardId}`).emit('object:unlocked', {
           objectId,
@@ -285,22 +287,25 @@ export class CanvasGateway
     if (!client.userId || !data.objectId) return;
     const locks = this.getBoardLocks(data.boardId);
     const held = locks.get(data.objectId);
-    if (held && held.userId !== client.userId) {
+    if (held && held.expiresAt <= Date.now()) {
+      // Lock expired — it is free again; drop the stale entry.
+      locks.delete(data.objectId);
+    }
+    const live = locks.get(data.objectId);
+    if (live && live.userId !== client.userId) {
       client.emit('object:lock:denied', {
         objectId: data.objectId,
-        displayName: held.displayName,
+        displayName: live.displayName,
       });
       return;
     }
-    if (held) held.expiresAt = Date.now() + CanvasGateway.LOCK_TTL_MS;
-    else {
-      locks.set(data.objectId, {
-        objectId: data.objectId,
-        userId: client.userId,
-        displayName: client.displayName || 'Unknown',
-        expiresAt: Date.now() + CanvasGateway.LOCK_TTL_MS,
-      });
-    }
+    locks.set(data.objectId, {
+      objectId: data.objectId,
+      userId: client.userId,
+      displayName: client.displayName || 'Unknown',
+      expiresAt: Date.now() + CanvasGateway.LOCK_TTL_MS,
+      socketId: client.id,
+    });
     client.to(`board:${data.boardId}`).emit('object:locked', {
       objectId: data.objectId,
       userId: client.userId,
@@ -316,7 +321,7 @@ export class CanvasGateway
     if (!client.userId) return;
     const locks = this.getBoardLocks(data.boardId);
     const held = locks.get(data.objectId);
-    if (held && held.userId === client.userId) {
+    if (held && held.userId === client.userId && held.socketId === client.id) {
       locks.delete(data.objectId);
       if (locks.size === 0) this.objectLocks.delete(data.boardId);
       client.to(`board:${data.boardId}`).emit('object:unlocked', {

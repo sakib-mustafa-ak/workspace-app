@@ -217,16 +217,27 @@ describe('TasksService', () => {
   describe('getById', () => {
     it('returns task when found', async () => {
       tasksRepo.findById.mockResolvedValue(mockTask);
+      mockDbSelect([mockMembership]);
+      policy.isAtLeast.mockReturnValue(true);
 
-      const result = await service.getById('t1');
+      const result = await service.getById('t1', 'u1');
       expect(result.id).toBe('t1');
     });
 
     it('throws when missing', async () => {
       tasksRepo.findById.mockResolvedValue(undefined);
 
-      await expect(service.getById('missing')).rejects.toThrow(
+      await expect(service.getById('missing', 'u1')).rejects.toThrow(
         'Task not found.',
+      );
+    });
+
+    it('throws when the caller is not a workspace member', async () => {
+      tasksRepo.findById.mockResolvedValue(mockTask);
+      mockDbSelect([]);
+
+      await expect(service.getById('t1', 'outsider')).rejects.toThrow(
+        'not a member',
       );
     });
   });

@@ -6,9 +6,11 @@ import {
   desc,
   eq,
   lt,
+  or,
   type Db,
   type NewAuditEventRow,
   type AuditEventRow,
+  type SQL,
   auditEvents,
 } from '@repo/database';
 
@@ -35,7 +37,22 @@ export class AuditRepository {
     const conditions = [eq(auditEvents.workspaceId, workspaceId)];
 
     if (opts.cursor) {
-      conditions.push(lt(auditEvents.createdAt, new Date(opts.cursor)));
+      // Composite keyset cursor "createdAt:id" — a plain createdAt cursor
+      // skips every row sharing the boundary timestamp with the last row of
+      // the previous page (audit writes frequently share a millisecond).
+      const [ts, id] = opts.cursor.split(':');
+      const cursorTime = new Date(ts);
+      conditions.push(
+        id
+          ? (or(
+              lt(auditEvents.createdAt, cursorTime),
+              and(
+                eq(auditEvents.createdAt, cursorTime),
+                lt(auditEvents.id, id),
+              ),
+            ) as SQL)
+          : lt(auditEvents.createdAt, cursorTime),
+      );
     }
     if (action) conditions.push(eq(auditEvents.action, action));
     if (resourceType)
@@ -45,7 +62,7 @@ export class AuditRepository {
       .select()
       .from(auditEvents)
       .where(and(...conditions))
-      .orderBy(desc(auditEvents.createdAt))
+      .orderBy(desc(auditEvents.createdAt), desc(auditEvents.id))
       .limit(limit + 1);
 
     const hasMore = rows.length > limit;
@@ -55,7 +72,7 @@ export class AuditRepository {
       data: rows,
       nextCursor:
         hasMore && rows.length > 0
-          ? rows[rows.length - 1].createdAt.toISOString()
+          ? `${rows[rows.length - 1].createdAt.toISOString()}:${rows[rows.length - 1].id}`
           : null,
     };
   }

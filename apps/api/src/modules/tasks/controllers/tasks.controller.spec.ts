@@ -106,7 +106,7 @@ describe('TasksController', () => {
     it('returns a task', async () => {
       tasksService.getById.mockResolvedValue(mockTask);
 
-      const result = await controller.getById('t1');
+      const result = await controller.getById({ id: 'u1' } as never, 't1');
       expect(result.id).toBe('t1');
     });
   });

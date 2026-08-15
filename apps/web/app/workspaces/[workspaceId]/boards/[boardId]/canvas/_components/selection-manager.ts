@@ -28,6 +28,18 @@ export function hitTest(
     case 'line':
     case 'arrow':
       return distanceToSegment(point, { x: obj.x, y: obj.y }, { x: obj.x + obj.width, y: obj.y + obj.height }) < 8 / zoom;
+    case 'connector':
+      // The connector is a cubic bezier from (0,0) to (w,h) with control
+      // points (w/2, 0) and (w/2, h) — mirror the renderer.
+      return (
+        distanceToCubicBezier(
+          { x: localX, y: localY },
+          { x: 0, y: 0 },
+          { x: obj.width / 2, y: 0 },
+          { x: obj.width / 2, y: obj.height },
+          { x: obj.width, y: obj.height },
+        ) < 8 / zoom
+      );
     case 'path':
       return distanceToPolyline({ x: localX, y: localY }, obj.points ?? []) < 8 / zoom;
     case 'text':
@@ -54,6 +66,37 @@ function distanceToPolyline(p: { x: number; y: number }, points: { x: number; y:
   for (let i = 0; i < points.length - 1; i++) {
     const d = distanceToSegment(p, points[i]!, points[i + 1]!);
     if (d < min) min = d;
+  }
+  return min;
+}
+
+function cubicPoint(t: number, p0: { x: number; y: number }, p1: { x: number; y: number }, p2: { x: number; y: number }, p3: { x: number; y: number }) {
+  const u = 1 - t;
+  return {
+    x: u * u * u * p0.x + 3 * u * u * t * p1.x + 3 * u * t * t * p2.x + t * t * t * p3.x,
+    y: u * u * u * p0.y + 3 * u * u * t * p1.y + 3 * u * t * t * p2.y + t * t * t * p3.y,
+  };
+}
+
+/**
+ * Approximate the minimum distance from `p` to a cubic bezier by sampling
+ * it as a polyline. 24 samples is plenty for an 8px hit threshold.
+ */
+function distanceToCubicBezier(
+  p: { x: number; y: number },
+  p0: { x: number; y: number },
+  p1: { x: number; y: number },
+  p2: { x: number; y: number },
+  p3: { x: number; y: number },
+): number {
+  const SAMPLES = 24;
+  let min = Infinity;
+  let prev = p0;
+  for (let i = 1; i <= SAMPLES; i++) {
+    const cur = cubicPoint(i / SAMPLES, p0, p1, p2, p3);
+    const d = distanceToSegment(p, prev, cur);
+    if (d < min) min = d;
+    prev = cur;
   }
   return min;
 }

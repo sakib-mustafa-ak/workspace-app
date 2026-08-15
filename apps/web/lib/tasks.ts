@@ -40,10 +40,6 @@ export type UpdateTaskData = {
 export const tasksApi = {
   listByBoard: (workspaceId: string, boardId: string) =>
     api.get<Task[]>(`/workspaces/${workspaceId}/boards/${boardId}/tasks`),
-  listByColumn: (workspaceId: string, boardId: string, columnId: string) =>
-    api.get<Task[]>(`/workspaces/${workspaceId}/boards/${boardId}/tasks/columns/${columnId}`),
-  getById: (workspaceId: string, boardId: string, taskId: string) =>
-    api.get<Task>(`/workspaces/${workspaceId}/boards/${boardId}/tasks/${taskId}`),
   create: (workspaceId: string, boardId: string, columnId: string, data: CreateTaskData) =>
     api.post<Task>(`/workspaces/${workspaceId}/boards/${boardId}/tasks/columns/${columnId}`, data),
   update: (workspaceId: string, boardId: string, taskId: string, data: UpdateTaskData) =>

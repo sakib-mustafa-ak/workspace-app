@@ -140,7 +140,7 @@ export function TaskModal({
           <h2 className="text-sm font-semibold">
             {mode === 'create' ? 'Create task' : 'Edit task'}
           </h2>
-          <button onClick={onClose} className="text-surface-500 hover:text-surface-300">
+          <button onClick={onClose} title="Close" aria-label="Close" className="text-surface-500 hover:text-surface-300">
             <X size={16} />
           </button>
         </div>

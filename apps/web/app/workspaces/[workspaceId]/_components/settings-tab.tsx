@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Pencil, Check, Archive, Trash2 } from 'lucide-react';
 import { workspacesApi, type Workspace, type WorkspaceMember } from '@/lib/workspaces';
+import { ConfirmModal } from '@/components/confirm-modal';
 
 type Props = {
   workspace: Workspace;
@@ -24,8 +25,12 @@ export function SettingsTab({
   const [editingWs, setEditingWs] = useState(false);
   const [wsName, setWsName] = useState('');
   const [wsDesc, setWsDesc] = useState('');
+  const [actionError, setActionError] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   async function handleUpdateWs() {
+    setActionError('');
     try {
       await workspacesApi.update(workspaceId, {
         name: wsName.trim() || undefined,
@@ -33,34 +38,52 @@ export function SettingsTab({
       });
       onUpdate();
       setEditingWs(false);
-    } catch { /* handled */ }
+    } catch {
+      setActionError('Failed to update workspace.');
+    }
   }
 
   async function handleArchiveWs() {
+    setActionError('');
     try {
       await workspacesApi.archive(workspaceId);
       onUpdate();
-    } catch { /* handled */ }
+    } catch {
+      setActionError('Failed to archive workspace.');
+    }
   }
 
   async function handleUnarchiveWs() {
+    setActionError('');
     try {
       await workspacesApi.unarchive(workspaceId);
       onUpdate();
-    } catch { /* handled */ }
+    } catch {
+      setActionError('Failed to unarchive workspace.');
+    }
   }
 
   async function handleDeleteWs() {
-    if (!confirm('Delete this workspace? This cannot be undone.')) return;
+    setActionError('');
+    setDeleting(true);
     try {
       await workspacesApi.delete(workspaceId);
       window.location.href = '/dashboard';
-    } catch { /* handled */ }
+    } catch {
+      setActionError('Failed to delete workspace.');
+      setDeleting(false);
+      setConfirmDelete(false);
+    }
   }
 
   return (
     <div className="max-w-lg p-6">
       <h2 className="mb-6 text-sm font-semibold">Workspace settings</h2>
+      {actionError && (
+        <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm text-red-400">
+          {actionError}
+        </div>
+      )}
       <div className="space-y-4">
         <div>
           <label className="mb-1 block text-xs font-medium text-surface-400">Name</label>
@@ -119,10 +142,13 @@ export function SettingsTab({
                 <select
                   onChange={async (e) => {
                     if (e.target.value && confirm('Transfer ownership? This cannot be undone.')) {
+                      setActionError('');
                       try {
                         await workspacesApi.transferOwnership(workspaceId, e.target.value);
                         onUpdate();
-                      } catch { void 0 }
+                      } catch {
+                        setActionError('Failed to transfer ownership.');
+                      }
                     }
                   }}
                   className="w-full rounded border border-surface-700 bg-surface-800 px-3 py-2 text-xs outline-none"
@@ -133,13 +159,24 @@ export function SettingsTab({
                   ))}
                 </select>
               </div>
-              <button onClick={handleDeleteWs} className="flex items-center gap-1.5 rounded-lg border border-red-800/50 px-4 py-2 text-xs text-red-400 hover:bg-red-500/10">
+              <button onClick={() => setConfirmDelete(true)} className="flex items-center gap-1.5 rounded-lg border border-red-800/50 px-4 py-2 text-xs text-red-400 hover:bg-red-500/10">
                 <Trash2 size={14} /> Delete workspace
               </button>
             </>
           )}
         </div>
       </div>
+
+      <ConfirmModal
+        open={confirmDelete}
+        title="Delete workspace?"
+        description="This will permanently delete this workspace and everything in it. This cannot be undone."
+        confirmLabel="Delete workspace"
+        variant="danger"
+        loading={deleting}
+        onConfirm={handleDeleteWs}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </div>
   );
 }

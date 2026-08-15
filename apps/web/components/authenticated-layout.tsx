@@ -64,6 +64,8 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
             `}</style>
             <button
               onClick={() => setSidebarOpen(true)}
+              title="Open navigation menu"
+              aria-label="Open navigation menu"
               className="absolute left-5 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-surface-800 bg-surface-900 text-surface-300 transition-colors hover:bg-surface-800 hover:text-white"
             >
               <Menu size={22} />

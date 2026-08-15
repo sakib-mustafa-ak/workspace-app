@@ -9,31 +9,35 @@ export default function UsersPage() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const limit = 20;
 
   function loadUsers() {
     setLoading(true);
-    usersApi.list({ limit, page })
+    setLoadError('');
+    usersApi.list({ limit, page, search: search.trim() || undefined })
       .then((res) => {
         setUsers(res.users);
         setTotal(res.total);
       })
-      .catch(() => undefined)
+      .catch(() => setLoadError('Failed to load users. Please try again.'))
       .finally(() => setLoading(false));
   }
 
   useEffect(() => { loadUsers(); }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const filtered = search
-    ? users.filter((u) =>
-        u.displayName.toLowerCase().includes(search.toLowerCase()) ||
-        u.email.toLowerCase().includes(search.toLowerCase())
-      )
-    : users;
+  // Debounced search: reset to page 1 and re-query server-side.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setPage(1);
+      loadUsers();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const totalPages = Math.ceil(total / limit);
+  const totalPages = Math.max(Math.ceil(total / limit), 1);
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
@@ -53,17 +57,36 @@ export default function UsersPage() {
         </div>
       </div>
 
-      {loading ? (
+      {loadError ? (
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/5 py-24">
+          <p className="text-sm font-medium text-red-400">{loadError}</p>
+          <button
+            onClick={loadUsers}
+            className="mt-4 rounded-lg bg-primary-600 px-4 py-2 text-xs font-medium text-white hover:bg-primary-500"
+          >
+            Try again
+          </button>
+        </div>
+      ) : loading ? (
         <div className="space-y-3">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="h-16 animate-pulse rounded-xl bg-surface-800/50" />
           ))}
         </div>
+      ) : users.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-surface-700/50 bg-surface-900/30 py-24">
+          <p className="text-sm font-medium text-surface-400">
+            {search ? 'No users match your search' : 'No users yet'}
+          </p>
+          <p className="mt-1 text-xs text-surface-500">
+            {search ? 'Try a different search term' : 'Users will appear here as accounts are created'}
+          </p>
+        </div>
       ) : (
         <>
           <div className="overflow-hidden rounded-xl border border-surface-800">
             <div className="divide-y divide-surface-800">
-              {filtered.map((u) => (
+              {users.map((u) => (
                 <Link
                   key={u.id}
                   href={`/users/${u.id}`}

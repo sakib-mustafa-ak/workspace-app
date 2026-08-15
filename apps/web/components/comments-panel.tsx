@@ -114,7 +114,7 @@ export function CommentsPanel({ boardId }: Props) {
         {replyTo && (
           <div className="mb-2 flex items-center justify-between rounded bg-surface-800 px-2 py-1">
             <span className="text-xs text-surface-400">Replying to comment</span>
-            <button type="button" onClick={() => setReplyTo(null)}>
+            <button type="button" onClick={() => setReplyTo(null)} title="Cancel reply" aria-label="Cancel reply">
               <X size={12} className="text-surface-500" />
             </button>
           </div>
@@ -129,6 +129,8 @@ export function CommentsPanel({ boardId }: Props) {
           <button
             type="submit"
             disabled={!content.trim()}
+            title="Send comment"
+            aria-label="Send comment"
             className="rounded-lg bg-primary-600 p-2 text-white hover:bg-primary-500 disabled:opacity-50"
           >
             <Send size={14} />
@@ -189,10 +191,10 @@ function CommentRow({
             <p className="text-xs text-surface-200">{comment.content}</p>
             {isOwner && (
               <div className="flex gap-1 shrink-0">
-                <button onClick={onStartEdit} className="text-surface-500 hover:text-surface-300">
+                <button onClick={onStartEdit} title="Edit comment" aria-label="Edit comment" className="text-surface-500 hover:text-surface-300">
                   <Pencil size={12} />
                 </button>
-                <button onClick={onDelete} className="text-surface-500 hover:text-red-400">
+                <button onClick={onDelete} title="Delete comment" aria-label="Delete comment" className="text-surface-500 hover:text-red-400">
                   <Trash2 size={12} />
                 </button>
               </div>

@@ -147,6 +147,8 @@ export function MembersTab({
                   </select>
                   <button
                     onClick={() => onRemoveMember(m.userId)}
+                    title="Remove member"
+                    aria-label={`Remove ${m.user?.displayName ?? 'member'}`}
                     className="rounded p-1 text-surface-500 hover:text-red-400"
                   >
                     <UserMinus size={14} />

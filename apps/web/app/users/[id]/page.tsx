@@ -1,21 +1,23 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { usersApi, type UserProfile, type UserMembership, type AuditLogEntry } from '@/lib/users';
 import { ArrowLeft, Mail, Calendar, Shield, BadgeCheck, BadgeX, Loader2, ExternalLink, Clock, LogIn, Edit3, Trash2, UserPlus } from 'lucide-react';
 
 export default function UserDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [memberships, setMemberships] = useState<UserMembership[]>([]);
   const [activity, setActivity] = useState<AuditLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
+  function loadUser() {
     const id = params.id as string;
+    setLoading(true);
+    setError('');
     Promise.all([
       usersApi.getById(id),
       usersApi.getMemberships(id).catch(() => [] as UserMembership[]),
@@ -26,9 +28,25 @@ export default function UserDetailPage() {
         setMemberships(m);
         setActivity(a);
       })
-      .catch(() => router.push('/users'))
+      .catch(() => setError('Failed to load this user.'))
       .finally(() => setLoading(false));
-  }, [params.id, router]);
+  }
+
+  useEffect(() => { loadUser(); }, [params.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (error) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-3">
+        <p className="text-sm font-medium text-red-400">{error}</p>
+        <button
+          onClick={loadUser}
+          className="rounded-lg bg-primary-600 px-4 py-2 text-xs font-medium text-white hover:bg-primary-500"
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

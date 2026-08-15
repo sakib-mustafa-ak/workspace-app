@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/hooks/use-theme';
 import { api } from '@/lib/api';
 import { workspacesApi, type Workspace } from '@/lib/workspaces';
+import { notificationsApi } from '@/lib/notifications';
 import {
   LayoutDashboard,
   Settings,
@@ -38,6 +39,7 @@ export function Sidebar() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [searchResults, setSearchResults] = useState<any>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -70,6 +72,19 @@ export function Sidebar() {
     workspacesApi.list().then(setUserWorkspaces).catch(() => {});
   }, []);
 
+  // Poll unread notification count every 30s so the badge stays fresh.
+  useEffect(() => {
+    let cancelled = false;
+    const load = () => {
+      notificationsApi.countUnread()
+        .then((res) => { if (!cancelled) setUnreadCount(res.count); })
+        .catch(() => {});
+    };
+    load();
+    const interval = setInterval(load, 30_000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
+
   return (
     <aside className="flex h-full w-60 flex-shrink-0 flex-col border-r border-surface-800 bg-gradient-to-b from-surface-900 to-surface-900/95">
       <div className="flex h-14 items-center border-b border-surface-800 px-4">
@@ -98,7 +113,16 @@ export function Sidebar() {
                 {b.title}
               </Link>
             ))}
-            {(!searchResults.boards || searchResults.boards.length === 0) && (
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            {searchResults.tasks?.map((t: any) => (
+              <Link key={t.id} href={`/workspaces/${t.workspaceId}/boards/${t.boardId}`}
+                className="flex items-center gap-2 px-3 py-2 text-xs text-surface-300 hover:bg-surface-800">
+                <span className="text-surface-600">·</span>
+                {t.title}
+              </Link>
+            ))}
+            {(!searchResults.boards || searchResults.boards.length === 0) &&
+              (!searchResults.tasks || searchResults.tasks.length === 0) && (
               <p className="px-3 py-4 text-center text-xs text-surface-500">No results</p>
             )}
           </div>
@@ -121,6 +145,11 @@ export function Sidebar() {
               >
                 <item.icon size={16} className={active ? 'text-primary-400' : ''} />
                 <span className="flex-1">{item.label}</span>
+                {item.href === '/notifications' && unreadCount > 0 && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
               </Link>
             );
           })}

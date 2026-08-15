@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Plus, ArrowLeft, Columns, Loader2, Search, Archive, Trash2 } from 'lucide-react';
 import { workspacesApi, type Workspace } from '@/lib/workspaces';
@@ -9,18 +9,19 @@ import { boardsApi, type Board } from '@/lib/boards';
 
 export default function BoardsPage() {
   const params = useParams();
-  const router = useRouter();
   const workspaceId = params.workspaceId as string;
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [boards, setBoards] = useState<Board[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [name, setName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
   function loadBoards() {
     setLoading(true);
+    setError('');
     Promise.all([
       workspacesApi.getById(workspaceId),
       boardsApi.list(workspaceId),
@@ -29,7 +30,7 @@ export default function BoardsPage() {
         setWorkspace(ws);
         setBoards(boardList);
       })
-      .catch(() => router.push('/dashboard'))
+      .catch(() => setError('Failed to load this workspace. It may have been deleted or you may not have access.'))
       .finally(() => setLoading(false));
   }
 
@@ -122,7 +123,17 @@ export default function BoardsPage() {
         </form>
       )}
 
-      {loading ? (
+      {error ? (
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/5 py-20">
+          <p className="text-sm font-medium text-red-400">{error}</p>
+          <button
+            onClick={() => loadBoards()}
+            className="mt-4 rounded-lg bg-primary-600 px-4 py-2 text-xs font-medium text-white hover:bg-primary-500"
+          >
+            Try again
+          </button>
+        </div>
+      ) : loading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 size={24} className="animate-spin text-primary-500" />
         </div>

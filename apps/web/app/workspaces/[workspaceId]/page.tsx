@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft, LayoutDashboard, Columns, Users, Mail, Settings, History,
@@ -25,7 +25,6 @@ type Tab = 'overview' | 'boards' | 'members' | 'invitations' | 'settings' | 'act
 
 export default function WorkspaceDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const { user } = useAuth();
   const workspaceId = params.workspaceId as string;
 
@@ -35,9 +34,11 @@ export default function WorkspaceDetailPage() {
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   function loadWorkspace() {
     setLoading(true);
+    setError('');
     Promise.all([
       workspacesApi.getById(workspaceId),
       boardsApi.list(workspaceId),
@@ -46,7 +47,7 @@ export default function WorkspaceDetailPage() {
         setWorkspace(ws);
         setBoards(boardList);
       })
-      .catch(() => router.push('/dashboard'))
+      .catch(() => setError('Failed to load this workspace. It may have been deleted or you may not have access.'))
       .finally(() => setLoading(false));
   }
 
@@ -77,6 +78,20 @@ export default function WorkspaceDetailPage() {
       await workspacesApi.removeMember(workspaceId, userId);
       setMembers((prev) => prev.filter((m) => m.userId !== userId));
     } catch { /* handled */ }
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-3">
+        <p className="text-sm font-medium text-red-400">{error}</p>
+        <button
+          onClick={() => loadWorkspace()}
+          className="rounded-lg bg-primary-600 px-4 py-2 text-xs font-medium text-white hover:bg-primary-500"
+        >
+          Try again
+        </button>
+      </div>
+    );
   }
 
   if (loading) {
@@ -135,7 +150,7 @@ export default function WorkspaceDetailPage() {
 
       <div className="flex-1 overflow-auto">
         {tab === 'overview' && (
-          <OverviewTab workspaceId={workspaceId} />
+          <OverviewTab workspaceId={workspaceId} onInvite={() => setTab('members')} />
         )}
         {tab === 'boards' && (
           <BoardsTab workspaceId={workspaceId} boards={boards} />

@@ -25,7 +25,10 @@ export function ProfileTab() {
     setSaving(true);
     setSaved(false);
     try {
-      const updated = await usersApi.updateMe({ displayName: name });
+      const updated = await usersApi.updateMe({
+        displayName: name,
+        bio: bio.trim() || null,
+      });
       if (profile) setProfile({ ...profile, ...updated });
       setSaved(true);
     } catch (err: unknown) {

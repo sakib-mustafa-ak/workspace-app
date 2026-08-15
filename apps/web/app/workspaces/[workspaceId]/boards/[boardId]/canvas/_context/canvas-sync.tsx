@@ -146,6 +146,7 @@ type CanvasSyncApi = {
   objectLocks: Map<string, RemotePresenceUser>;
   requestLock: (objectId: string) => void;
   releaseLock: (objectId: string) => void;
+  loadError: string;
 };
 
 const CanvasSyncContext = createContext<CanvasSyncApi | null>(null);
@@ -173,6 +174,7 @@ export function CanvasSyncProvider({ boardId, children }: Props) {
 
   const [presence, setPresence] = useState<RemotePresenceUser[]>([]);
   const [remoteCursors, setRemoteCursors] = useState<RemoteCursor[]>([]);
+  const [loadError, setLoadError] = useState('');
   const cursorsRef = useRef(new Map<string, RemoteCursor>());
   const lastCursorEmit = useRef(0);
   const lastCursorPos = useRef<{ x: number; y: number } | null>(null);
@@ -300,6 +302,7 @@ socket.on('cursor:moved', (data: unknown) => {
 
   useEffect(() => {
     let cancelled = false;
+    setLoadError('');
     canvasApi
       .getOrCreate(boardIdRef.current)
       .then((canvas) => {
@@ -310,7 +313,8 @@ socket.on('cursor:moved', (data: unknown) => {
         });
       })
       .catch(() => {
-        /* load failures surface as an empty canvas */
+        if (cancelled) return;
+        setLoadError('Failed to load this canvas. Please try again.');
       });
     return () => {
       cancelled = true;
@@ -427,8 +431,9 @@ socket.on('cursor:moved', (data: unknown) => {
       objectLocks,
       requestLock,
       releaseLock,
+      loadError,
     }),
-    [presence, remoteCursors, emitCursor, objectLocks, requestLock, releaseLock],
+    [presence, remoteCursors, emitCursor, objectLocks, requestLock, releaseLock, loadError],
   );
 
   return (

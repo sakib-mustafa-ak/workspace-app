@@ -89,17 +89,22 @@ function DashboardContent() {
   const { user } = useAuth();
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [pendingInvites, setPendingInvites] = useState<Invitation[]>([]);
   const [recentBoards, setRecentBoards] = useState<RecentBoard[]>([]);
 
-  useEffect(() => {
+  function loadWorkspaces() {
+    setLoading(true);
+    setLoadError('');
     workspacesApi
       .list()
       .then(setWorkspaces)
-      .catch(() => undefined)
+      .catch(() => setLoadError('Failed to load your workspaces. Please try again.'))
       .finally(() => setLoading(false));
-  }, []);
+  }
+
+  useEffect(() => { loadWorkspaces(); }, []);
 
   useEffect(() => {
     workspacesApi.listMyPendingInvitations?.()
@@ -174,7 +179,17 @@ function DashboardContent() {
       )}
 
       {/* Workspace grid */}
-      {loading ? (
+      {loadError ? (
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/5 py-24">
+          <p className="text-sm font-medium text-red-400">{loadError}</p>
+          <button
+            onClick={loadWorkspaces}
+            className="mt-4 rounded-lg bg-primary-600 px-4 py-2 text-xs font-medium text-white hover:bg-primary-500"
+          >
+            Try again
+          </button>
+        </div>
+      ) : loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="h-36 rounded-xl bg-surface-800/50 overflow-hidden relative">

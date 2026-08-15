@@ -30,6 +30,24 @@ function PresenceChips() {
   );
 }
 
+function CanvasLoadError() {
+  const { loadError } = useCanvasSync();
+  if (!loadError) return null;
+  return (
+    <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center">
+      <div className="pointer-events-auto rounded-xl border border-red-500/20 bg-surface-900/95 px-6 py-4 shadow-xl">
+        <p className="text-sm font-medium text-red-400">{loadError}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-2 rounded-lg bg-primary-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-primary-500"
+        >
+          Reload
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function CanvasPage() {
   const params = useParams();
   const workspaceId = params.workspaceId as string;
@@ -52,6 +70,7 @@ export default function CanvasPage() {
             <PresenceChips />
           </div>
           <Toolbar />
+          <CanvasLoadError />
           <CanvasSurface />
         </div>
       </CanvasSyncProvider>

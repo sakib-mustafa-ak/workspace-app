@@ -23,6 +23,10 @@ export type UserProfile = {
 
 export type UpdateProfileData = {
   displayName?: string;
+  bio?: string | null;
+  avatarUrl?: string | null;
+  timezone?: string | null;
+  locale?: string | null;
 };
 
 export type UserListParams = {
@@ -65,8 +69,6 @@ export const usersApi = {
     api.get<UserProfile>(`/users/${id}`),
   list: (params?: UserListParams) =>
     api.get<UserListResponse>(`/users${buildQuery(params as Record<string, string | number | undefined>)}`),
-  delete: (id: string) =>
-    api.delete<void>(`/users/${id}`),
   getMemberships: (id: string) =>
     api.get<UserMembership[]>(`/users/${id}/memberships`),
   getActivity: (id: string) =>

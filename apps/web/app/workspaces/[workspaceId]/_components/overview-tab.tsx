@@ -10,9 +10,10 @@ import { boardsApi } from '@/lib/boards';
 
 type Props = {
   workspaceId: string;
+  onInvite: () => void;
 };
 
-export function OverviewTab({ workspaceId }: Props) {
+export function OverviewTab({ workspaceId, onInvite }: Props) {
   const [stats, setStats] = useState({ boards: 0, members: 0, tasks: 0 });
   const [recentActivity, setRecentActivity] = useState<AuditEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +55,7 @@ export function OverviewTab({ workspaceId }: Props) {
         >
           <Plus size={14} /> New board
         </Link>
-        <button className="flex items-center gap-1.5 rounded-lg border border-surface-700 px-4 py-2 text-xs text-surface-300 hover:text-white">
+        <button onClick={onInvite} className="flex items-center gap-1.5 rounded-lg border border-surface-700 px-4 py-2 text-xs text-surface-300 hover:text-white">
           <Mail size={14} /> Invite members
         </button>
       </div>

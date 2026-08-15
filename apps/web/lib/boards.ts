@@ -46,14 +46,4 @@ export const boardsApi = {
     api.patch<BoardColumn>(`/workspaces/${workspaceId}/boards/${boardId}/columns/${columnId}`, data),
   archiveColumn: (workspaceId: string, boardId: string, columnId: string) =>
     api.post<void>(`/workspaces/${workspaceId}/boards/${boardId}/columns/${columnId}/archive`),
-  exportBoard: (workspaceId: string, boardId: string) =>
-    api.post<BoardExportData>(`/workspaces/${workspaceId}/boards/${boardId}/export`),
-  importBoard: (workspaceId: string, data: BoardExportData) =>
-    api.post<Board>(`/workspaces/${workspaceId}/boards/import`, data),
-};
-
-export type BoardExportData = {
-  board: { name: string; description: string | null };
-  columns: { name: string; position: number }[];
-  tasks: { title: string; description: string | null; position: number; priority: string; columnName: string }[];
 };

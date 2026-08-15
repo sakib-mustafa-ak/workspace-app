@@ -19,7 +19,10 @@ export function InvitationsTab({
 }: Props) {
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('EDITOR');
-  const [inviteResult, setInviteResult] = useState('');
+  const [inviteResult, setInviteResult] = useState<{
+    text: string;
+    kind: 'success' | 'error';
+  } | null>(null);
   const [inviteToken, setInviteToken] = useState('');
   const [copied, setCopied] = useState(false);
 
@@ -33,11 +36,11 @@ export function InvitationsTab({
       });
       setInviteToken(res.token);
       setInviteEmail('');
-      setInviteResult('Invitation created!');
-      setTimeout(() => setInviteResult(''), 3000);
+      setInviteResult({ text: 'Invitation created!', kind: 'success' });
+      setTimeout(() => setInviteResult(null), 3000);
       onInviteCreated();
     } catch {
-      setInviteResult('Failed to send invitation');
+      setInviteResult({ text: 'Failed to send invitation', kind: 'error' });
     }
   }
 
@@ -78,7 +81,9 @@ export function InvitationsTab({
         </button>
       </form>
       {inviteResult && (
-        <p className="mb-2 text-xs text-emerald-400">{inviteResult}</p>
+        <p className={`mb-2 text-xs ${inviteResult.kind === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
+          {inviteResult.text}
+        </p>
       )}
       {inviteToken && (
         <div className="mb-4 rounded-lg border border-primary-500/20 bg-primary-500/10 px-4 py-3">
@@ -118,6 +123,8 @@ export function InvitationsTab({
                 </span>
                 <button
                   onClick={() => onRevoke(inv.id)}
+                  title="Revoke invitation"
+                  aria-label={`Revoke invitation for ${inv.email}`}
                   className="rounded p-1 text-surface-500 hover:text-red-400"
                 >
                   <Ban size={14} />

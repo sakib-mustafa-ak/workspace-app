@@ -42,6 +42,7 @@ export default function BoardDetailPage() {
   const [columns, setColumns] = useState<BoardColumn[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [showComments, setShowComments] = useState(false);
   const [showFiles, setShowFiles] = useState(false);
   const [showAiSummary, setShowAiSummary] = useState(false);
@@ -65,6 +66,7 @@ export default function BoardDetailPage() {
 
   function loadBoard() {
     setLoading(true);
+    setError('');
     Promise.all([
       workspacesApi.getById(workspaceId),
       boardsApi.getById(workspaceId, boardId),
@@ -76,7 +78,7 @@ export default function BoardDetailPage() {
         setColumns(cols.filter((c) => c.status !== 'ARCHIVED'));
         setTasks(tsks.filter((t) => t.status !== 'DELETED'));
       })
-      .catch(() => router.push(`/workspaces/${workspaceId}/boards`))
+      .catch(() => setError('Failed to load this board. It may have been deleted or you may not have access.'))
       .finally(() => setLoading(false));
   }
 
@@ -218,6 +220,20 @@ export default function BoardDetailPage() {
     }
   }
 
+  if (error) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-3">
+        <p className="text-sm font-medium text-red-400">{error}</p>
+        <button
+          onClick={() => loadBoard()}
+          className="rounded-lg bg-primary-600 px-4 py-2 text-xs font-medium text-white hover:bg-primary-500"
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
@@ -328,6 +344,9 @@ export default function BoardDetailPage() {
           <div className="relative">
             <button
               onClick={() => setShowSettings(!showSettings)}
+              title="Board settings"
+              aria-label="Board settings"
+              aria-expanded={showSettings}
               className="rounded-lg p-1.5 text-surface-400 hover:bg-surface-800 hover:text-surface-200"
             >
               <Settings size={16} />

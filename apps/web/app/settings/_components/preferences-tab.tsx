@@ -22,6 +22,7 @@ export function PreferencesTab() {
   const [notifPrefs, setNotifPrefs] = useState<NotifPrefs>(defaultNotifPrefs);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   const { permission, subscriptions, loading: pushLoading, subscribe, unsubscribe } = usePushNotifications();
 
@@ -37,13 +38,16 @@ export function PreferencesTab() {
   async function handleSave() {
     setSaving(true);
     setSaved(false);
+    setSaveError('');
     try {
       await Promise.all([
         api.patch('/notification-preferences', notifPrefs),
         api.patch('/users/me', { timezone, locale }),
       ]);
       setSaved(true);
-    } catch { /* handled */ }
+    } catch {
+      setSaveError('Failed to save preferences. Please try again.');
+    }
     finally { setSaving(false); }
   }
 
@@ -56,6 +60,7 @@ export function PreferencesTab() {
 
   return (
     <div className="space-y-6">
+      {saveError && <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm text-red-400">{saveError}</div>}
       {saved && <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-400">Preferences saved.</div>}
 
       <Section title="Timezone">
@@ -86,6 +91,9 @@ export function PreferencesTab() {
                 <span className="text-sm capitalize text-surface-300">{key}</span>
                 <button
                   type="button"
+                  role="switch"
+                  aria-checked={val}
+                  aria-label={`${channel} ${key}`}
                   onClick={() => togglePref(channel, key, !val)}
                   className={`relative h-5 w-9 rounded-full transition-colors ${val ? 'bg-primary-600' : 'bg-surface-700'}`}
                 >

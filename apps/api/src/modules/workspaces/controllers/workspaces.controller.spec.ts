@@ -142,7 +142,7 @@ describe('WorkspacesController', () => {
   it('getMembers returns member list', async () => {
     service.getMembers.mockResolvedValue([mockMember]);
 
-    const result = await controller.getMembers('w1');
+    const result = await controller.getMembers({ id: 'u1' } as never, 'w1');
     expect(result).toHaveLength(1);
     expect(result[0].role).toBe('EDITOR');
   });

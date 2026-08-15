@@ -2,6 +2,8 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 
 import { DATABASE, type Db, type UserRow } from '@repo/database';
 
+import { WorkspaceMembersRepository } from '../../workspaces/repositories/workspace-members.repository';
+import { AuditRepository } from '../../audit/repositories/audit.repository';
 import { UsersEventBus } from '../events/users.events';
 import { UsersRepository } from '../repositories/users.repository';
 import { UsersErrorCode, UsersException } from '../errors/users.errors';
@@ -14,6 +16,9 @@ export class UsersService {
     @Inject(DATABASE) private readonly db: Db,
     @Inject(UsersRepository) private readonly users: UsersRepository,
     @Inject(UsersEventBus) private readonly events: UsersEventBus,
+    @Inject(WorkspaceMembersRepository)
+    private readonly membersRepo: WorkspaceMembersRepository,
+    @Inject(AuditRepository) private readonly auditRepo: AuditRepository,
   ) {}
 
   public async getProfile(userId: string): Promise<UserRow> {
@@ -65,10 +70,15 @@ export class UsersService {
     userId: string,
     targetUserId: string,
   ): Promise<void> {
-    if (userId === targetUserId) {
+    // Only self-deletion is allowed through this endpoint. Cross-user
+    // deletion is a privilege-escalation hole (any authenticated user
+    // could soft-delete any other account) and nothing in the product
+    // legitimately needs an admin to delete a user yet. When an admin
+    // flow is designed, add a real role check here.
+    if (userId !== targetUserId) {
       throw new UsersException(
-        UsersErrorCode.CANNOT_DELETE_SELF,
-        'Cannot delete your own account through this endpoint. Use account deletion flow.',
+        UsersErrorCode.CANNOT_DELETE_OTHER,
+        'You can only delete your own account.',
       );
     }
 
@@ -86,12 +96,48 @@ export class UsersService {
   }
 
   public async listUsers(
-    opts: { limit?: number; offset?: number } = {},
+    opts: {
+      limit?: number;
+      offset?: number;
+      search?: string;
+      sortBy?: 'displayName' | 'email' | 'createdAt';
+      sortOrder?: 'asc' | 'desc';
+    } = {},
   ): Promise<{ users: UserRow[]; total: number }> {
     const [users, total] = await Promise.all([
       this.users.list(opts),
-      this.users.count(),
+      this.users.countFiltered(opts.search),
     ]);
     return { users, total };
+  }
+
+  /**
+   * Workspace memberships for a user (public profile data — same shape the
+   * workspace member list uses, with the workspace name resolved).
+   */
+  public async getUserMemberships(userId: string) {
+    const memberships = await this.membersRepo.listByUserWithWorkspace(userId);
+    return memberships.map((m) => ({
+      workspaceId: m.workspaceId,
+      workspaceName: m.workspaceName,
+      role: m.role,
+      joinedAt: m.joinedAt?.toISOString() ?? null,
+    }));
+  }
+
+  /**
+   * Recent audit events authored by a user, newest first. Capped — the
+   * user profile page renders a short timeline, not a full audit view.
+   */
+  public async getUserActivity(userId: string, limit = 20) {
+    const rows = await this.auditRepo.listByUser(userId, limit);
+    return rows.map((r) => ({
+      id: r.id,
+      action: r.action,
+      entityType: r.resourceType,
+      entityId: r.resourceId,
+      metadata: r.metadata ?? {},
+      createdAt: r.createdAt.toISOString(),
+    }));
   }
 }

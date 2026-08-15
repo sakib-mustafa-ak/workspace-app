@@ -18,6 +18,7 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import type { CurrentUser as CurrentUserModel } from '../../auth/interfaces/current-user.interface';
@@ -137,9 +138,10 @@ export class WorkspacesController {
   @ApiOperation({ summary: 'List workspace members' })
   @ApiOkResponse({ type: [WorkspaceMemberResponseDto] })
   public async getMembers(
+    @CurrentUser() user: CurrentUserModel,
     @Param('id') id: string,
   ): Promise<WorkspaceMemberResponseDto[]> {
-    const members = await this.workspaces.getMembers(id);
+    const members = await this.workspaces.getMembers(id, user.id);
     return members.map(toMemberResponse);
   }
 
@@ -190,6 +192,7 @@ export class WorkspacesController {
     return toWorkspaceResponse(ws);
   }
 
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @Post(':id/invitations')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create invitation' })

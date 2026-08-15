@@ -261,6 +261,7 @@ export class WorkspacesService {
 
   public async getMembers(
     workspaceId: string,
+    userId: string,
   ): Promise<WorkspaceMemberWithUser[]> {
     const ws = await this.workspacesRepo.findById(workspaceId);
     if (!ws) {
@@ -269,6 +270,9 @@ export class WorkspacesService {
         'Workspace not found.',
       );
     }
+    // Members list is private to the workspace — any member may view it,
+    // but non-members must not be able to enumerate emails/names.
+    await this.getMembership(workspaceId, userId);
     return this.members.listByWorkspace(workspaceId);
   }
 

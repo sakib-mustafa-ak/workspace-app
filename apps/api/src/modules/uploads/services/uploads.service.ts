@@ -11,6 +11,20 @@ import { LocalStorageProvider } from '../providers/local-storage.provider';
 
 @Injectable()
 export class UploadsService {
+  private static readonly MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
+  private static readonly ALLOWED_MIME_TYPES = new Set([
+    'image/png',
+    'image/jpeg',
+    'image/gif',
+    'image/webp',
+    'image/svg+xml',
+    'application/pdf',
+    'text/plain',
+    'text/markdown',
+    'application/json',
+  ]);
+
   constructor(
     @Inject(UploadsRepository) private readonly uploadsRepo: UploadsRepository,
     @Inject(BoardsRepository) private readonly boardsRepo: BoardsRepository,
@@ -47,6 +61,21 @@ export class UploadsService {
       throw new UploadException(
         UploadErrorCode.INSUFFICIENT_ROLE,
         'Insufficient role',
+      );
+    }
+
+    if (file.size > UploadsService.MAX_FILE_SIZE) {
+      throw new UploadException(
+        UploadErrorCode.FILE_TOO_LARGE,
+        'File exceeds the 10 MB size limit',
+      );
+    }
+
+    const mimeType = file.mimetype?.toLowerCase() ?? '';
+    if (!UploadsService.ALLOWED_MIME_TYPES.has(mimeType)) {
+      throw new UploadException(
+        UploadErrorCode.INVALID_MIME_TYPE,
+        'File type is not allowed',
       );
     }
 
@@ -134,6 +163,12 @@ export class UploadsService {
       throw new UploadException(
         UploadErrorCode.NOT_A_MEMBER,
         'Not a workspace member',
+      );
+    }
+    if (!this.policy.canView(membership.role)) {
+      throw new UploadException(
+        UploadErrorCode.INSUFFICIENT_ROLE,
+        'Insufficient role',
       );
     }
     return this.uploadsRepo.findByWorkspace(workspaceId);

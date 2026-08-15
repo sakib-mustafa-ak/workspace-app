@@ -26,6 +26,7 @@ import type { Request } from 'express';
 
 import { CurrentUser } from '../decorators/current-user.decorator';
 import { Public } from '../decorators/public.decorator';
+import { Throttle } from '@nestjs/throttler';
 import type { CurrentUser as CurrentUserModel } from '../interfaces/current-user.interface';
 import { AuthResponseDto, UserProfileDto } from '../dto/auth-response.dto';
 import { LoginDto } from '../dto/login.dto';
@@ -70,6 +71,7 @@ export class AuthController {
    * Begin a brand-new account, identity and first session in one go.
    */
   @Public()
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
@@ -102,6 +104,7 @@ export class AuthController {
    * Verify credentials, issue tokens and a session row.
    */
   @Public()
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Email + password login' })
@@ -132,6 +135,7 @@ export class AuthController {
    * and revokes the previous refresh token regardless of outcome.
    */
   @Public()
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Rotate refresh token' })
@@ -181,6 +185,7 @@ export class AuthController {
    * "Email Verification" flow step 1.
    */
   @Public()
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('request-verification')
   @HttpCode(HttpStatus.ACCEPTED)
   @ApiOperation({
@@ -199,6 +204,7 @@ export class AuthController {
    * straight from the email link works without an existing session.
    */
   @Public()
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('verify-email')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Verify an email address from a token link' })
@@ -235,6 +241,7 @@ export class AuthController {
    * required (Part V-A "Password Reset").
    */
   @Public()
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('request-password-reset')
   @HttpCode(HttpStatus.ACCEPTED)
   @ApiOperation({
@@ -260,6 +267,7 @@ export class AuthController {
    * endpoint without a current session (Part V-A "Password Reset").
    */
   @Public()
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -325,7 +333,9 @@ export class AuthController {
       displayName: fresh.displayName,
       email: fresh.email,
       status: fresh.status,
-      emailVerifiedAt: null, // Surface area for the email-verification flow added later.
+      emailVerifiedAt: fresh.emailVerifiedAt
+        ? fresh.emailVerifiedAt.toISOString()
+        : null,
     };
   }
 }

@@ -17,6 +17,10 @@ export const envSchema = z.object({
 
   APP_PUBLIC_BASE_URL: z.string().url().default('http://localhost:3000'),
 
+  // Comma-separated list of allowed browser origins for CORS. Defaults to
+  // the public base URL when unset. Use "*" only in development.
+  CORS_ORIGINS: z.string().default(''),
+
   DATABASE_URL: z
     .string()
     .min(1, 'DATABASE_URL is required to connect to PostgreSQL.'),

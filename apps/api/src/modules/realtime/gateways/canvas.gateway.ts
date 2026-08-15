@@ -8,12 +8,15 @@ import {
   MessageBody,
 } from '@nestjs/websockets';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Server, Socket } from 'socket.io';
 import { jwtVerify } from 'jose';
 import { TextEncoder } from 'node:util';
 
 import { UsersService } from '../../users/services/users.service';
 import { NotificationsEventBus } from '../../notifications/events/notifications.events';
+import { BoardsRepository } from '../../boards/repositories/boards.repository';
+import { WorkspaceMembersRepository } from '../../workspaces/repositories/workspace-members.repository';
 import type {
   PresenceUser,
   ObjectLock,
@@ -26,7 +29,6 @@ export interface AuthenticatedSocket extends Socket {
 
 @Injectable()
 @WebSocketGateway({
-  cors: { origin: '*', credentials: true },
   namespace: '/canvas',
 })
 export class CanvasGateway
@@ -41,11 +43,24 @@ export class CanvasGateway
 
   private static readonly LOCK_TTL_MS = 30_000;
 
+  private readonly jwtSecret: string;
+
   constructor(
     @Inject(UsersService) private readonly users: UsersService,
     @Inject(NotificationsEventBus)
     private readonly notificationsBus: NotificationsEventBus,
-  ) {}
+    @Inject(BoardsRepository)
+    private readonly boardsRepo: BoardsRepository,
+    @Inject(WorkspaceMembersRepository)
+    private readonly membersRepo: WorkspaceMembersRepository,
+    config: ConfigService,
+  ) {
+    const secret = config.get<string>('auth.jwt.access.secret');
+    if (!secret) {
+      throw new Error('auth.jwt.access.secret is not configured');
+    }
+    this.jwtSecret = secret;
+  }
 
   onModuleInit(): void {
     this.notificationsBus.onNotificationCreated((payload) => {
@@ -64,11 +79,7 @@ export class CanvasGateway
       return;
     }
     try {
-      const jwtSecret = process.env.JWT_ACCESS_SECRET;
-      if (!jwtSecret) {
-        throw new Error('JWT_ACCESS_SECRET is not configured');
-      }
-      const secret = new TextEncoder().encode(jwtSecret);
+      const secret = new TextEncoder().encode(this.jwtSecret);
       const { payload } = await jwtVerify(token, secret);
       const userId = payload.sub as string;
       client.userId = userId;
@@ -86,6 +97,28 @@ export class CanvasGateway
       return user.displayName || 'Unknown';
     } catch {
       return 'Unknown';
+    }
+  }
+
+  /**
+   * True when the user is an active member of the workspace that owns the
+   * board. Resolves the board -> workspace first, then checks membership.
+   * Used to keep sockets out of boards they do not belong to.
+   */
+  private async isBoardMember(
+    userId: string,
+    boardId: string,
+  ): Promise<boolean> {
+    try {
+      const board = await this.boardsRepo.findById(boardId);
+      if (!board) return false;
+      const membership = await this.membersRepo.findByWorkspaceAndUser(
+        board.workspaceId,
+        userId,
+      );
+      return Boolean(membership);
+    } catch {
+      return false;
     }
   }
 
@@ -122,9 +155,13 @@ export class CanvasGateway
     @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { boardId: string },
   ): void {
-    if (!client.userId) return;
+    if (!client.userId || !data.boardId) return;
     const userId = client.userId;
     void (async () => {
+      if (!(await this.isBoardMember(userId, data.boardId))) {
+        client.emit('board:join:denied', { boardId: data.boardId });
+        return;
+      }
       if (!client.displayName) {
         client.displayName = await this.resolveDisplayName(userId);
       }
@@ -184,7 +221,11 @@ export class CanvasGateway
     @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { boardId: string; object: unknown },
   ): void {
-    client.to(`board:${data.boardId}`).emit('object:created', data.object);
+    if (!client.userId || !data.boardId) return;
+    void (async () => {
+      if (!(await this.isBoardMember(client.userId!, data.boardId))) return;
+      client.to(`board:${data.boardId}`).emit('object:created', data.object);
+    })();
   }
 
   @SubscribeMessage('object:updated')
@@ -192,7 +233,11 @@ export class CanvasGateway
     @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { boardId: string; object: unknown },
   ): void {
-    client.to(`board:${data.boardId}`).emit('object:updated', data.object);
+    if (!client.userId || !data.boardId) return;
+    void (async () => {
+      if (!(await this.isBoardMember(client.userId!, data.boardId))) return;
+      client.to(`board:${data.boardId}`).emit('object:updated', data.object);
+    })();
   }
 
   @SubscribeMessage('object:deleted')
@@ -200,7 +245,11 @@ export class CanvasGateway
     @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { boardId: string; objectId: string },
   ): void {
-    client.to(`board:${data.boardId}`).emit('object:deleted', data.objectId);
+    if (!client.userId || !data.boardId) return;
+    void (async () => {
+      if (!(await this.isBoardMember(client.userId!, data.boardId))) return;
+      client.to(`board:${data.boardId}`).emit('object:deleted', data.objectId);
+    })();
   }
 
   private getBoardLocks(boardId: string): Map<string, ObjectLock> {

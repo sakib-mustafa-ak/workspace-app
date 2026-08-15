@@ -3,7 +3,7 @@ import { HttpException } from '@nestjs/common';
 export const UsersErrorCode = {
   USER_NOT_FOUND: 'USERS.NOT_FOUND',
   EMAIL_ALREADY_TAKEN: 'USERS.EMAIL_ALREADY_TAKEN',
-  CANNOT_DELETE_SELF: 'USERS.CANNOT_DELETE_SELF',
+  CANNOT_DELETE_OTHER: 'USERS.CANNOT_DELETE_OTHER',
   ACCOUNT_SUSPENDED: 'USERS.ACCOUNT_SUSPENDED',
 } as const;
 
@@ -13,7 +13,7 @@ export type UsersErrorCode =
 const STATUS_BY_CODE: Readonly<Record<UsersErrorCode, number>> = {
   [UsersErrorCode.USER_NOT_FOUND]: 404,
   [UsersErrorCode.EMAIL_ALREADY_TAKEN]: 409,
-  [UsersErrorCode.CANNOT_DELETE_SELF]: 422,
+  [UsersErrorCode.CANNOT_DELETE_OTHER]: 403,
   [UsersErrorCode.ACCOUNT_SUSPENDED]: 403,
 };
 

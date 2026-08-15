@@ -12,6 +12,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Throttle } from '@nestjs/throttler';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -36,6 +37,7 @@ export class UploadsController {
     @Inject(UploadsService) private readonly uploads: UploadsService,
   ) {}
 
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor('file'))

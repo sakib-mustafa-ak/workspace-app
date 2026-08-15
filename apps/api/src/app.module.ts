@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 import { configuration } from './config/index.js';
 import { DatabaseModule } from './infrastructure/database/database.module.js';
@@ -54,6 +56,17 @@ import { ChecklistModule } from './modules/checklists/checklist.module.js';
       load: [configuration],
     }),
 
+    // Global rate limiting. Default is generous (120 req/min per IP);
+    // sensitive routes tighten it with @Throttle(). Single-instance
+    // in-memory storage — revisit with a Redis store before scaling
+    // horizontally.
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60_000,
+        limit: 120,
+      },
+    ]),
+
     AppLoggerModule,
     DatabaseModule,
     RedisModule,
@@ -72,6 +85,12 @@ import { ChecklistModule } from './modules/checklists/checklist.module.js';
     AiModule,
     AuditModule,
     ChecklistModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}

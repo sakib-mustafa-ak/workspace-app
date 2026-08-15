@@ -78,16 +78,23 @@ describe('UsersController', () => {
       total: 1,
     });
 
-    const result = await controller.listUsers('10', '0');
+    const result = await controller.listUsers(
+      '10',
+      undefined,
+      '1',
+      undefined,
+      undefined,
+      undefined,
+    );
     expect(result.users).toHaveLength(1);
     expect(result.total).toBe(1);
+    expect(result.page).toBe(1);
+    expect(result.limit).toBe(10);
+    expect(result.totalPages).toBe(1);
   });
 
-  it('deleteUser calls deleteAccount', async () => {
-    await controller.deleteUser({ id: 'admin' } as never, 'target-id');
-    expect(usersService.deleteAccount).toHaveBeenCalledWith(
-      'admin',
-      'target-id',
-    );
+  it('deleteUser calls deleteAccount for own account', async () => {
+    await controller.deleteUser({ id: 'admin' } as never, 'admin');
+    expect(usersService.deleteAccount).toHaveBeenCalledWith('admin', 'admin');
   });
 });

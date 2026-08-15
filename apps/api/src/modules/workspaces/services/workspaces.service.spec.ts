@@ -306,21 +306,32 @@ describe('WorkspacesService', () => {
   });
 
   describe('getMembers', () => {
-    it('returns members for existing workspace', async () => {
+    it('returns members for existing workspace when caller is a member', async () => {
       workspacesRepo.findById.mockResolvedValue(mockWorkspace);
+      members.findByWorkspaceAndUser.mockResolvedValue(mockOwnership);
       members.listByWorkspace.mockResolvedValue([
         mockOwnership,
         mockMemberEntry,
       ]);
 
-      const result = await service.getMembers('w1');
+      const result = await service.getMembers('w1', 'u1');
       expect(result).toHaveLength(2);
+    });
+
+    it('throws when caller is not a member', async () => {
+      workspacesRepo.findById.mockResolvedValue(mockWorkspace);
+      members.findByWorkspaceAndUser.mockResolvedValue(undefined);
+
+      await expect(service.getMembers('w1', 'outsider')).rejects.toThrow(
+        'not a member',
+      );
+      expect(members.listByWorkspace).not.toHaveBeenCalled();
     });
 
     it('throws when workspace missing', async () => {
       workspacesRepo.findById.mockResolvedValue(undefined);
 
-      await expect(service.getMembers('missing')).rejects.toThrow(
+      await expect(service.getMembers('missing', 'u1')).rejects.toThrow(
         'Workspace not found.',
       );
     });

@@ -24,7 +24,13 @@ async function bootstrap(): Promise<void> {
   app.useBodyParser('json', { limit: '10mb' });
 
   app.use(helmet());
-  app.enableCors();
+
+  const configService = app.get(ConfigService);
+  const corsOrigins = configService.get<string[]>('app.corsOrigins') ?? [];
+  app.enableCors({
+    origin: corsOrigins,
+    credentials: true,
+  });
 
   app.useStaticAssets(join(process.cwd(), 'uploads'), {
     prefix: '/uploads/',
@@ -49,7 +55,6 @@ async function bootstrap(): Promise<void> {
   app.useGlobalFilters(new BusinessExceptionFilter());
   app.useGlobalInterceptors(new ResponseInterceptor());
 
-  const configService = app.get(ConfigService);
   const port = Number(configService.get<number>('app.port') ?? 4000);
 
   await app.listen(port);

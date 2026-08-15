@@ -12,14 +12,14 @@ function getPasswordStrength(password: string): {
   textColor: string;
 } {
   let score = 0;
-  if (password.length >= 8) score++;
   if (password.length >= 12) score++;
+  if (password.length >= 16) score++;
   if (/[A-Z]/.test(password)) score++;
   if (/[0-9]/.test(password)) score++;
   if (/[^A-Za-z0-9]/.test(password)) score++;
-  const labels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
-  const barColors = ['', 'bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-emerald-500'];
-  const textColors = ['', 'text-red-400', 'text-orange-400', 'text-yellow-400', 'text-emerald-400'];
+  const labels = ['', 'Weak', 'Fair', 'Good', 'Strong', 'Strong'];
+  const barColors = ['', 'bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-emerald-500', 'bg-emerald-500'];
+  const textColors = ['', 'text-red-400', 'text-orange-400', 'text-yellow-400', 'text-emerald-400', 'text-emerald-400'];
   return { score, label: labels[score] ?? '', barColor: barColors[score] ?? '', textColor: textColors[score] ?? '' };
 }
 
@@ -40,8 +40,16 @@ export default function RegisterPage() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       errors.email = 'Invalid email address';
     }
-    if (password.length < 8) {
-      errors.password = 'Password must be at least 8 characters';
+    if (password.length < 12) {
+      errors.password = 'Password must be at least 12 characters';
+    } else if (
+      !/[a-z]/.test(password) ||
+      !/[A-Z]/.test(password) ||
+      !/[0-9]/.test(password) ||
+      !/[^A-Za-z0-9]/.test(password)
+    ) {
+      errors.password =
+        'Password must include uppercase, lowercase, a number, and a symbol';
     }
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;

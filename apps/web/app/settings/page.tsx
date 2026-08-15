@@ -1,18 +1,16 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { User, Shield, Settings2, AlertTriangle } from 'lucide-react';
+import { User, Shield, Settings2 } from 'lucide-react';
 import { TabNav } from './_components/tab-nav';
 import { ProfileTab } from './_components/profile-tab';
 import { SecurityTab } from './_components/security-tab';
 import { PreferencesTab } from './_components/preferences-tab';
-import { DangerTab } from './_components/danger-tab';
 
 const TABS = [
   { id: 'profile', label: 'Profile', icon: User },
   { id: 'security', label: 'Security', icon: Shield },
   { id: 'preferences', label: 'Preferences', icon: Settings2 },
-  { id: 'danger', label: 'Danger Zone', icon: AlertTriangle },
 ];
 
 export default function SettingsPage() {
@@ -34,7 +32,6 @@ export default function SettingsPage() {
         {activeTab === 'profile' && <ProfileTab />}
         {activeTab === 'security' && <SecurityTab />}
         {activeTab === 'preferences' && <PreferencesTab />}
-        {activeTab === 'danger' && <DangerTab />}
       </div>
     </div>
   );

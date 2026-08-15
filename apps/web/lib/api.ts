@@ -3,7 +3,35 @@ const API_ORIGIN =
     ? `${window.location.protocol}//${window.location.hostname}`
     : 'http://localhost';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || `${API_ORIGIN}:4000/api/v1`;
+/**
+ * Resolve the API base URL.
+ *
+ * - NEXT_PUBLIC_API_URL (set in Vercel/Render/Netlify env) is the source of
+ *   truth in every environment.
+ * - In development the Next.js rewrites proxy /api -> localhost:4000, so the
+ *   same-origin /api prefix works without any env.
+ * - In production WITHOUT the env var there is no correct default — the old
+ *   `${origin}:4000` fallback silently dialed a dead port on hosted deploys
+ *   (the login failure). Fail loudly instead so the misconfiguration is
+ *   obvious in the console rather than as a mysterious network error.
+ */
+const isDev =
+  process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test';
+
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL
+  ? process.env.NEXT_PUBLIC_API_URL
+  : isDev
+    ? `${API_ORIGIN}/api/v1`
+    : 'MISSING_NEXT_PUBLIC_API_URL';
+
+function assertConfigured(): void {
+  if (BASE_URL === 'MISSING_NEXT_PUBLIC_API_URL') {
+    throw new Error(
+      'NEXT_PUBLIC_API_URL is not set. Add it to the deployment environment ' +
+        '(e.g. https://workspace-api-m9q7.onrender.com/api/v1 on Vercel).',
+    );
+  }
+}
 
 export class ApiError extends Error {
   constructor(
@@ -57,6 +85,7 @@ async function request<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
+  assertConfigured();
   const token =
     typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
 
@@ -124,6 +153,7 @@ async function requestFormData<T>(
   path: string,
   formData: FormData,
 ): Promise<T> {
+  assertConfigured();
   const token =
     typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
 

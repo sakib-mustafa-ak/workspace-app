@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   MousePointer2, Square, Circle, Minus, ArrowRight, Pencil, Type, NotebookPen,
   GitBranch, Undo2, Redo2, Grid3x3, AlignStartVertical, AlignCenterVertical,
@@ -69,11 +70,16 @@ function canvasCenter() {
     : { cx: window.innerWidth / 2, cy: window.innerHeight / 2 };
 }
 
-function useDismiss(onClose: () => void) {
+function useDismiss(onClose: () => void, insideRefs: React.RefObject<HTMLElement | null>[] = []) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
+    function isInside(node: Node | null): boolean {
+      if (!node) return false;
+      if (ref.current?.contains(node)) return true;
+      return insideRefs.some((r) => r.current?.contains(node));
+    }
     function onDoc(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+      if (!isInside(e.target as Node | null)) onClose();
     }
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose();
@@ -84,7 +90,7 @@ function useDismiss(onClose: () => void) {
       document.removeEventListener('mousedown', onDoc);
       document.removeEventListener('keydown', onKey);
     };
-  }, [onClose]);
+  }, [onClose, insideRefs]);
   return ref;
 }
 
@@ -103,11 +109,40 @@ function Dropdown({
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useDismiss(() => setOpen(false));
+  const [pos, setPos] = useState<{ top: number; left: number; right: number } | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const ref = useDismiss(() => setOpen(false), [menuRef]);
+
+  // The ribbon scrolls with overflow-x-auto, which clips absolutely-positioned
+  // children. Render the menu through a portal to <body> and position it from
+  // the trigger's bounding rect so it always floats above the canvas.
+  useEffect(() => {
+    if (!open) return;
+    const btn = btnRef.current;
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    setPos({
+      top: rect.bottom + 6,
+      left: rect.left,
+      right: window.innerWidth - rect.right,
+    });
+    function onScroll() {
+      if (menuRef.current && menuRef.current.contains(document.activeElement)) return;
+      setOpen(false);
+    }
+    window.addEventListener('scroll', onScroll, true);
+    window.addEventListener('resize', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, [open]);
 
   return (
     <div ref={ref} className="relative shrink-0">
       <button
+        ref={btnRef}
         type="button"
         title={label}
         aria-label={label}
@@ -124,18 +159,25 @@ function Dropdown({
         <span className="max-w-24 truncate whitespace-nowrap">{label}</span>
         <ChevronDown size={12} className={`text-surface-500 transition-transform duration-150 ${open ? 'rotate-180' : ''}`} />
       </button>
-      {open && (
-        <div
-          role="menu"
-          aria-label={label}
-          className={`absolute top-full z-50 mt-1.5 min-w-52 rounded-xl border border-surface-700/80 bg-surface-900/95 p-1.5 shadow-xl shadow-black/40 backdrop-blur-sm ${
-            align === 'right' ? 'right-0' : 'left-0'
-          }`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {children}
-        </div>
-      )}
+      {open &&
+        pos &&
+        createPortal(
+          <div
+            ref={menuRef}
+            role="menu"
+            aria-label={label}
+            style={{
+              top: pos.top,
+              left: align === 'right' ? undefined : pos.left,
+              right: align === 'right' ? pos.right : undefined,
+            }}
+            className="fixed z-[100] min-w-52 rounded-xl border border-surface-700/80 bg-surface-900/95 p-1.5 shadow-xl shadow-black/40 backdrop-blur-sm"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {children}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

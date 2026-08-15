@@ -5,38 +5,62 @@ import {
   MousePointer2, Square, Circle, Minus, ArrowRight, Pencil, Type, NotebookPen,
   GitBranch, Undo2, Redo2, Grid3x3, AlignStartVertical, AlignCenterVertical,
   AlignEndVertical, AlignStartHorizontal, AlignCenterHorizontal, AlignEndHorizontal,
-  Layers, ImageIcon, ZoomIn, ZoomOut, Trash2, X, Eraser, ChevronDown,
+  Layers, ImageIcon, ZoomIn, ZoomOut, Trash2, X, Eraser, Check, ChevronDown, Link2,
 } from 'lucide-react';
 import { useCanvas, type ToolType, type CanvasObject } from '../_context/canvas-state';
 import { useCanvasSync } from '../_context/canvas-sync';
+
+type IconType = React.ComponentType<{ size?: number; className?: string }>;
 
 type ToolDef = {
   type: ToolType;
   label: string;
   shortcut: string;
-  icon: React.ComponentType<{ size?: number }>;
+  icon: IconType;
 };
 
-const tools: ToolDef[] = [
-  { type: 'select', label: 'Select', shortcut: 'V', icon: MousePointer2 },
-  { type: 'path', label: 'Pencil', shortcut: 'P', icon: Pencil },
-  { type: 'rectangle', label: 'Rectangle', shortcut: 'R', icon: Square },
-  { type: 'ellipse', label: 'Ellipse', shortcut: 'O', icon: Circle },
-  { type: 'line', label: 'Line', shortcut: 'L', icon: Minus },
-  { type: 'arrow', label: 'Arrow', shortcut: 'A', icon: ArrowRight },
-  { type: 'text', label: 'Text', shortcut: 'T', icon: Type },
-  { type: 'stickyNote', label: 'Sticky note', shortcut: 'N', icon: NotebookPen },
-  { type: 'connector', label: 'Connector', shortcut: 'C', icon: GitBranch },
-  { type: 'eraser', label: 'Eraser', shortcut: 'E', icon: Eraser },
+/**
+ * Tool groups mirror how Office / Google Docs ribbon menus are organized:
+ * Select · Draw · Shapes · Text · Connectors. The menu shows sections so a
+ * power user can find a tool by category, and each row carries its shortcut.
+ */
+const toolGroups: { label: string; tools: ToolDef[] }[] = [
+  { label: 'Select', tools: [{ type: 'select', label: 'Select', shortcut: 'V', icon: MousePointer2 }] },
+  {
+    label: 'Draw',
+    tools: [{ type: 'path', label: 'Pencil', shortcut: 'P', icon: Pencil }, { type: 'eraser', label: 'Eraser', shortcut: 'E', icon: Eraser }],
+  },
+  {
+    label: 'Shapes',
+    tools: [
+      { type: 'rectangle', label: 'Rectangle', shortcut: 'R', icon: Square },
+      { type: 'ellipse', label: 'Ellipse', shortcut: 'O', icon: Circle },
+      { type: 'line', label: 'Line', shortcut: 'L', icon: Minus },
+      { type: 'arrow', label: 'Arrow', shortcut: 'A', icon: ArrowRight },
+    ],
+  },
+  {
+    label: 'Text',
+    tools: [
+      { type: 'text', label: 'Text', shortcut: 'T', icon: Type },
+      { type: 'stickyNote', label: 'Sticky note', shortcut: 'N', icon: NotebookPen },
+    ],
+  },
+  { label: 'Connect', tools: [{ type: 'connector', label: 'Connector', shortcut: 'C', icon: GitBranch }] },
 ];
+
+const allTools = toolGroups.flatMap((g) => g.tools);
 
 const fillColors = ['#ffffff', '#f1f5f9', '#fbbf24', '#34d399', '#60a5fa', '#f87171', '#1e293b', '#0f172a'];
 
+/** Compact ribbon control: 28px, 8px corners, quiet at rest, tonal hover. */
 const iconBtn =
-  'flex h-8 w-8 items-center justify-center rounded-lg transition-colors disabled:opacity-30';
+  'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-surface-400 transition-colors duration-150 ' +
+  'hover:bg-surface-800 hover:text-surface-100 ' +
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60 ' +
+  'disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-surface-400';
 
-const dropdownBtn =
-  'flex h-8 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-surface-300 transition-colors hover:bg-surface-800 hover:text-surface-100';
+const divider = <div className="mx-1 h-4 w-px shrink-0 bg-surface-700/80" aria-hidden="true" />;
 
 function canvasCenter() {
   const r = document.querySelector<HTMLCanvasElement>('canvas[data-canvas="surface"]')?.getBoundingClientRect();
@@ -45,29 +69,14 @@ function canvasCenter() {
     : { cx: window.innerWidth / 2, cy: window.innerHeight / 2 };
 }
 
-function Dropdown({
-  label,
-  icon: Icon,
-  children,
-  align = 'left',
-  buttonClassName = '',
-}: {
-  label: string;
-  icon?: React.ComponentType<{ size?: number }>;
-  children: React.ReactNode;
-  align?: 'left' | 'right';
-  buttonClassName?: string;
-}) {
-  const [open, setOpen] = useState(false);
+function useDismiss(onClose: () => void) {
   const ref = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
-    if (!open) return;
     function onDoc(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
     }
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'Escape') onClose();
     }
     document.addEventListener('mousedown', onDoc);
     document.addEventListener('keydown', onKey);
@@ -75,7 +84,26 @@ function Dropdown({
       document.removeEventListener('mousedown', onDoc);
       document.removeEventListener('keydown', onKey);
     };
-  }, [open]);
+  }, [onClose]);
+  return ref;
+}
+
+/** The ribbon menu trigger: label + icon + chevron, matches Office's compact buttons. */
+function Dropdown({
+  label,
+  icon: Icon,
+  children,
+  align = 'left',
+  className = '',
+}: {
+  label: string;
+  icon?: IconType;
+  children: React.ReactNode;
+  align?: 'left' | 'right';
+  className?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useDismiss(() => setOpen(false));
 
   return (
     <div ref={ref} className="relative shrink-0">
@@ -85,22 +113,40 @@ function Dropdown({
         aria-label={label}
         aria-haspopup="menu"
         aria-expanded={open}
-        onClick={() => setOpen(o => !o)}
-        className={`${dropdownBtn} ${buttonClassName} ${open ? 'bg-surface-800 text-surface-100' : ''}`}
+        onClick={() => setOpen((o) => !o)}
+        className={`flex h-7 items-center gap-1.5 rounded-lg px-2 text-xs font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60 ${
+          open
+            ? 'bg-surface-800 text-surface-100'
+            : 'text-surface-300 hover:bg-surface-800/70 hover:text-surface-100'
+        } ${className}`}
       >
-        {Icon && <Icon size={15} />}
-        <span className="whitespace-nowrap">{label}</span>
-        <ChevronDown size={13} className={`text-surface-500 transition-transform ${open ? 'rotate-180' : ''}`} />
+        {Icon && <Icon size={15} className={open ? 'text-primary-400' : ''} />}
+        <span className="max-w-24 truncate whitespace-nowrap">{label}</span>
+        <ChevronDown size={12} className={`text-surface-500 transition-transform duration-150 ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
         <div
           role="menu"
-          className={`absolute top-full z-50 mt-1 min-w-48 rounded-xl border border-surface-700 bg-surface-900/98 p-1 shadow-xl backdrop-blur-sm ${align === 'right' ? 'right-0' : 'left-0'}`}
+          aria-label={label}
+          className={`absolute top-full z-50 mt-1.5 min-w-52 rounded-xl border border-surface-700/80 bg-surface-900/95 p-1.5 shadow-xl shadow-black/40 backdrop-blur-sm ${
+            align === 'right' ? 'right-0' : 'left-0'
+          }`}
           onClick={(e) => e.stopPropagation()}
         >
           {children}
         </div>
       )}
+    </div>
+  );
+}
+
+function MenuSection({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="mb-1 last:mb-0">
+      <p className="px-2 pb-1 pt-2 text-[10px] font-medium uppercase tracking-[0.08em] text-surface-500 first:pt-0.5">
+        {label}
+      </p>
+      <div>{children}</div>
     </div>
   );
 }
@@ -112,24 +158,27 @@ function ToolRow({ tool, active, onPick }: { tool: ToolDef; active: boolean; onP
       role="menuitemradio"
       aria-checked={active}
       onClick={onPick}
-      className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors ${
-        active ? 'bg-primary-600 text-white' : 'text-surface-300 hover:bg-surface-800 hover:text-surface-100'
+      className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs transition-colors duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60 ${
+        active
+          ? 'bg-primary-600/15 text-primary-200'
+          : 'text-surface-300 hover:bg-surface-800 hover:text-surface-100'
       }`}
     >
-      <Icon size={15} />
+      <Icon size={15} className={active ? 'text-primary-400' : 'text-surface-500'} />
       <span className="flex-1">{tool.label}</span>
-      <span className={`text-[10px] ${active ? 'text-primary-200' : 'text-surface-600'}`}>{tool.shortcut}</span>
+      {active && <Check size={13} className="text-primary-400" />}
+      {!active && <span className="text-[10px] tabular-nums text-surface-600">{tool.shortcut}</span>}
     </button>
   );
 }
 
-function AlignButton({ icon: Icon, title, onClick }: { icon: React.ComponentType<{ size?: number }>; title: string; onClick: () => void }) {
+function AlignButton({ icon: Icon, title, onClick }: { icon: IconType; title: string; onClick: () => void }) {
   return (
     <button
       title={title}
       aria-label={title}
       onClick={onClick}
-      className="rounded-lg p-1.5 text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-200"
+      className={`${iconBtn}`}
     >
       <Icon size={15} />
     </button>
@@ -145,11 +194,11 @@ export function Toolbar() {
   }
 
   function handleAlign(dir: 'left' | 'center-h' | 'right' | 'top' | 'center-v' | 'bottom') {
-    const selected = state.objects.filter(o => state.selectedIds.includes(o.id));
+    const selected = state.objects.filter((o) => state.selectedIds.includes(o.id));
     if (selected.length < 2) return;
     const ref = selected[0];
     if (!ref) return;
-    const updates = selected.map(o => {
+    const updates = selected.map((o) => {
       if (o.id === ref.id) return { id: o.id };
       switch (dir) {
         case 'left': return { id: o.id, x: ref.x };
@@ -161,8 +210,8 @@ export function Toolbar() {
       }
     });
     const aligned = updates
-      .map(u => {
-        const base = selected.find(o => o.id === u.id);
+      .map((u) => {
+        const base = selected.find((o) => o.id === u.id);
         return base ? { ...base, x: u.x ?? base.x, y: u.y ?? base.y } : null;
       })
       .filter((o): o is CanvasObject => o !== null);
@@ -181,14 +230,16 @@ export function Toolbar() {
     dispatch({ type: 'ZOOM_AT', payload: { scale: state.zoom * factor, cx, cy } });
   }
 
-  const activeTool = tools.find(t => t.type === state.activeTool) ?? tools[0]!;
+  const activeTool = allTools.find((t) => t.type === state.activeTool) ?? allTools[0]!;
   const ActiveIcon = activeTool.icon;
 
-  const divider = <div className="mx-1 h-5 w-px shrink-0 bg-surface-700" />;
+  const hasSelection = state.selectedIds.length > 0;
+  const multiSelect = state.selectedIds.length > 1;
 
   return (
     <div className="pointer-events-none absolute left-1/2 top-3 z-30 max-w-[calc(100vw-0.75rem)] -translate-x-1/2">
-      <div className="pointer-events-auto flex max-w-full flex-wrap items-center justify-center gap-0.5 rounded-xl border border-surface-700 bg-surface-900/95 p-1 shadow-xl backdrop-blur-sm">
+      <div className="pointer-events-auto flex max-w-full items-center gap-0.5 overflow-x-auto rounded-xl border border-surface-700/80 bg-surface-900/95 p-1 shadow-xl shadow-black/25 backdrop-blur-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {/* History */}
         <button
           title="Undo (Ctrl+Z)"
           aria-label="Undo (Ctrl+Z)"
@@ -199,7 +250,7 @@ export function Toolbar() {
             void syncSnapshot(state.objects, target);
           }}
           disabled={state.history.past.length === 0}
-          className={`${iconBtn} text-surface-400 hover:bg-surface-800 hover:text-surface-200`}
+          className={iconBtn}
         >
           <Undo2 size={16} />
         </button>
@@ -213,50 +264,59 @@ export function Toolbar() {
             void syncSnapshot(state.objects, target);
           }}
           disabled={state.history.future.length === 0}
-          className={`${iconBtn} text-surface-400 hover:bg-surface-800 hover:text-surface-200`}
+          className={iconBtn}
         >
           <Redo2 size={16} />
         </button>
 
         {divider}
 
+        {/* Tools */}
         <Dropdown label={activeTool.label} icon={ActiveIcon}>
-          <div className="py-0.5">
-            {tools.map(tool => (
-              <ToolRow
-                key={tool.type}
-                tool={tool}
-                active={state.activeTool === tool.type}
-                onPick={() => dispatch({ type: 'SET_ACTIVE_TOOL', payload: tool.type })}
-              />
-            ))}
-          </div>
+          {toolGroups.map((group) => (
+            <MenuSection key={group.label} label={group.label}>
+              {group.tools.map((tool) => (
+                <ToolRow
+                  key={tool.type}
+                  tool={tool}
+                  active={state.activeTool === tool.type}
+                  onPick={() => dispatch({ type: 'SET_ACTIVE_TOOL', payload: tool.type })}
+                />
+              ))}
+            </MenuSection>
+          ))}
         </Dropdown>
 
+        {/* Insert */}
         <button
           title="Upload image"
           aria-label="Upload image"
           onClick={handleImageUpload}
-          className={`${iconBtn} text-surface-400 hover:bg-surface-800 hover:text-surface-200`}
+          className={iconBtn}
         >
           <ImageIcon size={16} />
         </button>
 
         {divider}
 
-        <Dropdown label="Color" align="right">
-          <div className="px-2.5 py-2">
-            <div className="mb-1.5 flex items-center gap-2">
-              <span
-                className="h-3.5 w-3.5 rounded-full border border-surface-600"
-                style={{ backgroundColor: state.fillColor }}
-              />
-              <span className="text-[10px] uppercase tracking-wider text-surface-500">Fill</span>
-              <span
-                className="h-3.5 w-3.5 rounded-full border border-surface-600"
-                style={{ backgroundColor: state.strokeColor }}
-              />
-              <span className="text-[10px] uppercase tracking-wider text-surface-500">Stroke</span>
+        {/* Color: separated Fill / Stroke slots + palette */}
+        <Dropdown label="Color" align="right" className="pr-1.5">
+          <div className="w-56 px-2 py-1">
+            <div className="mb-2 flex items-center gap-2">
+              <div className="flex flex-1 items-center gap-1.5 rounded-lg bg-surface-800/60 px-1.5 py-1">
+                <span
+                  className="h-4 w-4 shrink-0 rounded-full border border-surface-600 shadow-inner"
+                  style={{ backgroundColor: state.fillColor }}
+                />
+                <span className="text-[10px] uppercase tracking-wider text-surface-400">Fill</span>
+              </div>
+              <div className="flex flex-1 items-center gap-1.5 rounded-lg bg-surface-800/60 px-1.5 py-1">
+                <span
+                  className="h-4 w-4 shrink-0 rounded-full border border-surface-600 shadow-inner"
+                  style={{ backgroundColor: state.strokeColor }}
+                />
+                <span className="text-[10px] uppercase tracking-wider text-surface-400">Stroke</span>
+              </div>
             </div>
             <div className="grid grid-cols-4 gap-1.5">
               {fillColors.map((color) => (
@@ -264,27 +324,43 @@ export function Toolbar() {
                   key={color}
                   title={color}
                   aria-label={`Color ${color}`}
-                  aria-pressed={state.fillColor === color}
+                  aria-pressed={state.fillColor === color && state.strokeColor === color}
                   onClick={() => {
                     dispatch({ type: 'SET_FILL_COLOR', payload: color });
                     dispatch({ type: 'SET_STROKE_COLOR', payload: color });
                   }}
-                  className={`h-6 w-6 rounded-full border-2 transition-all ${
-                    state.fillColor === color ? 'scale-110 border-primary-400' : 'border-surface-600'
+                  className={`flex h-6 items-center justify-center rounded-md border-2 transition-all duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60 ${
+                    state.fillColor === color || state.strokeColor === color
+                      ? 'scale-105 border-primary-400'
+                      : 'border-surface-700 hover:border-surface-500'
                   }`}
                   style={{ backgroundColor: color }}
-                />
+                >
+                  {(state.fillColor === color || state.strokeColor === color) && (
+                    <Check size={12} className={isLightColor(color) ? 'text-surface-900' : 'text-white'} />
+                  )}
+                </button>
               ))}
             </div>
+            <p className="mt-2 flex items-center gap-1 px-0.5 text-[10px] text-surface-600">
+              <Link2 size={10} />
+              Applies to fill and stroke
+            </p>
           </div>
         </Dropdown>
 
-        <Dropdown label={`Stroke ${state.strokeWidth}px`}>
-          <div className="w-56 px-3 py-2.5">
+        {/* Stroke */}
+        <Dropdown label={`${state.strokeWidth}px`} align="right" className="pr-1.5">
+          <div className="w-60 px-3 py-2">
             <div className="mb-3">
-              <div className="mb-1 flex items-center justify-between">
-                <span className="text-[10px] uppercase tracking-wider text-surface-500">Stroke width</span>
+              <div className="mb-1.5 flex items-center justify-between">
+                <span className="text-[10px] font-medium uppercase tracking-wider text-surface-500">Stroke width</span>
                 <span className="text-xs tabular-nums text-surface-300">{state.strokeWidth}px</span>
+              </div>
+              <div className="mb-1 flex h-6 items-center">
+                <div className="h-px w-full bg-surface-700">
+                  <div className="h-full bg-surface-400" style={{ width: `${(state.strokeWidth / 10) * 100}%` }} />
+                </div>
               </div>
               <input
                 type="range"
@@ -292,15 +368,31 @@ export function Toolbar() {
                 max={10}
                 value={state.strokeWidth}
                 onChange={(e) => dispatch({ type: 'SET_STROKE_WIDTH', payload: Number(e.target.value) })}
-                className="w-full"
+                className="w-full accent-primary-500"
                 title="Stroke width"
                 aria-label="Stroke width"
               />
+              <div className="mt-1 flex justify-between px-0.5 text-[10px] tabular-nums text-surface-600">
+                <span>1</span>
+                <span>5</span>
+                <span>10</span>
+              </div>
             </div>
             <div>
-              <div className="mb-1 flex items-center justify-between">
-                <span className="text-[10px] uppercase tracking-wider text-surface-500">Opacity</span>
+              <div className="mb-1.5 flex items-center justify-between">
+                <span className="text-[10px] font-medium uppercase tracking-wider text-surface-500">Opacity</span>
                 <span className="text-xs tabular-nums text-surface-300">{state.opacity}%</span>
+              </div>
+              <div className="mb-1 flex h-6 items-center gap-0.5">
+                <span className="h-full w-2 rounded-sm bg-surface-700/60" />
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                  <span
+                    key={i}
+                    className="h-full flex-1 rounded-sm bg-surface-700/60"
+                    style={{ opacity: state.opacity > (i / 8) * 100 ? 1 : 0.35 }}
+                  />
+                ))}
+                <span className="h-full w-2 rounded-sm bg-surface-700/60" />
               </div>
               <input
                 type="range"
@@ -308,7 +400,7 @@ export function Toolbar() {
                 max={100}
                 value={state.opacity}
                 onChange={(e) => dispatch({ type: 'SET_OPACITY', payload: Number(e.target.value) })}
-                className="w-full"
+                className="w-full accent-primary-500"
                 title="Opacity"
                 aria-label="Opacity"
               />
@@ -318,13 +410,14 @@ export function Toolbar() {
 
         {divider}
 
-        <div className="flex shrink-0 items-center gap-0.5 px-1">
+        {/* Zoom */}
+        <div className="flex shrink-0 items-center">
           <button
             title="Zoom out (Ctrl+scroll down)"
             aria-label="Zoom out"
             onClick={() => zoomBy(0.9)}
             disabled={state.zoom <= 0.25}
-            className={`${iconBtn} text-surface-400 hover:bg-surface-800 hover:text-surface-200`}
+            className={iconBtn}
           >
             <ZoomOut size={15} />
           </button>
@@ -335,7 +428,7 @@ export function Toolbar() {
               const { cx, cy } = canvasCenter();
               dispatch({ type: 'ZOOM_AT', payload: { scale: 1, cx, cy } });
             }}
-            className={`${iconBtn} min-w-12 px-1 text-xs tabular-nums text-surface-300 hover:bg-surface-800 hover:text-white`}
+            className="h-7 min-w-11 shrink-0 rounded-lg px-1 text-center text-xs tabular-nums text-surface-300 transition-colors duration-150 hover:bg-surface-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60"
           >
             {Math.round(state.zoom * 100)}%
           </button>
@@ -344,37 +437,40 @@ export function Toolbar() {
             aria-label="Zoom in"
             onClick={() => zoomBy(1.1)}
             disabled={state.zoom >= 4}
-            className={`${iconBtn} text-surface-400 hover:bg-surface-800 hover:text-surface-200`}
+            className={iconBtn}
           >
             <ZoomIn size={15} />
           </button>
         </div>
 
+        <div className="mx-0.5 h-4 w-px shrink-0 bg-surface-700/80" aria-hidden="true" />
+
+        {/* View toggles */}
         <button
           title="Toggle grid"
           aria-label="Toggle grid"
           aria-pressed={state.gridVisible}
           onClick={() => dispatch({ type: 'TOGGLE_GRID' })}
           className={`${iconBtn} ${
-            state.gridVisible ? 'bg-primary-600/20 text-primary-400' : 'text-surface-400 hover:text-surface-200'
+            state.gridVisible ? 'bg-primary-600/15 text-primary-400' : ''
           }`}
         >
           <Grid3x3 size={16} />
         </button>
-
         <button
           title="Toggle layers panel"
           aria-label="Toggle layers panel"
           aria-pressed={state.layersOpen}
           onClick={() => dispatch({ type: 'TOGGLE_LAYERS' })}
-          className={`${iconBtn} transition-colors ${
-            state.layersOpen ? 'bg-primary-600/20 text-primary-400' : 'text-surface-400 hover:text-surface-200'
+          className={`${iconBtn} ${
+            state.layersOpen ? 'bg-primary-600/15 text-primary-400' : ''
           }`}
         >
           <Layers size={16} />
         </button>
 
-        {state.selectedIds.length > 1 && (
+        {/* Contextual actions — fixed slots so they never shift the ribbon */}
+        {multiSelect && (
           <>
             {divider}
             <div className="flex shrink-0 items-center">
@@ -388,28 +484,36 @@ export function Toolbar() {
           </>
         )}
 
-        {state.selectedIds.length > 0 && (
-          <button
-            title="Delete selection (Del)"
-            aria-label="Delete selection (Del)"
-            onClick={handleDeleteSelected}
-            className={`${iconBtn} text-red-400/90 hover:bg-red-500/10 hover:text-red-300`}
-          >
-            <Trash2 size={15} />
-          </button>
-        )}
-
-        {state.selectedIds.length > 0 && (
-          <button
-            title="Clear selection (Esc)"
-            aria-label="Clear selection (Esc)"
-            onClick={() => dispatch({ type: 'CLEAR_SELECTION' })}
-            className={`${iconBtn} text-surface-400 hover:bg-surface-800 hover:text-surface-200`}
-          >
-            <X size={15} />
-          </button>
+        {hasSelection && (
+          <>
+            {divider}
+            <button
+              title="Delete selection (Del)"
+              aria-label="Delete selection (Del)"
+              onClick={handleDeleteSelected}
+              className={`${iconBtn} text-red-400/90 hover:bg-red-500/10 hover:text-red-300 focus-visible:ring-red-500/60`}
+            >
+              <Trash2 size={15} />
+            </button>
+            <button
+              title="Clear selection (Esc)"
+              aria-label="Clear selection (Esc)"
+              onClick={() => dispatch({ type: 'CLEAR_SELECTION' })}
+              className={iconBtn}
+            >
+              <X size={15} />
+            </button>
+          </>
         )}
       </div>
     </div>
   );
+}
+
+function isLightColor(hex: string): boolean {
+  const n = parseInt(hex.slice(1), 16);
+  const r = (n >> 16) & 255;
+  const g = (n >> 8) & 255;
+  const b = n & 255;
+  return (r * 299 + g * 587 + b * 114) / 1000 > 150;
 }

@@ -399,10 +399,16 @@ export function Toolbar() {
                 <span className="text-[10px] font-medium uppercase tracking-wider text-surface-500">Stroke width</span>
                 <span className="text-xs tabular-nums text-surface-300">{state.strokeWidth}px</span>
               </div>
-              <div className="mb-1 flex h-6 items-center">
-                <div className="h-px w-full bg-surface-700">
-                  <div className="h-full bg-surface-400" style={{ width: `${(state.strokeWidth / 10) * 100}%` }} />
-                </div>
+              {/* Live stroke preview: a real line at the selected width and color */}
+              <div className="mb-2 flex h-10 items-center justify-center rounded-lg border border-surface-800 bg-surface-950">
+                <span
+                  className="block w-4/5 rounded-full"
+                  style={{
+                    height: Math.max(Math.min(state.strokeWidth * 2.4, 32), 1),
+                    backgroundColor: state.strokeColor,
+                    boxShadow: `0 0 0 1px rgba(148,163,184,0.25)`,
+                  }}
+                />
               </div>
               <input
                 type="range"
@@ -425,16 +431,19 @@ export function Toolbar() {
                 <span className="text-[10px] font-medium uppercase tracking-wider text-surface-500">Opacity</span>
                 <span className="text-xs tabular-nums text-surface-300">{state.opacity}%</span>
               </div>
-              <div className="mb-1 flex h-6 items-center gap-0.5">
-                <span className="h-full w-2 rounded-sm bg-surface-700/60" />
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                  <span
-                    key={i}
-                    className="h-full flex-1 rounded-sm bg-surface-700/60"
-                    style={{ opacity: state.opacity > (i / 8) * 100 ? 1 : 0.35 }}
-                  />
-                ))}
-                <span className="h-full w-2 rounded-sm bg-surface-700/60" />
+              {/* Checkerboard transparency preview at the current opacity */}
+              <div
+                className="mb-2 h-8 rounded-lg border border-surface-800 bg-surface-950"
+                style={{
+                  backgroundImage:
+                    'conic-gradient(rgba(148,163,184,0.35) 25%, transparent 0 50%, rgba(148,163,184,0.35) 0 75%, transparent 0)',
+                  backgroundSize: '10px 10px',
+                }}
+              >
+                <div
+                  className="h-full w-full rounded-[7px]"
+                  style={{ backgroundColor: state.strokeColor, opacity: state.opacity / 100 }}
+                />
               </div>
               <input
                 type="range"
@@ -446,6 +455,11 @@ export function Toolbar() {
                 title="Opacity"
                 aria-label="Opacity"
               />
+              <div className="mt-1 flex justify-between px-0.5 text-[10px] tabular-nums text-surface-600">
+                <span>0</span>
+                <span>50</span>
+                <span>100</span>
+              </div>
             </div>
           </div>
         </Dropdown>

@@ -195,8 +195,8 @@ export default function BoardDetailPage() {
       const reordered = arrayMove(colTasks, oldIdx, newIdx);
       setTasks((prev) =>
         prev.map((t) => {
-          const found = reordered.find((r) => r.id === t.id);
-          return found ? { ...t, position: reordered.indexOf(found) } : t;
+          const found = reordered.findIndex((r) => r.id === t.id);
+          return found !== -1 ? { ...t, position: found } : t;
         }),
       );
       await tasksApi.move(workspaceId, boardId, active.id as string, {

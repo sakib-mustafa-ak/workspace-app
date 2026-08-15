@@ -133,11 +133,49 @@ async function requestFormData<T>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${BASE_URL}${path}`, {
+  let res = await fetch(`${BASE_URL}${path}`, {
     method: 'POST',
     headers,
     body: formData,
   });
+
+  // Form-data uploads must participate in the same refresh flow as JSON
+  // requests — otherwise every upload fails with a 401 after token expiry.
+  if (res.status === 401 && token) {
+    if (!isRefreshing) {
+      isRefreshing = true;
+      try {
+        const newToken = await refreshAccessToken();
+        isRefreshing = false;
+        refreshQueue.forEach((q) => q.resolve(newToken));
+        refreshQueue = [];
+
+        headers['Authorization'] = `Bearer ${newToken}`;
+        res = await fetch(`${BASE_URL}${path}`, {
+          method: 'POST',
+          headers,
+          body: formData,
+        });
+      } catch (err) {
+        isRefreshing = false;
+        refreshQueue.forEach((q) => q.reject(err));
+        refreshQueue = [];
+        clearSession();
+        window.location.href = '/auth/login';
+        throw err;
+      }
+    } else {
+      const newToken = await new Promise<string>((resolve, reject) => {
+        refreshQueue.push({ resolve, reject });
+      });
+      headers['Authorization'] = `Bearer ${newToken}`;
+      res = await fetch(`${BASE_URL}${path}`, {
+        method: 'POST',
+        headers,
+        body: formData,
+      });
+    }
+  }
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));

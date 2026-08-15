@@ -111,13 +111,23 @@ export function canvasReducer(state: CanvasState, action: CanvasAction): CanvasS
       };
     case 'SNAPSHOT':
       return { ...state, history: captureHistory(state) };
-    case 'LOAD_OBJECTS':
+    case 'LOAD_OBJECTS': {
+      // Merge rather than replace: objects that arrived via live socket
+      // events while the initial fetch was in flight must not be dropped.
+      // Server payload wins for ids that exist in both.
+      const merged = [...state.objects];
+      for (const o of action.payload) {
+        const idx = merged.findIndex((m) => m.id === o.id);
+        if (idx === -1) merged.push(o);
+        else merged[idx] = o;
+      }
       return {
         ...state,
-        objects: action.payload,
+        objects: merged,
         selectedIds: [],
         history: { past: [], future: [] },
       };
+    }
     case 'UPDATE_OBJECT':
       return {
         ...state,

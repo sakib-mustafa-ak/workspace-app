@@ -64,8 +64,16 @@ export const workspacesApi = {
     api.delete<void>(`/workspaces/${id}/invitations/${invitationId}`),
   acceptInvitation: (selector: string, verifier: string) =>
     api.post<{ workspaceId: string; message: string }>('/workspaces/invitations/accept', { selector, verifier }),
-  getActivity: (id: string, params?: { cursor?: string; action?: string; resourceType?: string }) =>
-    api.get<{ data: AuditEvent[]; nextCursor: string | null }>(`/workspaces/${id}/activity?${new URLSearchParams(params as Record<string, string>)}`),
+  getActivity: (id: string, params?: { cursor?: string; action?: string; resourceType?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.cursor) query.set('cursor', params.cursor);
+    if (params?.action) query.set('action', params.action);
+    if (params?.resourceType) query.set('resourceType', params.resourceType);
+    const qs = query.toString();
+    return api.get<{ data: AuditEvent[]; nextCursor: string | null }>(
+      `/workspaces/${id}/activity${qs ? `?${qs}` : ''}`,
+    );
+  },
   transferOwnership: (id: string, newOwnerId: string) =>
     api.post<Workspace>(`/workspaces/${id}/transfer`, { newOwnerId }),
 };

@@ -189,6 +189,13 @@ export function CanvasSurface() {
     const pos = screenToCanvas(sx, sy);
 
     if (state.activeTool === 'select') {
+      // On a double-click the second pointerdown carries detail > 1. Skip the
+      // drag setup so handleDoubleClick can start text editing without also
+      // beginning a move drag that shifts the object and grabs a lock.
+      if (e.detail > 1) {
+        dispatch({ type: 'SELECT', payload: [] });
+        return;
+      }
       const sorted = [...state.objects].sort((a, b) => b.zIndex - a.zIndex);
 
       for (const obj of sorted) {

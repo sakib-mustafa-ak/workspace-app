@@ -55,9 +55,9 @@ export default function LoginPage() {
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-600/20 to-primary-600/10 shadow-sm shadow-primary-600/10">
               <LogIn size={20} className="text-primary-400" />
             </div>
-            <h1 className="text-xl font-bold">Welcome back</h1>
+            <h1 className="text-xl font-bold">Sign in</h1>
             <p className="mt-1 text-sm text-surface-400">
-              Sign in to your workspace
+              Access your workspace
             </p>
           </div>
 

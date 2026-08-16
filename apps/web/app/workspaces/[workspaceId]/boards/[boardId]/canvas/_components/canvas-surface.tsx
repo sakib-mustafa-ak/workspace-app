@@ -13,7 +13,7 @@ export function CanvasSurface() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { state, dispatch } = useCanvas();
-  const { persistCreate, persistUpdate, persistUpdateMany, persistDelete, syncSnapshot, remoteCursors, emitCursor, objectLocks, requestLock, releaseLock } =
+  const { persistCreate, persistUpdate, persistUpdateMany, persistDelete, syncSnapshot, remoteCursors, emitCursor, objectLocks, requestLock, releaseLock, broadcastObjectUpdate } =
     useCanvasSync();
 
   const drawingRef = useRef<string | null>(null);
@@ -478,11 +478,15 @@ export function CanvasSurface() {
           if (!d || strokeBufferRef.current.length === 0) return;
           const pts = [...(d.points ?? []), ...strokeBufferRef.current];
           strokeBufferRef.current = [];
+          const updated = { ...d, points: pts };
           dispatch({
             type: 'UPDATE_OBJECT',
             payload: { id: d.id, points: pts },
             batch: true,
           });
+          // Live-broadcast the growing stroke so collaborators see the
+          // pencil line in real time, not just on pointer-up.
+          broadcastObjectUpdate(updated);
         });
       }
       return;

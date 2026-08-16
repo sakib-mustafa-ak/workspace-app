@@ -128,12 +128,21 @@ export function canvasReducer(state: CanvasState, action: CanvasAction): CanvasS
         history: { past: [], future: [] },
       };
     }
-    case 'UPDATE_OBJECT':
+    case 'UPDATE_OBJECT': {
+      const exists = state.objects.some(o => o.id === action.payload.id);
+      // Live socket updates can arrive for an object we have not seen yet
+      // (e.g. a collaborator's in-progress stroke broadcast as object:updated
+      // before its final object:created). Treat an update for an unknown id
+      // as a create so real-time strokes appear immediately.
+      const nextObjects = exists
+        ? state.objects.map(o => o.id === action.payload.id ? { ...o, ...action.payload } : o)
+        : [...state.objects, action.payload as CanvasObject];
       return {
         ...state,
-        objects: state.objects.map(o => o.id === action.payload.id ? { ...o, ...action.payload } : o),
+        objects: nextObjects,
         history: action.batch ? state.history : captureHistory(state),
       };
+    }
     case 'UPDATE_OBJECTS': {
       const updateMap = new Map(action.payload.map(u => [u.id, u]));
       return {

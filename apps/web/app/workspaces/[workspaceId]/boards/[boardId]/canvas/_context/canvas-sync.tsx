@@ -140,6 +140,9 @@ type CanvasSyncApi = {
   persistUpdateMany: (objs: CanvasObject[]) => Promise<void>;
   persistDelete: (objectIds: string[]) => Promise<void>;
   syncSnapshot: (prev: CanvasObject[], next: CanvasObject[]) => Promise<void>;
+  /** Broadcast a live object update over the socket without any REST call —
+   *  used for real-time pencil strokes mid-drag. */
+  broadcastObjectUpdate: (obj: CanvasObject) => void;
   presence: RemotePresenceUser[];
   remoteCursors: RemoteCursor[];
   emitCursor: (x: number, y: number) => void;
@@ -321,50 +324,76 @@ socket.on('cursor:moved', (data: unknown) => {
     };
   }, [boardId]);
 
+  const broadcastObjectUpdate = useCallback((obj: CanvasObject) => {
+    socketRef.current?.emit('object:updated', {
+      boardId: boardIdRef.current,
+      object: toServerShape(obj),
+    });
+  }, []);
+
   const api: CanvasSyncApi = useMemo(
     () => ({
       persistCreate: async (obj, opts) => {
-        const created = await canvasApi.createObject(
-          boardIdRef.current,
-          toServerObject(obj),
-        );
-        const canonical = created ? toLocalObject(created) : obj;
-        dispatchRef.current({
-          type: 'UPDATE_OBJECT',
-          payload: canonical,
-          batch: opts?.batch ?? false,
-        });
+        // Broadcast first so collaborators see the object immediately;
+        // the REST create persists it in the background.
         socketRef.current?.emit('object:created', {
           boardId: boardIdRef.current,
-          object: toServerShape(canonical),
+          object: toServerShape(obj),
         });
+        try {
+          const created = await canvasApi.createObject(
+            boardIdRef.current,
+            toServerObject(obj),
+          );
+          const canonical = created ? toLocalObject(created) : obj;
+          dispatchRef.current({
+            type: 'UPDATE_OBJECT',
+            payload: canonical,
+            batch: opts?.batch ?? false,
+          });
+        } catch {
+          // Persistence failure is non-fatal for the live session — the
+          // object is already on screen and broadcast; a reload will show
+          // whether it actually saved.
+        }
       },
       persistUpdate: async (obj) => {
-        await canvasApi.updateObject(
-          boardIdRef.current,
-          obj.id,
-          toServerUpdate(obj),
-        );
+        // Broadcast first for real-time updates (e.g. live pencil strokes),
+        // then persist. Collaborators must not wait on the REST round-trip.
         socketRef.current?.emit('object:updated', {
           boardId: boardIdRef.current,
           object: toServerShape(obj),
         });
+        try {
+          await canvasApi.updateObject(
+            boardIdRef.current,
+            obj.id,
+            toServerUpdate(obj),
+          );
+        } catch {
+          // Non-fatal for the live session.
+        }
       },
       persistUpdateMany: async (objs) => {
-        await Promise.all(
-          objs.map((o) =>
-            canvasApi.updateObject(
-              boardIdRef.current,
-              o.id,
-              toServerUpdate(o),
-            ),
-          ),
-        );
+        // Broadcast the batch immediately, then persist in parallel.
         for (const obj of objs) {
           socketRef.current?.emit('object:updated', {
             boardId: boardIdRef.current,
             object: toServerShape(obj),
           });
+        }
+        try {
+          await Promise.all(
+            objs.map((o) =>
+              canvasApi.updateObject(
+                boardIdRef.current,
+                o.id,
+                toServerUpdate(o),
+              ),
+            ),
+          );
+        } catch {
+          // Non-fatal for the live session.
         }
       },
       persistDelete: async (objectIds) => {
@@ -432,8 +461,9 @@ socket.on('cursor:moved', (data: unknown) => {
       requestLock,
       releaseLock,
       loadError,
+      broadcastObjectUpdate,
     }),
-    [presence, remoteCursors, emitCursor, objectLocks, requestLock, releaseLock, loadError],
+    [presence, remoteCursors, emitCursor, objectLocks, requestLock, releaseLock, loadError, broadcastObjectUpdate],
   );
 
   return (

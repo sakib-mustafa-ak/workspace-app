@@ -57,6 +57,7 @@ describe('CanvasGateway', () => {
     const emit = jest.fn();
     const to = jest.fn().mockReturnValue({ emit });
     const client = {
+      id: 'sock-' + Math.random(),
       userId: 'u-1',
       to,
     } as unknown as AuthenticatedSocket;
@@ -77,6 +78,7 @@ describe('CanvasGateway', () => {
     const emit = jest.fn();
     const to = jest.fn().mockReturnValue({ emit });
     const client = {
+      id: 'sock-' + Math.random(),
       userId: 'u-1',
       to,
     } as unknown as AuthenticatedSocket;
@@ -95,6 +97,7 @@ describe('CanvasGateway', () => {
     const emit = jest.fn();
     const to = jest.fn().mockReturnValue({ emit });
     const client = {
+      id: 'sock-' + Math.random(),
       userId: 'u-1',
       to,
     } as unknown as AuthenticatedSocket;
@@ -114,6 +117,7 @@ describe('CanvasGateway', () => {
     const emit = jest.fn();
     const to = jest.fn().mockReturnValue({ emit });
     const client = {
+      id: 'sock-' + Math.random(),
       userId: 'u-1',
       to,
     } as unknown as AuthenticatedSocket;

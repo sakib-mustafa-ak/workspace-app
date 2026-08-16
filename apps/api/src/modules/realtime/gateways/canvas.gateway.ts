@@ -41,6 +41,13 @@ export class CanvasGateway
 
   private objectLocks = new Map<string, Map<string, ObjectLock>>();
 
+  /** Per-socket, per-board membership cache: a user's workspace membership
+   *  does not change mid-session, so the two-DB-query check runs once per
+   *  (socket, board) instead of once per relayed event. This is what keeps
+   *  real-time stroke segments fast — each object:updated would otherwise
+   *  pay 2 DB round-trips on the free tier. */
+  private membershipCache = new Map<string, Map<string, boolean>>();
+
   private static readonly LOCK_TTL_MS = 30_000;
 
   private readonly jwtSecret: string;
@@ -104,22 +111,38 @@ export class CanvasGateway
    * True when the user is an active member of the workspace that owns the
    * board. Resolves the board -> workspace first, then checks membership.
    * Used to keep sockets out of boards they do not belong to.
+   *
+   * Results are cached per (socket, board) — membership is stable for the
+   * life of a socket, and this runs on every relayed object event.
    */
   private async isBoardMember(
+    socketId: string,
     userId: string,
     boardId: string,
   ): Promise<boolean> {
+    const boardCache = this.membershipCache.get(socketId);
+    const cached = boardCache?.get(boardId);
+    if (cached !== undefined) return cached;
+
+    let allowed = false;
     try {
       const board = await this.boardsRepo.findById(boardId);
-      if (!board) return false;
-      const membership = await this.membersRepo.findByWorkspaceAndUser(
-        board.workspaceId,
-        userId,
-      );
-      return Boolean(membership);
+      if (board) {
+        const membership = await this.membersRepo.findByWorkspaceAndUser(
+          board.workspaceId,
+          userId,
+        );
+        allowed = Boolean(membership);
+      }
     } catch {
-      return false;
+      allowed = false;
     }
+
+    if (!this.membershipCache.has(socketId)) {
+      this.membershipCache.set(socketId, new Map());
+    }
+    this.membershipCache.get(socketId)!.set(boardId, allowed);
+    return allowed;
   }
 
   private syncStaleName(client: AuthenticatedSocket): void {
@@ -137,6 +160,7 @@ export class CanvasGateway
   }
 
   handleDisconnect(client: AuthenticatedSocket): void {
+    this.membershipCache.delete(client.id);
     if (client.userId) {
       for (const [boardId, users] of this.boardRooms) {
         if (users.delete(client.userId)) {
@@ -158,7 +182,7 @@ export class CanvasGateway
     if (!client.userId || !data.boardId) return;
     const userId = client.userId;
     void (async () => {
-      if (!(await this.isBoardMember(userId, data.boardId))) {
+      if (!(await this.isBoardMember(client.id, userId, data.boardId))) {
         client.emit('board:join:denied', { boardId: data.boardId });
         return;
       }
@@ -223,7 +247,8 @@ export class CanvasGateway
   ): void {
     if (!client.userId || !data.boardId) return;
     void (async () => {
-      if (!(await this.isBoardMember(client.userId!, data.boardId))) return;
+      if (!(await this.isBoardMember(client.id, client.userId!, data.boardId)))
+        return;
       client.to(`board:${data.boardId}`).emit('object:created', data.object);
     })();
   }
@@ -235,7 +260,8 @@ export class CanvasGateway
   ): void {
     if (!client.userId || !data.boardId) return;
     void (async () => {
-      if (!(await this.isBoardMember(client.userId!, data.boardId))) return;
+      if (!(await this.isBoardMember(client.id, client.userId!, data.boardId)))
+        return;
       client.to(`board:${data.boardId}`).emit('object:updated', data.object);
     })();
   }
@@ -247,7 +273,8 @@ export class CanvasGateway
   ): void {
     if (!client.userId || !data.boardId) return;
     void (async () => {
-      if (!(await this.isBoardMember(client.userId!, data.boardId))) return;
+      if (!(await this.isBoardMember(client.id, client.userId!, data.boardId)))
+        return;
       client.to(`board:${data.boardId}`).emit('object:deleted', data.objectId);
     })();
   }

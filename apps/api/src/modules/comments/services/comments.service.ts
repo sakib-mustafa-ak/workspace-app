@@ -76,7 +76,7 @@ export class CommentsService {
   public async listByBoard(
     boardId: string,
     userId: string,
-  ): Promise<BoardCommentRow[]> {
+  ): Promise<Array<BoardCommentRow & { author: { displayName: string; avatarUrl: string | null } | null }>> {
     const board = await this.commentsRepo.findBoardById(boardId);
     if (!board) {
       throw new CommentsException(
@@ -85,7 +85,7 @@ export class CommentsService {
       );
     }
     await this.requireRole(board.workspaceId, userId, 'VIEWER');
-    return this.commentsRepo.findByBoard(boardId);
+    return this.commentsRepo.findByBoardWithAuthor(boardId);
   }
 
   public async getById(

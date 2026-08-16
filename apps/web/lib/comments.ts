@@ -7,6 +7,7 @@ export type Comment = {
   parentId: string | null;
   content: string;
   userId: string;
+  author?: { displayName: string; avatarUrl: string | null } | null;
   editedAt: string | null;
   createdAt: string;
   updatedAt: string;

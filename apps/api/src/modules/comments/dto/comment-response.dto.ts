@@ -1,4 +1,12 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+export class CommentAuthorDto {
+  @ApiProperty()
+  displayName!: string;
+
+  @ApiProperty({ nullable: true })
+  avatarUrl!: string | null;
+}
 
 export class CommentResponseDto {
   @ApiProperty()
@@ -18,6 +26,9 @@ export class CommentResponseDto {
 
   @ApiProperty()
   userId!: string;
+
+  @ApiPropertyOptional({ type: CommentAuthorDto, nullable: true })
+  author?: CommentAuthorDto | null;
 
   @ApiProperty({ nullable: true })
   editedAt!: Date | null;

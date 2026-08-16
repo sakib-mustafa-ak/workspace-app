@@ -279,7 +279,7 @@ export function Toolbar() {
   const multiSelect = state.selectedIds.length > 1;
 
   return (
-    <div className="pointer-events-none absolute left-1/2 top-3 z-30 max-w-[calc(100vw-0.75rem)] -translate-x-1/2">
+    <div className="pointer-events-none absolute left-1/2 top-12 z-30 max-w-[calc(100vw-0.75rem)] -translate-x-1/2">
       <div className="pointer-events-auto flex max-w-full items-center gap-0.5 overflow-x-auto rounded-xl border border-surface-700/80 bg-surface-900/95 p-1 shadow-xl shadow-black/25 backdrop-blur-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {/* History */}
         <button

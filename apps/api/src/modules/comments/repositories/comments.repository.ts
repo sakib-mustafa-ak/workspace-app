@@ -12,6 +12,7 @@ import {
   type NewBoardCommentRow,
   boardComments,
   boards,
+  users,
 } from '@repo/database';
 
 @Injectable()
@@ -49,6 +50,28 @@ export class CommentsRepository {
         ),
       )
       .orderBy(desc(boardComments.createdAt));
+  }
+
+  /** Comments with the author's display name + avatar joined in, so the UI
+   *  can render messaging-app-style avatars without a second query. */
+  public async findByBoardWithAuthor(boardId: string): Promise<
+    Array<BoardCommentRow & { author: { displayName: string; avatarUrl: string | null } | null }>
+  > {
+    const rows = await this.db
+      .select({
+        comment: boardComments,
+        user: { displayName: users.displayName, avatarUrl: users.avatarUrl },
+      })
+      .from(boardComments)
+      .innerJoin(users, eq(boardComments.userId, users.id))
+      .where(
+        and(
+          eq(boardComments.boardId, boardId),
+          sql`${boardComments.deletedAt} IS NULL`,
+        ),
+      )
+      .orderBy(desc(boardComments.createdAt));
+    return rows.map((r) => ({ ...r.comment, author: r.user }));
   }
 
   public async findReplies(parentId: string): Promise<BoardCommentRow[]> {

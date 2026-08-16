@@ -90,6 +90,7 @@ describe('CommentsService', () => {
             create: jest.fn(),
             findById: jest.fn(),
             findByBoard: jest.fn(),
+            findByBoardWithAuthor: jest.fn(),
             findReplies: jest.fn(),
             update: jest.fn(),
             softDelete: jest.fn(),
@@ -192,7 +193,7 @@ describe('CommentsService', () => {
       commentsRepo.findBoardById.mockResolvedValue(mockBoard);
       mockDbSelect([mockMembership]);
       policy.isAtLeast.mockReturnValue(true);
-      commentsRepo.findByBoard.mockResolvedValue([mockComment, mockReply]);
+      commentsRepo.findByBoardWithAuthor.mockResolvedValue([mockComment, mockReply]);
 
       const result = await service.listByBoard('b1', 'u1');
 

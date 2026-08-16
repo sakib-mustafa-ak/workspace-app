@@ -4,7 +4,11 @@ import type { BoardCommentRow } from '@repo/database';
 import { CommentsService } from '../services/comments.service';
 import { CommentsController } from './comments.controller';
 
-const mockComment: BoardCommentRow = {
+type CommentWithAuthor = BoardCommentRow & {
+  author: { displayName: string; avatarUrl: string | null } | null;
+};
+
+const mockComment: CommentWithAuthor = {
   id: 'c1',
   boardId: 'b1',
   workspaceId: 'w1',
@@ -15,6 +19,7 @@ const mockComment: BoardCommentRow = {
   createdAt: new Date(),
   updatedAt: new Date(),
   deletedAt: null,
+  author: { displayName: 'Ada', avatarUrl: null },
 };
 
 describe('CommentsController', () => {

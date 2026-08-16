@@ -107,6 +107,7 @@ function toCommentResponse(c: {
   editedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
+  author?: { displayName: string; avatarUrl: string | null } | null;
 }): CommentResponseDto {
   return {
     id: c.id,
@@ -115,6 +116,7 @@ function toCommentResponse(c: {
     parentId: c.parentId,
     content: c.content,
     userId: c.userId,
+    author: c.author ?? null,
     editedAt: c.editedAt,
     createdAt: c.createdAt,
     updatedAt: c.updatedAt,

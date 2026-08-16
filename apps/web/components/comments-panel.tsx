@@ -165,6 +165,8 @@ function CommentRow({
   onReply: () => void;
 }) {
   const isOwner = userId === comment.userId;
+  const authorName = comment.author?.displayName || 'Unknown';
+  const avatarInitial = (authorName.charAt(0) || '?').toUpperCase();
 
   return (
     <div className="rounded-lg border border-surface-800 bg-surface-950 p-3">
@@ -187,10 +189,26 @@ function CommentRow({
         </div>
       ) : (
         <>
-          <div className="flex items-start justify-between gap-2">
-            <p className="text-xs text-surface-200">{comment.content}</p>
+          <div className="flex items-center gap-2">
+            {comment.author?.avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={comment.author.avatarUrl}
+                alt={authorName}
+                className="h-6 w-6 shrink-0 rounded-full object-cover"
+              />
+            ) : (
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-500/30 to-primary-700/30 text-[10px] font-bold text-primary-300">
+                {avatarInitial}
+              </div>
+            )}
+            <span className="text-xs font-semibold text-surface-200">{authorName}</span>
+            <span className="text-[10px] text-surface-500">
+              {new Date(comment.createdAt).toLocaleString()}
+            </span>
+            {comment.editedAt && <span className="text-[10px] text-surface-600">(edited)</span>}
             {isOwner && (
-              <div className="flex gap-1 shrink-0">
+              <div className="ml-auto flex gap-1 shrink-0">
                 <button onClick={onStartEdit} title="Edit comment" aria-label="Edit comment" className="text-surface-500 hover:text-surface-300">
                   <Pencil size={12} />
                 </button>
@@ -200,11 +218,8 @@ function CommentRow({
               </div>
             )}
           </div>
+          <p className="mt-1.5 text-xs text-surface-200">{comment.content}</p>
           <div className="mt-1.5 flex items-center gap-2">
-            <span className="text-[10px] text-surface-500">
-              {new Date(comment.createdAt).toLocaleDateString()}
-            </span>
-            {comment.editedAt && <span className="text-[10px] text-surface-600">(edited)</span>}
             {!comment.parentId && (
               <button onClick={onReply} className="text-[10px] text-surface-500 hover:text-surface-300">
                 Reply

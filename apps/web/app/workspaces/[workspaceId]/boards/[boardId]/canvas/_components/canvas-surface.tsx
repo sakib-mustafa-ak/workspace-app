@@ -431,6 +431,12 @@ export function CanvasSurface() {
       }));
       scheduleDragFlush(() => {
         dispatch({ type: 'UPDATE_OBJECTS', payload: updates, batch: true });
+        // Real-time: broadcast the moved objects so collaborators see the
+        // drag live, not just on pointer-up.
+        for (const u of updates) {
+          const o = stateRef.current.objects.find(x => x.id === u.id);
+          if (o) broadcastObjectUpdate({ ...o, x: u.x, y: u.y });
+        }
       });
       return;
     }
@@ -445,6 +451,8 @@ export function CanvasSurface() {
             payload: { id: obj.id, ...result },
             batch: true,
           });
+          // Real-time: broadcast the resized object mid-drag.
+          broadcastObjectUpdate({ ...obj, ...result });
         });
       }
       return;
@@ -496,11 +504,17 @@ export function CanvasSurface() {
     const oy = originRef.current.y;
     if (liveDrawRef.current) liveDrawRef.current.to = pos;
     scheduleDragFlush(() => {
+      const width = pos.x - ox;
+      const height = pos.y - oy;
       dispatch({
         type: 'UPDATE_OBJECT',
-        payload: { id: drawId, width: pos.x - ox, height: pos.y - oy },
+        payload: { id: drawId, width, height },
         batch: true,
       });
+      // Real-time: broadcast the growing shape (rectangle/ellipse/line/
+      // arrow) so collaborators see it draw live.
+      const d = stateRef.current.objects.find(o => o.id === drawId);
+      if (d) broadcastObjectUpdate({ ...d, width, height });
     });
   }
 

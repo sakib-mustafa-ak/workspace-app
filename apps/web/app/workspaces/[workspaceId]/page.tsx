@@ -150,7 +150,7 @@ export default function WorkspaceDetailPage() {
 
       <div className="flex-1 overflow-auto">
         {tab === 'overview' && (
-          <OverviewTab workspaceId={workspaceId} onInvite={() => setTab('members')} />
+          <OverviewTab workspaceId={workspaceId} onInvite={() => setTab('invitations')} />
         )}
         {tab === 'boards' && (
           <BoardsTab workspaceId={workspaceId} boards={boards} />

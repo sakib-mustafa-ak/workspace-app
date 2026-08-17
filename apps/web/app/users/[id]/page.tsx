@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { usersApi, type UserProfile, type UserMembership, type AuditLogEntry } from '@/lib/users';
-import { ArrowLeft, Mail, Calendar, Shield, BadgeCheck, BadgeX, Loader2, ExternalLink, Clock, LogIn, Edit3, Trash2, UserPlus } from 'lucide-react';
+import { ArrowLeft, Mail, Calendar, Shield, BadgeCheck, BadgeX, ExternalLink, Clock, LogIn, Edit3, Trash2, UserPlus, MapPin, Languages } from 'lucide-react';
 
 export default function UserDetailPage() {
   const params = useParams();
@@ -50,8 +50,23 @@ export default function UserDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <Loader2 size={24} className="animate-spin text-primary-500" />
+      <div className="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-8">
+        <div className="mb-6 h-4 w-28 animate-pulse rounded bg-surface-800/60" />
+        <div className="overflow-hidden rounded-2xl border border-surface-800/50 bg-surface-900/60">
+          <div className="flex items-center gap-4 bg-gradient-to-br from-primary-600/10 to-primary-600/5 p-6 sm:p-8">
+            <div className="h-16 w-16 animate-pulse rounded-full bg-surface-700/60" />
+            <div className="flex-1 space-y-2">
+              <div className="h-5 w-40 animate-pulse rounded bg-surface-700/60" />
+              <div className="h-3 w-56 animate-pulse rounded bg-surface-800/60" />
+            </div>
+          </div>
+          <div className="grid gap-4 p-6 sm:grid-cols-2 sm:p-8">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-8 animate-pulse rounded bg-surface-800/50" />
+            ))}
+          </div>
+        </div>
+        <div className="mt-6 h-40 animate-pulse rounded-2xl border border-surface-800/50 bg-surface-900/50" />
       </div>
     );
   }
@@ -62,7 +77,7 @@ export default function UserDetailPage() {
     <div className="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-8">
       <Link
         href="/users"
-        className="mb-6 flex items-center gap-1.5 text-sm text-surface-400 transition-colors hover:text-white"
+        className="mb-6 inline-flex items-center gap-1.5 text-sm text-surface-400 transition-colors hover:text-white"
       >
         <ArrowLeft size={14} />
         Back to users
@@ -73,9 +88,18 @@ export default function UserDetailPage() {
         <div className="relative overflow-hidden bg-gradient-to-br from-primary-600/10 to-primary-600/5 p-6 sm:p-8">
           <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary-600/10 blur-3xl" />
           <div className="relative flex flex-col items-center gap-4 sm:flex-row">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-surface-500 to-surface-600 text-xl font-bold text-white shadow-lg shadow-black/20">
-              {user.displayName.charAt(0).toUpperCase()}
-            </div>
+            {user.avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.avatarUrl}
+                alt={user.displayName}
+                className="h-16 w-16 shrink-0 rounded-full object-cover shadow-lg shadow-black/20"
+              />
+            ) : (
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-surface-500 to-surface-600 text-xl font-bold text-white shadow-lg shadow-black/20">
+                {user.displayName.charAt(0).toUpperCase()}
+              </div>
+            )}
             <div className="text-center sm:text-left">
               <h1 className="text-xl font-bold tracking-tight">{user.displayName}</h1>
               <p className="mt-0.5 text-sm text-surface-400">{user.email}</p>
@@ -140,20 +164,28 @@ export default function UserDetailPage() {
             </div>
           )}
 
-          <div className="grid gap-4 pt-4 sm:grid-cols-2">
-            {user.timezone && (
-              <div>
-                <p className="text-xs font-medium text-surface-500">Timezone</p>
-                <p className="mt-1 text-sm text-surface-300">{user.timezone}</p>
-              </div>
-            )}
-            {user.locale && (
-              <div>
-                <p className="text-xs font-medium text-surface-500">Locale</p>
-                <p className="mt-1 text-sm text-surface-300">{user.locale}</p>
-              </div>
-            )}
-          </div>
+          {(user.timezone || user.locale) && (
+            <div className="grid gap-4 pt-4 sm:grid-cols-2">
+              {user.timezone && (
+                <div>
+                  <p className="text-xs font-medium text-surface-500">Timezone</p>
+                  <p className="mt-1 flex items-center gap-1.5 text-sm text-surface-300">
+                    <MapPin size={13} className="text-surface-500" />
+                    {user.timezone}
+                  </p>
+                </div>
+              )}
+              {user.locale && (
+                <div>
+                  <p className="text-xs font-medium text-surface-500">Locale</p>
+                  <p className="mt-1 flex items-center gap-1.5 text-sm text-surface-300">
+                    <Languages size={13} className="text-surface-500" />
+                    {user.locale}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -225,15 +257,24 @@ export default function UserDetailPage() {
 }
 
 function actionIcon(action: string) {
+  const normalized = action.toLowerCase();
   const icons: Record<string, React.ReactNode> = {
-    'LOGIN': <LogIn size={10} />,
-    'UPDATE': <Edit3 size={10} />,
-    'DELETE': <Trash2 size={10} />,
-    'CREATE': <UserPlus size={10} />,
+    'login': <LogIn size={10} />,
+    'update': <Edit3 size={10} />,
+    'delete': <Trash2 size={10} />,
+    'create': <UserPlus size={10} />,
   };
-  return <span className="text-surface-400">{icons[action] || <Clock size={10} />}</span>;
+  return <span className="text-surface-400">{icons[normalized] || <Clock size={10} />}</span>;
 }
 
 function formatAction(log: AuditLogEntry): string {
-  return `${log.action} ${log.entityType}${log.entityId ? ` #${log.entityId.slice(0, 8)}` : ''}`;
+  // Human-friendly: "board.created" -> "created a board"
+  const [entity, verb] = log.action.split('.');
+  const action = verb || entity || log.action;
+  const entityLabel = (entity || '').replace(/_/g, ' ');
+  if (verb) {
+    const verbPast = verb.endsWith('e') ? `${verb}d` : verb.endsWith('d') ? verb : `${verb}ed`;
+    return `${verbPast} ${entityLabel}${log.entityId ? ` #${log.entityId.slice(0, 8)}` : ''}`;
+  }
+  return `${action} ${entityLabel}${log.entityId ? ` #${log.entityId.slice(0, 8)}` : ''}`;
 }

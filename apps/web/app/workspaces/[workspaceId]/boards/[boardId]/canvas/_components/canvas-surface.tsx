@@ -40,7 +40,13 @@ export function CanvasSurface() {
 
   const [editingText, setEditingText] = useState<{ id: string; text: string } | null>(null);
   // Editing state for table / codeSnippet pads: tab-separated cells per row.
-  const [editingPad, setEditingPad] = useState<{ id: string; value: string } | null>(null);
+  // Tables also track rows/cols so the user can grow/shrink the grid.
+  const [editingPad, setEditingPad] = useState<{
+    id: string;
+    value: string;
+    rows: number;
+    cols: number;
+  } | null>(null);
 
   const lockedObjectIds = useRef(new Set<string>());
   lockedObjectIds.current = new Set(
@@ -112,12 +118,12 @@ export function CanvasSurface() {
       if (obj.type === 'table') {
         const t = obj.table ?? { rows: 3, cols: 3, cells: [['', '', ''], ['', '', ''], ['', '', '']] };
         const grid = t.cells.map((row) => row.join('\t')).join('\n');
-        setEditingPad({ id: obj.id, value: grid });
+        setEditingPad({ id: obj.id, value: grid, rows: t.rows, cols: t.cols });
         requestLock(obj.id);
         return;
       }
       if (obj.type === 'codeSnippet') {
-        setEditingPad({ id: obj.id, value: obj.text || '' });
+        setEditingPad({ id: obj.id, value: obj.text || '', rows: 1, cols: 1 });
         requestLock(obj.id);
         return;
       }
@@ -129,17 +135,17 @@ export function CanvasSurface() {
     const obj = stateRef.current.objects.find(o => o.id === editingPad.id);
     if (obj) {
       if (obj.type === 'table') {
-        const rows = editingPad.value.split('\n');
-        const cells = rows.map((r) => r.split('\t'));
-        const cols = Math.max(...cells.map((r) => r.length), obj.table?.cols ?? 3);
-        const table = {
-          rows: cells.length,
-          cols,
-          cells: cells.map((r) => {
-            while (r.length < cols) r.push('');
-            return r;
-          }),
-        };
+        // Build rows from the textarea (one line per row, cells tab-separated),
+        // then pad/trim to the user-chosen rows/cols.
+        const typed = editingPad.value.split('\n').map((r) => r.split('\t'));
+        const cells: string[][] = [];
+        for (let r = 0; r < editingPad.rows; r++) {
+          const src = typed[r] ?? [];
+          const row: string[] = [];
+          for (let c = 0; c < editingPad.cols; c++) row.push(src[c] ?? '');
+          cells.push(row);
+        }
+        const table = { rows: editingPad.rows, cols: editingPad.cols, cells };
         dispatch({ type: 'UPDATE_OBJECT', payload: { id: obj.id, table } });
         void persistUpdate({ ...obj, table });
       } else {
@@ -331,13 +337,18 @@ export function CanvasSurface() {
       return;
     }
     const isContainer = state.activeTool === 'table' || state.activeTool === 'codeSnippet';
+    const containerW = state.activeTool === 'table' ? 240 : 260;
+    const containerH = state.activeTool === 'table' ? 140 : 120;
     const newObj: CanvasObject = {
       id,
       type: state.activeTool as CanvasObject['type'],
       x: pos.x,
       y: pos.y,
-      width: 0,
-      height: 0,
+      // Containers get their size baked in at creation so pointer-up and
+      // rendering always see the real dimensions (a separate dispatch raced
+      // React's async state and left the table at 0x0).
+      width: isContainer ? containerW : 0,
+      height: isContainer ? containerH : 0,
       rotation: 0,
       fill: state.fillColor,
       stroke: state.strokeColor,
@@ -354,15 +365,7 @@ export function CanvasSurface() {
     drawingRef.current = id;
     originRef.current = pos;
     dragMode.current = 'draw';
-    if (isContainer) {
-      // Containers get a default size immediately so a click creates a
-      // usable pad, then opens the editor on pointer-up (like text notes).
-      dispatch({
-        type: 'UPDATE_OBJECT',
-        payload: { id, width: state.activeTool === 'table' ? 240 : 260, height: state.activeTool === 'table' ? 140 : 120 },
-        batch: true,
-      });
-    } else if (state.activeTool === 'rectangle' || state.activeTool === 'ellipse' || state.activeTool === 'line' || state.activeTool === 'arrow'
+    if (state.activeTool === 'rectangle' || state.activeTool === 'ellipse' || state.activeTool === 'line' || state.activeTool === 'arrow'
       || state.activeTool === 'star' || state.activeTool === 'triangle' || state.activeTool === 'diamond' || state.activeTool === 'pentagon' || state.activeTool === 'hexagon') {
       liveDrawRef.current = { id, type: state.activeTool, from: pos, to: pos };
       startLivePaint();
@@ -641,6 +644,16 @@ export function CanvasSurface() {
           }
         }
       }
+      // One-shot tools: after drawing/creating once, revert to select so a
+      // second use requires deliberately re-picking the tool from the bar.
+      const drawnObj = current.objects.find(o => o.id === drawingRef.current);
+      const oneShot: CanvasObject['type'][] = [
+        'rectangle', 'ellipse', 'line', 'arrow', 'path', 'text', 'stickyNote',
+        'star', 'triangle', 'diamond', 'pentagon', 'hexagon', 'table', 'codeSnippet',
+      ];
+      if (drawnObj && oneShot.includes(drawnObj.type)) {
+        dispatch({ type: 'SET_ACTIVE_TOOL', payload: 'select' });
+      }
     } else if (dragMode.current === 'move' && moveIdsRef.current.length > 0) {
       const moved = moveIdsRef.current
         .map(id => current.objects.find(o => o.id === id))
@@ -861,8 +874,39 @@ export function CanvasSurface() {
               >
                 <div className="mb-1 flex items-center justify-between px-1">
                   <span className="text-[10px] font-medium uppercase tracking-wider text-surface-500">
-                    {isCode ? 'Code snippet' : 'Table — one row per line, cells separated by Tab'}
+                    {isCode ? 'Code snippet' : 'Table'}
                   </span>
+                  {!isCode && (
+                    <div className="flex items-center gap-1.5 text-[10px] text-surface-400">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setEditingPad(p => p ? { ...p, rows: Math.max(1, p.rows - 1) } : p); }}
+                        className="flex h-4 w-4 items-center justify-center rounded bg-surface-700 hover:bg-surface-600"
+                        title="Remove row"
+                        aria-label="Remove row"
+                      >−</button>
+                      <span>{editingPad.rows} × {editingPad.cols}</span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setEditingPad(p => p ? { ...p, rows: Math.min(20, p.rows + 1) } : p); }}
+                        className="flex h-4 w-4 items-center justify-center rounded bg-surface-700 hover:bg-surface-600"
+                        title="Add row"
+                        aria-label="Add row"
+                      >+</button>
+                      <span className="mx-0.5 text-surface-600">/</span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setEditingPad(p => p ? { ...p, cols: Math.max(1, p.cols - 1) } : p); }}
+                        className="flex h-4 w-4 items-center justify-center rounded bg-surface-700 hover:bg-surface-600"
+                        title="Remove column"
+                        aria-label="Remove column"
+                      >−</button>
+                      <span>{editingPad.cols}</span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setEditingPad(p => p ? { ...p, cols: Math.min(12, p.cols + 1) } : p); }}
+                        className="flex h-4 w-4 items-center justify-center rounded bg-surface-700 hover:bg-surface-600"
+                        title="Add column"
+                        aria-label="Add column"
+                      >+</button>
+                    </div>
+                  )}
                 </div>
                 <textarea
                   autoFocus

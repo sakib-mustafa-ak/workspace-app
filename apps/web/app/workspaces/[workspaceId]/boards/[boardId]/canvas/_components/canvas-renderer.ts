@@ -207,25 +207,59 @@ export function renderObject(
       break;
     }
     case 'codeSnippet': {
-      // Code chip: dark panel, mono text, header bar
+      // IDE-style code pad: VS Code dark palette, title bar with traffic
+      // lights, tab bar, line numbers, and lightweight syntax highlighting.
       const code = obj.text || '';
-      ctx.fillStyle = obj.fill || '#0f172a';
+      const PAD = '#0f172a';        // editor background (slate-900)
+      const BAR = '#1e293b';        // title/tab bar (slate-800)
+      const barH = 24;
+      const tabH = 22;
+      const gutterW = 26;
+      const lh = 15;                // line height
+
+      // Panel
+      ctx.fillStyle = PAD;
       roundRect(ctx, 0, 0, obj.width, obj.height, 6);
       ctx.fill();
-      // Header strip
-      ctx.fillStyle = 'rgba(148, 163, 184, 0.18)';
-      roundRect(ctx, 0, 0, obj.width, 20, 6);
+      // Title bar with traffic lights
+      ctx.fillStyle = BAR;
+      roundRect(ctx, 0, 0, obj.width, barH, 6);
       ctx.fill();
-      ctx.fillStyle = 'rgba(148, 163, 184, 0.9)';
+      ctx.fillRect(0, barH / 2, obj.width, barH / 2);
+      const dots = ['#ff5f56', '#ffbd2e', '#27c93f'] as const;
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.arc(9 + i * 11, 12, 4, 0, Math.PI * 2);
+        ctx.fillStyle = dots[i]!;
+        ctx.fill();
+      }
+      // Filename in the title bar
+      ctx.fillStyle = 'rgba(226, 232, 240, 0.75)';
       ctx.font = '10px ui-monospace, monospace';
-      ctx.fillText('code', 8, 14);
-      // Code lines
-      ctx.fillStyle = '#e2e8f0';
+      ctx.fillText('snippet', 44, 15);
+      // Tab bar (single tab)
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, barH, 60, tabH);
+      ctx.fillStyle = 'rgba(226, 232, 240, 0.9)';
+      ctx.font = '10px ui-monospace, monospace';
+      ctx.fillText('code.ts', 8, barH + 14);
+
+      const bodyTop = barH + tabH;
+      const maxLines = Math.floor((obj.height - bodyTop - 4) / lh);
+      const lines = code.split('\n').slice(0, maxLines);
+
       ctx.font = '11px ui-monospace, monospace';
-      const lines = code.split('\n').slice(0, 12);
       lines.forEach((line, i) => {
-        ctx.fillText(line, 8, 34 + i * 15);
+        const y = bodyTop + 6 + i * lh;
+        // Gutter line number
+        ctx.fillStyle = 'rgba(100, 116, 139, 0.5)';
+        ctx.textAlign = 'right';
+        ctx.fillText(String(i + 1), gutterW - 6, y);
+        ctx.textAlign = 'left';
+        // Highlighted code
+        drawHighlightedCode(ctx, line, gutterW + 6, y);
       });
+      ctx.textAlign = 'left';
       break;
     }
     case 'text':
@@ -289,6 +323,102 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.lineTo(x, y + r);
   ctx.arcTo(x, y, x + r, y, r);
   ctx.closePath();
+}
+
+/**
+ * Lightweight syntax highlighting for the code pad. One Dark Pro-ish
+ * palette: comments gray-italic, strings green, keywords purple, numbers
+ * orange, functions blue. Falls back to plain light text for anything the
+ * tokenizer does not recognize.
+ */
+const CODE_COLORS = {
+  default: '#e2e8f0',
+  comment: '#7f848e',
+  string: '#98c379',
+  keyword: '#c678dd',
+  number: '#d19a66',
+  function: '#61afef',
+} as const;
+
+const KEYWORDS = new Set([
+  'const', 'let', 'var', 'function', 'return', 'if', 'else', 'for', 'while',
+  'do', 'switch', 'case', 'break', 'continue', 'new', 'class', 'extends',
+  'import', 'from', 'export', 'default', 'async', 'await', 'try', 'catch',
+  'finally', 'throw', 'typeof', 'instanceof', 'in', 'of', 'this', 'null',
+  'undefined', 'true', 'false', 'interface', 'type', 'enum', 'public',
+  'private', 'protected', 'static', 'readonly', 'void', 'string', 'number',
+  'boolean', 'any', 'unknown', 'never', 'def', 'lambda', 'yield', 'pass',
+  'with', 'global', 'raise', 'except', 'print', 'int', 'float', 'str', 'list',
+  'dict', 'set', 'None', 'True', 'False', 'fn', 'let', 'mut', 'impl', 'struct',
+  'match', 'use', 'mod', 'pub', 'async', 'await', 'go', 'package', 'type',
+]);
+
+/** Tokenize a single line into [text, color] spans and draw them. */
+function drawHighlightedCode(
+  ctx: CanvasRenderingContext2D,
+  line: string,
+  x: number,
+  y: number,
+): void {
+  ctx.font = '11px ui-monospace, monospace';
+  const charW = ctx.measureText('0').width;
+  let col = 0;
+  let i = 0;
+  const n = line.length;
+
+  function drawSpan(start: number, end: number, color: string) {
+    if (end <= start) return;
+    const text = line.slice(start, end);
+    ctx.fillStyle = color;
+    ctx.fillText(text, x + col * charW, y);
+    col += text.length;
+  }
+
+  while (i < n) {
+    const ch = line[i]!;
+    // Comment (// or #)
+    if ((ch === '/' && line[i + 1] === '/') || ch === '#') {
+      drawSpan(i, n, CODE_COLORS.comment);
+      return;
+    }
+    // String
+    if (ch === '"' || ch === "'" || ch === '`') {
+      let j = i + 1;
+      while (j < n && line[j] !== ch) {
+        if (line[j] === '\\') j++;
+        j++;
+      }
+      drawSpan(i, Math.min(j + 1, n), CODE_COLORS.string);
+      i = j + 1;
+      continue;
+    }
+    // Number
+    if (/[0-9]/.test(ch)) {
+      let j = i;
+      while (j < n && /[0-9._]/.test(line[j]!)) j++;
+      drawSpan(i, j, CODE_COLORS.number);
+      i = j;
+      continue;
+    }
+    // Identifier / keyword / function call
+    if (/[A-Za-z_$]/.test(ch)) {
+      let j = i;
+      while (j < n && /[A-Za-z0-9_$]/.test(line[j]!)) j++;
+      const word = line.slice(i, j);
+      if (KEYWORDS.has(word)) {
+        drawSpan(i, j, CODE_COLORS.keyword);
+      } else if (line[j] === '(') {
+        drawSpan(i, j, CODE_COLORS.function);
+      } else {
+        drawSpan(i, j, CODE_COLORS.default);
+      }
+      i = j;
+      continue;
+    }
+    // Everything else — draw as-is, advance one char
+    drawSpan(i, i + 1, CODE_COLORS.default);
+    i++;
+  }
 }
 
 /**

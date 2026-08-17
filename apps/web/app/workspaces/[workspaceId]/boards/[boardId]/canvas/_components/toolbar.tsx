@@ -7,10 +7,11 @@ import {
   GitBranch, Undo2, Redo2, Grid3x3, AlignStartVertical, AlignCenterVertical,
   AlignEndVertical, AlignStartHorizontal, AlignCenterHorizontal, AlignEndHorizontal,
   Layers, ImageIcon, ZoomIn, ZoomOut, Trash2, X, Eraser, Check, ChevronDown, Link2,
-  Star, Triangle, Diamond, Pentagon, Hexagon, Table2, Code,
+  Star, Triangle, Diamond, Pentagon, Hexagon, Table2, Code, FileDown,
 } from 'lucide-react';
 import { useCanvas, type ToolType, type CanvasObject } from '../_context/canvas-state';
 import { useCanvasSync } from '../_context/canvas-sync';
+import { renderFrame } from './canvas-renderer';
 
 type IconType = React.ComponentType<{ size?: number; className?: string }>;
 
@@ -246,6 +247,63 @@ export function Toolbar() {
 
   function handleImageUpload() {
     window.dispatchEvent(new CustomEvent('canvas:upload-image'));
+  }
+
+  function handleExportPdf() {
+    if (state.objects.length === 0) return;
+    // Compute the bounding box of all objects (with padding), render the
+    // canvas content to an offscreen image, then open a print dialog so the
+    // browser can save it as a PDF.
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const o of state.objects) {
+      minX = Math.min(minX, o.x);
+      minY = Math.min(minY, o.y);
+      maxX = Math.max(maxX, o.x + o.width);
+      maxY = Math.max(maxY, o.y + o.height);
+    }
+    if (!isFinite(minX)) return;
+    const pad = 40;
+    const box = {
+      x: minX - pad,
+      y: minY - pad,
+      w: maxX - minX + pad * 2,
+      h: maxY - minY + pad * 2,
+    };
+    // Clamp box to the finite origin
+    box.x = Math.max(box.x, 0);
+    box.y = Math.max(box.y, 0);
+
+    const scale = 2; // 2x for print sharpness
+    const cvs = document.createElement('canvas');
+    cvs.width = Math.max(1, Math.round(box.w * scale));
+    cvs.height = Math.max(1, Math.round(box.h * scale));
+    const ctx = cvs.getContext('2d');
+    if (!ctx) return;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, cvs.width, cvs.height);
+    ctx.scale(scale, scale);
+    ctx.translate(-box.x, -box.y);
+
+    const exportState = {
+      ...state,
+      pan: { x: 0, y: 0 },
+      zoom: 1,
+      gridVisible: false,
+      selectedIds: [],
+    };
+    renderFrame(ctx, exportState);
+
+    const dataUrl = cvs.toDataURL('image/png');
+    const win = window.open('', '_blank', 'width=800,height=600');
+    if (!win) return;
+    win.document.write(
+      `<!doctype html><html><head><title>Canvas PDF</title>` +
+      `<style>@media print{body{margin:0}img{width:100%}}</style>` +
+      `</head><body><img src="${dataUrl}" style="width:100%"/></body></html>`,
+    );
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 400);
   }
 
   function handleAlign(dir: 'left' | 'center-h' | 'right' | 'top' | 'center-v' | 'bottom') {
@@ -536,6 +594,18 @@ export function Toolbar() {
           }`}
         >
           <Layers size={16} />
+        </button>
+
+        <div className="mx-0.5 h-4 w-px shrink-0 bg-surface-700/80" aria-hidden="true" />
+
+        <button
+          title="Export as PDF"
+          aria-label="Export as PDF"
+          onClick={handleExportPdf}
+          disabled={state.objects.length === 0}
+          className={iconBtn}
+        >
+          <FileDown size={16} />
         </button>
 
         {/* Contextual actions — fixed slots so they never shift the ribbon */}

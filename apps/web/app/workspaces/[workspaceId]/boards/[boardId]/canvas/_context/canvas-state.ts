@@ -101,13 +101,22 @@ export function canvasReducer(state: CanvasState, action: CanvasAction): CanvasS
         ...state,
         zoom: scale,
         pan: {
-          x: cx - (cx - state.pan.x) * (scale / state.zoom),
-          y: cy - (cy - state.pan.y) * (scale / state.zoom),
+          x: Math.min(0, cx - (cx - state.pan.x) * (scale / state.zoom)),
+          y: Math.min(0, cy - (cy - state.pan.y) * (scale / state.zoom)),
         },
       };
     }
     case 'SET_PAN':
-      return { ...state, pan: action.payload };
+      // Finite toward the top-left (the canvas origin can never be dragged
+      // below the viewport's top-left corner) and infinite toward the
+      // bottom-right (pan.x/y can grow arbitrarily negative).
+      return {
+        ...state,
+        pan: {
+          x: Math.min(0, action.payload.x),
+          y: Math.min(0, action.payload.y),
+        },
+      };
     case 'TOGGLE_GRID':
       return { ...state, gridVisible: !state.gridVisible };
     case 'TOGGLE_LAYERS':

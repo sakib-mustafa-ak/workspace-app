@@ -39,6 +39,8 @@ export function CanvasSurface() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [editingText, setEditingText] = useState<{ id: string; text: string } | null>(null);
+  // Editing state for table / codeSnippet pads: tab-separated cells per row.
+  const [editingPad, setEditingPad] = useState<{ id: string; value: string } | null>(null);
 
   const lockedObjectIds = useRef(new Set<string>());
   lockedObjectIds.current = new Set(
@@ -102,11 +104,57 @@ export function CanvasSurface() {
     const sorted = [...state.objects].sort((a, b) => b.zIndex - a.zIndex);
     for (const obj of sorted) {
       if (lockedObjectIds.current.has(obj.id)) continue;
-      if ((obj.type === 'text' || obj.type === 'stickyNote') && hitTest(pos, obj, state.zoom)) {
+      if (!hitTest(pos, obj, state.zoom)) continue;
+      if (obj.type === 'text' || obj.type === 'stickyNote') {
         startTextEdit(obj.id);
         return;
       }
+      if (obj.type === 'table') {
+        const t = obj.table ?? { rows: 3, cols: 3, cells: [['', '', ''], ['', '', ''], ['', '', '']] };
+        const grid = t.cells.map((row) => row.join('\t')).join('\n');
+        setEditingPad({ id: obj.id, value: grid });
+        requestLock(obj.id);
+        return;
+      }
+      if (obj.type === 'codeSnippet') {
+        setEditingPad({ id: obj.id, value: obj.text || '' });
+        requestLock(obj.id);
+        return;
+      }
     }
+  }
+
+  function handlePadCommit() {
+    if (!editingPad) return;
+    const obj = stateRef.current.objects.find(o => o.id === editingPad.id);
+    if (obj) {
+      if (obj.type === 'table') {
+        const rows = editingPad.value.split('\n');
+        const cells = rows.map((r) => r.split('\t'));
+        const cols = Math.max(...cells.map((r) => r.length), obj.table?.cols ?? 3);
+        const table = {
+          rows: cells.length,
+          cols,
+          cells: cells.map((r) => {
+            while (r.length < cols) r.push('');
+            return r;
+          }),
+        };
+        dispatch({ type: 'UPDATE_OBJECT', payload: { id: obj.id, table } });
+        void persistUpdate({ ...obj, table });
+      } else {
+        dispatch({ type: 'UPDATE_OBJECT', payload: { id: obj.id, text: editingPad.value } });
+        void persistUpdate({ ...obj, text: editingPad.value });
+      }
+    }
+    releaseLock(editingPad.id);
+    setEditingPad(null);
+  }
+
+  function handlePadCancel() {
+    if (!editingPad) return;
+    releaseLock(editingPad.id);
+    setEditingPad(null);
   }
 
   function handleTextEditCommit() {
@@ -282,6 +330,7 @@ export function CanvasSurface() {
       startLivePaint();
       return;
     }
+    const isContainer = state.activeTool === 'table' || state.activeTool === 'codeSnippet';
     const newObj: CanvasObject = {
       id,
       type: state.activeTool as CanvasObject['type'],
@@ -295,12 +344,26 @@ export function CanvasSurface() {
       strokeWidth: state.strokeWidth,
       opacity: state.opacity / 100,
       zIndex: state.objects.length,
+      ...(state.activeTool === 'table'
+        ? { table: { rows: 3, cols: 3, cells: [['', '', ''], ['', '', ''], ['', '', '']] } }
+        : state.activeTool === 'codeSnippet'
+          ? { text: '' }
+          : {}),
     };
     dispatch({ type: 'ADD_OBJECT', payload: newObj, batch: true });
     drawingRef.current = id;
     originRef.current = pos;
     dragMode.current = 'draw';
-    if (state.activeTool === 'rectangle' || state.activeTool === 'ellipse' || state.activeTool === 'line' || state.activeTool === 'arrow') {
+    if (isContainer) {
+      // Containers get a default size immediately so a click creates a
+      // usable pad, then opens the editor on pointer-up (like text notes).
+      dispatch({
+        type: 'UPDATE_OBJECT',
+        payload: { id, width: state.activeTool === 'table' ? 240 : 260, height: state.activeTool === 'table' ? 140 : 120 },
+        batch: true,
+      });
+    } else if (state.activeTool === 'rectangle' || state.activeTool === 'ellipse' || state.activeTool === 'line' || state.activeTool === 'arrow'
+      || state.activeTool === 'star' || state.activeTool === 'triangle' || state.activeTool === 'diamond' || state.activeTool === 'pentagon' || state.activeTool === 'hexagon') {
       liveDrawRef.current = { id, type: state.activeTool, from: pos, to: pos };
       startLivePaint();
     }
@@ -555,15 +618,15 @@ export function CanvasSurface() {
           }
         } else {
           const tiny = Math.abs(obj.width) < 3 && Math.abs(obj.height) < 3;
-          const isNote = obj.type === 'text' || obj.type === 'stickyNote';
+          const isNote = obj.type === 'text' || obj.type === 'stickyNote' || obj.type === 'table' || obj.type === 'codeSnippet';
           if (tiny && !isNote) {
             dispatch({ type: 'DELETE_OBJECTS', payload: [drawingRef.current] });
           } else {
             const normalized = tiny
               ? {
                   ...obj,
-                  width: obj.type === 'stickyNote' ? 160 : 20,
-                  height: obj.type === 'stickyNote' ? 100 : 20,
+                  width: obj.type === 'stickyNote' ? 160 : obj.type === 'table' ? 240 : obj.type === 'codeSnippet' ? 260 : 20,
+                  height: obj.type === 'stickyNote' ? 100 : obj.type === 'table' ? 140 : obj.type === 'codeSnippet' ? 120 : 20,
                 }
               : obj;
             if (tiny) {
@@ -775,6 +838,47 @@ export function CanvasSurface() {
                     }
                   }}
                   className="h-full min-h-[36px] w-full resize-none bg-transparent p-1 text-sm text-surface-100 outline-none"
+                  onClick={e => e.stopPropagation()}
+                />
+              </div>
+            </>
+          );
+        })()}
+        {editingPad && (() => {
+          const obj = state.objects.find(o => o.id === editingPad.id);
+          if (!obj) return null;
+          const isCode = obj.type === 'codeSnippet';
+          const left = obj.x * state.zoom + state.pan.x;
+          const top = obj.y * state.zoom + state.pan.y;
+          const width = Math.max(obj.width * state.zoom, 260);
+          const height = Math.max(obj.height * state.zoom, 140);
+          return (
+            <>
+              <div className="absolute inset-0 z-50" onClick={() => handlePadCommit()} />
+              <div
+                className="absolute z-50 rounded-lg border border-primary-500/60 bg-surface-800/95 p-1 shadow-xl backdrop-blur-sm"
+                style={{ left, top, width, height }}
+              >
+                <div className="mb-1 flex items-center justify-between px-1">
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-surface-500">
+                    {isCode ? 'Code snippet' : 'Table — one row per line, cells separated by Tab'}
+                  </span>
+                </div>
+                <textarea
+                  autoFocus
+                  value={editingPad.value}
+                  onChange={e => setEditingPad({ ...editingPad, value: e.target.value })}
+                  onBlur={handlePadCommit}
+                  onKeyDown={e => {
+                    if (e.key === 'Escape') {
+                      e.stopPropagation();
+                      handlePadCancel();
+                    }
+                  }}
+                  spellCheck={false}
+                  className={`h-[calc(100%-22px)] w-full resize-none bg-surface-950 p-2 text-xs text-surface-100 outline-none ${
+                    isCode ? 'font-mono' : ''
+                  }`}
                   onClick={e => e.stopPropagation()}
                 />
               </div>

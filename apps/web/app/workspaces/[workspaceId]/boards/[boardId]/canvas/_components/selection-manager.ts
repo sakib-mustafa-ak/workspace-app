@@ -17,7 +17,15 @@ export function hitTest(
     case 'rectangle':
     case 'image':
     case 'stickyNote':
+    case 'table':
+    case 'codeSnippet':
       return localX >= 0 && localX <= Math.abs(obj.width) && localY >= 0 && localY <= Math.abs(obj.height);
+    case 'star':
+    case 'triangle':
+    case 'diamond':
+    case 'pentagon':
+    case 'hexagon':
+      return pointInPolygon({ x: localX, y: localY }, polygonVertices(obj));
     case 'ellipse': {
       const rx = Math.abs(obj.width) / 2;
       const ry = Math.abs(obj.height) / 2;
@@ -68,6 +76,82 @@ function distanceToPolyline(p: { x: number; y: number }, points: { x: number; y:
     if (d < min) min = d;
   }
   return min;
+}
+
+/**
+ * Polygon vertices in the object's local frame — mirrors canvas-renderer's
+ * polygonPoints so hit testing matches what is drawn.
+ */
+function polygonVertices(obj: CanvasObject): { x: number; y: number }[] {
+  const w = obj.width;
+  const h = obj.height;
+  const cx = w / 2;
+  const cy = h / 2;
+  switch (obj.type) {
+    case 'triangle':
+      return [
+        { x: cx, y: 0 },
+        { x: w, y: h },
+        { x: 0, y: h },
+      ];
+    case 'diamond':
+      return [
+        { x: cx, y: 0 },
+        { x: w, y: cy },
+        { x: cx, y: h },
+        { x: 0, y: cy },
+      ];
+    case 'pentagon': {
+      const r = Math.min(w, h) / 2;
+      const pts: { x: number; y: number }[] = [];
+      for (let i = 0; i < 5; i++) {
+        const a = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+        pts.push({ x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) });
+      }
+      return pts;
+    }
+    case 'hexagon': {
+      const r = Math.min(w, h) / 2;
+      const pts: { x: number; y: number }[] = [];
+      for (let i = 0; i < 6; i++) {
+        const a = (i * 2 * Math.PI) / 6 + Math.PI / 6;
+        pts.push({ x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) });
+      }
+      return pts;
+    }
+    case 'star': {
+      const outer = Math.min(w, h) / 2;
+      const inner = outer * 0.4;
+      const pts: { x: number; y: number }[] = [];
+      for (let i = 0; i < 10; i++) {
+        const r = i % 2 === 0 ? outer : inner;
+        const a = -Math.PI / 2 + (i * Math.PI) / 5;
+        pts.push({ x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) });
+      }
+      return pts;
+    }
+    default:
+      return [
+        { x: 0, y: 0 },
+        { x: w, y: 0 },
+        { x: w, y: h },
+        { x: 0, y: h },
+      ];
+  }
+}
+
+/** Ray-casting point-in-polygon test. */
+function pointInPolygon(p: { x: number; y: number }, vertices: { x: number; y: number }[]): boolean {
+  let inside = false;
+  for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
+    const vi = vertices[i]!;
+    const vj = vertices[j]!;
+    const intersect =
+      vi.y > p.y !== vj.y > p.y &&
+      p.x < ((vj.x - vi.x) * (p.y - vi.y)) / (vj.y - vi.y) + vi.x;
+    if (intersect) inside = !inside;
+  }
+  return inside;
 }
 
 function cubicPoint(t: number, p0: { x: number; y: number }, p1: { x: number; y: number }, p2: { x: number; y: number }, p3: { x: number; y: number }) {

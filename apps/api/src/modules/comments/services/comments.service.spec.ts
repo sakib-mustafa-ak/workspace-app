@@ -193,7 +193,10 @@ describe('CommentsService', () => {
       commentsRepo.findBoardById.mockResolvedValue(mockBoard);
       mockDbSelect([mockMembership]);
       policy.isAtLeast.mockReturnValue(true);
-      commentsRepo.findByBoardWithAuthor.mockResolvedValue([mockComment, mockReply]);
+      commentsRepo.findByBoardWithAuthor.mockResolvedValue([
+        mockComment,
+        mockReply,
+      ]);
 
       const result = await service.listByBoard('b1', 'u1');
 

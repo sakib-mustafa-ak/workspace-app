@@ -55,7 +55,11 @@ export class CommentsRepository {
   /** Comments with the author's display name + avatar joined in, so the UI
    *  can render messaging-app-style avatars without a second query. */
   public async findByBoardWithAuthor(boardId: string): Promise<
-    Array<BoardCommentRow & { author: { displayName: string; avatarUrl: string | null } | null }>
+    Array<
+      BoardCommentRow & {
+        author: { displayName: string; avatarUrl: string | null } | null;
+      }
+    >
   > {
     const rows = await this.db
       .select({

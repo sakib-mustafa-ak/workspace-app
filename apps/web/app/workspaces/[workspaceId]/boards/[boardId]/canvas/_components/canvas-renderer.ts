@@ -143,6 +143,91 @@ export function renderObject(
       }
       break;
     }
+    case 'star':
+    case 'triangle':
+    case 'diamond':
+    case 'pentagon':
+    case 'hexagon': {
+      const pts = polygonPoints(obj);
+      ctx.beginPath();
+      ctx.moveTo(pts[0]!.x, pts[0]!.y);
+      for (const p of pts) ctx.lineTo(p.x, p.y);
+      ctx.closePath();
+      ctx.fillStyle = obj.fill;
+      ctx.fill();
+      ctx.strokeStyle = obj.stroke;
+      ctx.lineWidth = obj.strokeWidth;
+      ctx.stroke();
+      break;
+    }
+    case 'table': {
+      const t = obj.table ?? { rows: 2, cols: 2, cells: [['', ''], ['', '']] };
+      const rows = Math.max(t.rows, 1);
+      const cols = Math.max(t.cols, 1);
+      const cw = obj.width / cols;
+      const ch = obj.height / rows;
+      // Cells
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          ctx.fillStyle = obj.fill || '#ffffff';
+          ctx.fillRect(c * cw, r * ch, cw, ch);
+        }
+      }
+      // Grid lines
+      ctx.strokeStyle = obj.stroke;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let r = 0; r <= rows; r++) {
+        ctx.moveTo(0, r * ch);
+        ctx.lineTo(obj.width, r * ch);
+      }
+      for (let c = 0; c <= cols; c++) {
+        ctx.moveTo(c * cw, 0);
+        ctx.lineTo(c * cw, obj.height);
+      }
+      ctx.stroke();
+      // Cell text
+      ctx.font = '11px sans-serif';
+      ctx.fillStyle = '#0f172a';
+      ctx.textBaseline = 'middle';
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const cell = t.cells?.[r]?.[c];
+          if (cell) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(c * cw, r * ch, cw, ch);
+            ctx.clip();
+            ctx.fillText(cell, c * cw + 6, r * ch + ch / 2);
+            ctx.restore();
+          }
+        }
+      }
+      ctx.textBaseline = 'alphabetic';
+      break;
+    }
+    case 'codeSnippet': {
+      // Code chip: dark panel, mono text, header bar
+      const code = obj.text || '';
+      ctx.fillStyle = obj.fill || '#0f172a';
+      roundRect(ctx, 0, 0, obj.width, obj.height, 6);
+      ctx.fill();
+      // Header strip
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.18)';
+      roundRect(ctx, 0, 0, obj.width, 20, 6);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.9)';
+      ctx.font = '10px ui-monospace, monospace';
+      ctx.fillText('code', 8, 14);
+      // Code lines
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '11px ui-monospace, monospace';
+      const lines = code.split('\n').slice(0, 12);
+      lines.forEach((line, i) => {
+        ctx.fillText(line, 8, 34 + i * 15);
+      });
+      break;
+    }
     case 'text':
       ctx.font = '16px sans-serif';
       if (obj.text) {
@@ -204,6 +289,68 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.lineTo(x, y + r);
   ctx.arcTo(x, y, x + r, y, r);
   ctx.closePath();
+}
+
+/**
+ * Vertex list (in the object's local frame, 0..width / 0..height) for the
+ * polygon shapes. Star uses a 5-pointed outer/inner radius pattern.
+ */
+function polygonPoints(obj: CanvasObject): { x: number; y: number }[] {
+  const w = obj.width;
+  const h = obj.height;
+  const cx = w / 2;
+  const cy = h / 2;
+  switch (obj.type) {
+    case 'triangle':
+      return [
+        { x: cx, y: 0 },
+        { x: w, y: h },
+        { x: 0, y: h },
+      ];
+    case 'diamond':
+      return [
+        { x: cx, y: 0 },
+        { x: w, y: cy },
+        { x: cx, y: h },
+        { x: 0, y: cy },
+      ];
+    case 'pentagon': {
+      const r = Math.min(w, h) / 2;
+      const pts: { x: number; y: number }[] = [];
+      for (let i = 0; i < 5; i++) {
+        const a = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+        pts.push({ x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) });
+      }
+      return pts;
+    }
+    case 'hexagon': {
+      const r = Math.min(w, h) / 2;
+      const pts: { x: number; y: number }[] = [];
+      for (let i = 0; i < 6; i++) {
+        const a = (i * 2 * Math.PI) / 6 + Math.PI / 6;
+        pts.push({ x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) });
+      }
+      return pts;
+    }
+    case 'star': {
+      const outer = Math.min(w, h) / 2;
+      const inner = outer * 0.4;
+      const pts: { x: number; y: number }[] = [];
+      for (let i = 0; i < 10; i++) {
+        const r = i % 2 === 0 ? outer : inner;
+        const a = -Math.PI / 2 + (i * Math.PI) / 5;
+        pts.push({ x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) });
+      }
+      return pts;
+    }
+    default:
+      return [
+        { x: 0, y: 0 },
+        { x: w, y: 0 },
+        { x: w, y: h },
+        { x: 0, y: h },
+      ];
+  }
 }
 
 function drawSelectionOverlay(ctx: CanvasRenderingContext2D, state: CanvasState, accent: string) {

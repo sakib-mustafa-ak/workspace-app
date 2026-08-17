@@ -37,6 +37,16 @@ const LOCAL_TO_SERVER_TYPE: Record<CanvasObject['type'], CanvasObjectType> = {
   stickyNote: 'STICKY_NOTE',
   connector: 'CONNECTOR',
   image: 'IMAGE',
+  // New client shapes persist under the closest server type — they are
+  // bound-box shapes whose geometry lives in the client renderer, and the
+  // extra fields (table grid / code text) ride in `data`.
+  star: 'RECTANGLE',
+  triangle: 'RECTANGLE',
+  diamond: 'RECTANGLE',
+  pentagon: 'RECTANGLE',
+  hexagon: 'RECTANGLE',
+  table: 'STICKY_NOTE',
+  codeSnippet: 'STICKY_NOTE',
 };
 
 const SERVER_TO_LOCAL_TYPE: Record<string, CanvasObject['type']> = {
@@ -67,11 +77,15 @@ function toServerObject(obj: CanvasObject): CreateCanvasObjectData {
     strokeWidth: obj.strokeWidth,
     opacity: obj.opacity,
     data: {
+      // clientType preserves the exact client shape across the server
+      // round-trip — the server enum only knows RECTANGLE/STICKY_NOTE.
+      clientType: obj.type,
       text: obj.text,
       imageData: obj.imageData,
       sourceId: obj.sourceId,
       targetId: obj.targetId,
       points: obj.points,
+      table: obj.table,
     },
   };
 }
@@ -84,9 +98,17 @@ function toServerUpdate(obj: CanvasObject): Omit<CreateCanvasObjectData, 'id' | 
 
 function toLocalObject(server: ServerCanvasObject): CanvasObject {
   const data = (server.data ?? {}) as Record<string, unknown>;
+  // Prefer the client type we stored (survives the server round-trip);
+  // fall back to the server-type mapping for legacy objects.
+  const storedType = data.clientType as string | undefined;
+  const mappedType = SERVER_TO_LOCAL_TYPE[server.type] ?? 'rectangle';
+  const type = (
+    storedType &&
+    (['rectangle','ellipse','line','arrow','path','text','stickyNote','connector','image','star','triangle','diamond','pentagon','hexagon','table','codeSnippet'] as string[]).includes(storedType)
+  ) ? storedType as CanvasObject['type'] : mappedType;
   return {
     id: server.id,
-    type: SERVER_TO_LOCAL_TYPE[server.type] ?? 'rectangle',
+    type,
     x: server.x,
     y: server.y,
     width: server.width,
@@ -102,6 +124,7 @@ function toLocalObject(server: ServerCanvasObject): CanvasObject {
     sourceId: (data.sourceId as string | undefined) ?? undefined,
     targetId: (data.targetId as string | undefined) ?? undefined,
     points: Array.isArray(data.points) ? data.points as { x: number; y: number }[] : undefined,
+    table: data.table as CanvasObject['table'] | undefined,
   };
 }
 
@@ -127,6 +150,8 @@ function toServerShape(obj: CanvasObject): ServerCanvasObject {
       sourceId: obj.sourceId,
       targetId: obj.targetId,
       points: obj.points,
+      table: obj.table,
+      clientType: obj.type,
     },
     createdById: '',
     createdAt: '',

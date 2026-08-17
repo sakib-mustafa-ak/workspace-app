@@ -7,6 +7,7 @@ import {
   GitBranch, Undo2, Redo2, Grid3x3, AlignStartVertical, AlignCenterVertical,
   AlignEndVertical, AlignStartHorizontal, AlignCenterHorizontal, AlignEndHorizontal,
   Layers, ImageIcon, ZoomIn, ZoomOut, Trash2, X, Eraser, Check, ChevronDown, Link2,
+  Star, Triangle, Diamond, Pentagon, Hexagon, Table2, Code,
 } from 'lucide-react';
 import { useCanvas, type ToolType, type CanvasObject } from '../_context/canvas-state';
 import { useCanvasSync } from '../_context/canvas-sync';
@@ -38,6 +39,18 @@ const toolGroups: { label: string; tools: ToolDef[] }[] = [
       { type: 'ellipse', label: 'Ellipse', shortcut: 'O', icon: Circle },
       { type: 'line', label: 'Line', shortcut: 'L', icon: Minus },
       { type: 'arrow', label: 'Arrow', shortcut: 'A', icon: ArrowRight },
+      { type: 'star', label: 'Star', shortcut: '', icon: Star },
+      { type: 'triangle', label: 'Triangle', shortcut: '', icon: Triangle },
+      { type: 'diamond', label: 'Diamond', shortcut: '', icon: Diamond },
+      { type: 'pentagon', label: 'Pentagon', shortcut: '', icon: Pentagon },
+      { type: 'hexagon', label: 'Hexagon', shortcut: '', icon: Hexagon },
+    ],
+  },
+  {
+    label: 'Insert',
+    tools: [
+      { type: 'table', label: 'Table', shortcut: '', icon: Table2 },
+      { type: 'codeSnippet', label: 'Code snippet', shortcut: '', icon: Code },
     ],
   },
   {

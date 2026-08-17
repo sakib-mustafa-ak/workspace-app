@@ -1,10 +1,27 @@
 import { createContext, useContext, type Dispatch } from 'react';
 
-export type ToolType = 'select' | 'rectangle' | 'ellipse' | 'line' | 'arrow' | 'path' | 'text' | 'stickyNote' | 'connector' | 'eraser';
+export type ToolType =
+  | 'select' | 'rectangle' | 'ellipse' | 'line' | 'arrow' | 'path'
+  | 'text' | 'stickyNote' | 'connector' | 'eraser'
+  | 'star' | 'triangle' | 'diamond' | 'pentagon' | 'hexagon'
+  | 'table' | 'codeSnippet';
+
+export type CanvasObjectType =
+  | 'rectangle' | 'ellipse' | 'line' | 'arrow' | 'path'
+  | 'text' | 'stickyNote' | 'connector' | 'image'
+  | 'star' | 'triangle' | 'diamond' | 'pentagon' | 'hexagon'
+  | 'table' | 'codeSnippet';
+
+export type TableData = {
+  rows: number;
+  cols: number;
+  /** cells[row][col] — row-major text content */
+  cells: string[][];
+};
 
 export type CanvasObject = {
   id: string;
-  type: 'rectangle' | 'ellipse' | 'line' | 'arrow' | 'path' | 'text' | 'stickyNote' | 'connector' | 'image';
+  type: CanvasObjectType;
   x: number;
   y: number;
   width: number;
@@ -20,6 +37,8 @@ export type CanvasObject = {
   imageData?: string;
   sourceId?: string;
   targetId?: string;
+  /** table tool: rows/cols + cell contents */
+  table?: TableData;
 };
 
 type CanvasHistory = { past: CanvasObject[][]; future: CanvasObject[][] };

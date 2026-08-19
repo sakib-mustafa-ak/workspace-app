@@ -69,8 +69,8 @@
 }
 
 @keyframes borderGlow {
-  0%, 100% { border-color: rgb(59 130 246 / 0.3); }
-  50% { border-color: rgb(59 130 246 / 0.6); }
+  0%, 100% { border-color: rgb(214 207 225 / 0.3); }
+  50% { border-color: rgb(214 207 225 / 0.6); }
 }
 .animate-borderGlow {
   animation: borderGlow 1.5s ease-in-out infinite;

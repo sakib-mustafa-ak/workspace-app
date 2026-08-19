@@ -101,7 +101,7 @@ export default function UserDetailPage() {
               </div>
             )}
             <div className="text-center sm:text-left">
-              <h1 className="text-xl font-bold tracking-tight">{user.displayName}</h1>
+              <h1 className="text-xl font-bold tracking-tight text-warm-300">{user.displayName}</h1>
               <p className="mt-0.5 text-sm text-surface-400">{user.email}</p>
               {user.status !== 'ACTIVE' && (
                 <span className="mt-1.5 inline-flex items-center gap-1 rounded border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-400">
@@ -199,18 +199,19 @@ export default function UserDetailPage() {
             </h2>
           </div>
           <div className="divide-y divide-surface-800">
-            {memberships.map((m) => (
+            {memberships.map((m, i) => (
               <Link
                 key={m.workspaceId}
                 href={`/workspaces/${m.workspaceId}`}
-                className="flex items-center justify-between px-6 py-3 transition-colors hover:bg-surface-800/50"
+                className="flex items-center justify-between px-6 py-3 transition-colors hover:bg-surface-800/50 animate-name-in"
+                style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
               >
                 <div className="flex items-center gap-3">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-700 text-xs font-bold text-surface-300">
                     {m.workspaceName.charAt(0)}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-surface-200">{m.workspaceName}</p>
+                    <p className="underline-grow text-sm font-medium text-primary-400 transition-colors hover:text-white">{m.workspaceName}</p>
                     <p className="text-xs text-surface-500">Joined {new Date(m.joinedAt).toLocaleDateString()}</p>
                   </div>
                 </div>
@@ -233,7 +234,7 @@ export default function UserDetailPage() {
           <div className="px-6 py-4">
             <div className="relative space-y-0">
               {activity.slice(0, 10).map((log, i) => (
-                <div key={log.id} className="flex gap-4 pb-4 last:pb-0">
+                <div key={log.id} className="flex gap-4 pb-4 last:pb-0 animate-name-in" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
                   <div className="flex flex-col items-center">
                     <div className="z-10 flex h-6 w-6 items-center justify-center rounded-full bg-surface-800">
                       {actionIcon(log.action)}

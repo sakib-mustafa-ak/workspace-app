@@ -86,18 +86,19 @@ export default function UsersPage() {
         <>
           <div className="overflow-hidden rounded-xl border border-surface-800">
             <div className="divide-y divide-surface-800">
-              {users.map((u) => (
+              {users.map((u, i) => (
                 <Link
                   key={u.id}
                   href={`/users/${u.id}`}
-                  className="group flex items-center gap-4 bg-surface-900/50 px-5 py-4 transition-colors hover:bg-surface-800/50"
+                  className="group flex items-center gap-4 bg-surface-900/50 px-5 py-4 transition-colors hover:bg-surface-800/50 animate-name-in"
+                  style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-surface-600 to-surface-700 text-sm font-medium text-surface-200 shadow-sm">
                     {u.displayName.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-surface-200">{u.displayName}</span>
+                      <span className="text-sm font-medium text-warm-300 transition-colors group-hover:text-warm-200">{u.displayName}</span>
                       {u.status !== 'ACTIVE' && (
                         <span className="rounded border border-amber-500/20 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-400">
                           {u.status}

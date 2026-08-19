@@ -159,22 +159,27 @@ export function Sidebar() {
           <div className="px-3 pt-2">
             <p className="mb-2 px-3 text-label text-surface-500">Workspaces</p>
             <div className="space-y-1">
-              {userWorkspaces.map((ws) => (
-                <Link
-                  key={ws.id}
-                  href={`/workspaces/${ws.id}`}
-                  className={`flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
-                    pathname.startsWith(`/workspaces/${ws.id}`)
-                      ? 'bg-surface-800 text-white'
-                      : 'text-surface-400 hover:bg-surface-800/50 hover:text-surface-200'
-                  }`}
-                >
-                  <div className="flex h-5 w-5 items-center justify-center rounded bg-surface-700 text-[9px] font-bold text-surface-300">
-                    {ws.name.charAt(0).toUpperCase()}
-                  </div>
-                  {ws.name}
-                </Link>
-              ))}
+              {userWorkspaces.map((ws) => {
+                const wsActive = pathname.startsWith(`/workspaces/${ws.id}`);
+                return (
+                  <Link
+                    key={ws.id}
+                    href={`/workspaces/${ws.id}`}
+                    className={`flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                      wsActive
+                        ? 'bg-surface-800 text-white'
+                        : 'text-surface-400 hover:bg-surface-800/50 hover:text-surface-200'
+                    }`}
+                  >
+                    <div className="flex h-5 w-5 items-center justify-center rounded bg-surface-700 text-[9px] font-bold text-surface-300">
+                      {ws.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span className={`underline-grow truncate transition-colors ${wsActive ? 'text-white' : 'text-primary-400 hover:text-white'}`}>
+                      {ws.name}
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         )}
@@ -189,7 +194,7 @@ export function Sidebar() {
             {user?.displayName?.charAt(0)?.toUpperCase() || 'U'}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-surface-200">
+            <p className="truncate text-sm font-medium text-warm-300">
               {user?.displayName || 'User'}
             </p>
             <p className="hidden truncate text-xs text-surface-500 group-hover:block">{user?.email}</p>

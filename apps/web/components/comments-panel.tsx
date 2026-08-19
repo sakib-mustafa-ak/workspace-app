@@ -202,7 +202,7 @@ function CommentRow({
                 {avatarInitial}
               </div>
             )}
-            <span className="text-xs font-semibold text-surface-200">{authorName}</span>
+            <span className="text-xs font-semibold text-warm-300">{authorName}</span>
             <span className="text-[10px] text-surface-500">
               {new Date(comment.createdAt).toLocaleString()}
             </span>

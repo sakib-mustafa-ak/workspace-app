@@ -125,7 +125,7 @@ function DashboardContent() {
         <div>
           <p className="mb-1.5 text-label text-surface-500">Workspace OS</p>
           <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-            Hello, <span className="text-primary-400">{user?.displayName || 'there'}</span>
+            Hello, <span className="text-warm-300">{user?.displayName || 'there'}</span>
           </h1>
           <p className="mt-2 text-sm text-surface-500">
             {workspaces.length} workspace{workspaces.length !== 1 ? 's' : ''} · {user?.email}
@@ -171,7 +171,7 @@ function DashboardContent() {
                 className="group shrink-0 rounded-xl border border-surface-800 bg-surface-900 p-4 transition-all hover:border-surface-700 hover:bg-surface-800/50"
               >
                 <p className="text-sm font-medium text-surface-200 group-hover:text-white">{rb.name}</p>
-                <p className="mt-0.5 text-xs text-surface-500">{rb.workspaceName}</p>
+                <p className="mt-0.5 text-xs text-primary-400">{rb.workspaceName}</p>
               </Link>
             ))}
           </div>
@@ -229,7 +229,7 @@ function DashboardContent() {
                     className="mt-1 text-surface-600 opacity-0 transition-opacity group-hover:opacity-100"
                   />
                 </div>
-                <h3 className="mt-4 text-sm font-semibold text-surface-200 group-hover:text-white">
+                <h3 className="underline-grow mt-4 text-sm font-semibold text-primary-400 group-hover:text-white">
                   {ws.name}
                 </h3>
                 <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-surface-500">

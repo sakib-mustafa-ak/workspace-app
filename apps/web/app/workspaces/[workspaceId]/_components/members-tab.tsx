@@ -126,7 +126,7 @@ export function MembersTab({
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium">{m.user?.displayName || 'Member'}</p>
+                  <p className="text-sm font-medium text-warm-300">{m.user?.displayName || 'Member'}</p>
                   <RoleBadge role={m.role} />
                 </div>
                 <p className="text-xs text-surface-500">{m.status}</p>

@@ -27,6 +27,11 @@
   --color-surface-800: #242424;
   --color-surface-900: #1a1a1a;
   --color-surface-950: #121212;
+
+  --color-warm-200: #f2d98c;
+  --color-warm-300: #e6c46f;
+  --color-warm-400: #d4ac4e;
+  --color-warm-500: #c09a3e;
 }
 
 @keyframes slideUp {
@@ -96,6 +101,49 @@
 .animate-drift { animation: drift 12s ease-in-out infinite; }
 .animate-breathe { animation: breathe 3s ease-in-out infinite; }
 
+@keyframes nameIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-name-in {
+  animation: nameIn 200ms ease-out both;
+}
+
+.underline-grow {
+  position: relative;
+}
+.underline-grow::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1px;
+  background: var(--color-primary-400);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 200ms ease-out;
+}
+.underline-grow:hover::after,
+.group:hover .underline-grow::after {
+  transform: scaleX(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-name-in,
+  .animate-slideUp,
+  .animate-fadeIn,
+  .animate-fadeUp,
+  .animate-countUp,
+  .animate-slideIn,
+  .animate-borderGlow,
+  .animate-drift,
+  .animate-breathe,
+  .animate-shimmer {
+    animation: none;
+  }
+}
+
 .tnum {
   font-variant-numeric: tabular-nums;
 }
@@ -123,4 +171,8 @@
   --color-amber-300: #b45309;
   --color-amber-400: #92400e;
   --color-amber-500: #d97706;
+  --color-warm-200: #6b5216;
+  --color-warm-300: #8a6a1f;
+  --color-warm-400: #a07f2e;
+  --color-warm-500: #b8923a;
 }

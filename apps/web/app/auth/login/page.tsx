@@ -114,7 +114,7 @@ export default function LoginPage() {
                   <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-600 text-xs font-semibold text-surface-100">
                     {(p.displayName || p.email)[0]?.toUpperCase()}
                   </span>
-                  <span className="text-surface-200">{p.displayName || p.email}</span>
+                  <span className="text-warm-300">{p.displayName || p.email}</span>
                   <span
                     role="button"
                     aria-label={`Remove ${p.displayName}`}

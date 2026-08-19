@@ -21,16 +21,22 @@ global user directory and profile endpoints.
 ### 1. Peer-scoping rule (UsersService)
 
 A user's **peers** = distinct users sharing ≥1 workspace with the requester, where **both**
-memberships have status `ACTIVE` (PENDING invitees are excluded).
+memberships have status `ACTIVE` (PENDING invitees are excluded). Workspace archived status
+is irrelevant — membership `ACTIVE` is the only gate.
 
 - New helper `getPeerIds(requesterId): Promise<string[]>` — implemented as a single query
   over `workspace_memberships` (distinct user ids joined through shared active workspaces).
-- `listUsers(...)` — filter results to peers ∪ self before returning. Pagination and search
-  still apply within that set.
+- `listUsers(...)` — peer-scope **in the SQL query itself** (`WHERE user_id IN (peerIds ∪
+  self)`). Do NOT filter in memory after the query: pagination/offset would drift when
+  non-peers are stripped out. Search and sorting apply within the scoped set.
 - `getUserById(id, requesterId)` — return profile if `id === requesterId` or peer, otherwise
   throw the existing user-not-found error (**404**, never 403 — do not leak existence).
 - `getUserMemberships(id, requesterId)` / `getUserActivity(id, requesterId)` — same rule,
   else 404.
+- **Scope only the controller-facing methods.** `getProfile(id)` stays unscoped — it is
+  shared internally (e.g. `canvas.gateway.ts` calls it for presence payloads). Peer checks
+  live in the public entry points (`getUserById`, `listUsers`, memberships, activity), which
+  receive `requesterId` from the authenticated request.
 - `getMe` / `updateMe` — unchanged (always the requester themselves).
 
 ### 2. Workspace members endpoints (verify, not assume)
@@ -52,6 +58,9 @@ they simply show colleagues only. Invites are raw email-based and unaffected.
 
 ## Testing (API jest suites)
 
+New test file `apps/api/src/modules/users/services/users.service.spec.ts` (none exists
+today; follow the fixture patterns of `workspaces.service.spec.ts`), covering:
+
 - Peers can fetch each other's profile / memberships / activity.
 - Non-peers get 404 on all three user endpoints.
 - `listUsers` excludes non-peers, with and without a search term; includes self.
@@ -67,6 +76,7 @@ they simply show colleagues only. Invites are raw email-based and unaffected.
 
 ## Bonus fix (approved separately)
 
-`borderGlow` keyframe in `apps/web/app/globals.css` still uses the pre-rebrand blue
-`rgb(59 130 246/…)` → replace with lavender `rgb(214 207 225/…)` (primary-400), preserving
-the existing keyframe structure.
+`borderGlow` keyframe in `apps/web/app/globals.css` (lines ~67-68) still uses the
+pre-rebrand blue `rgb(59 130 246 / 0.3)` and `rgb(59 130 246 / 0.6)` → replace with lavender
+`rgb(214 207 225 / 0.3)` and `rgb(214 207 225 / 0.6)` (primary-400), preserving the keyframe
+structure.

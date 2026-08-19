@@ -55,7 +55,8 @@ export async function register(
 
 export async function logout(): Promise<void> {
   try {
-    await api.post('/auth/logout');
+    const refreshToken = localStorage.getItem('refreshToken');
+    await api.post('/auth/logout', refreshToken ? { refreshToken } : {});
   } catch {
     // handled
   } finally {

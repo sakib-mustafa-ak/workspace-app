@@ -95,6 +95,22 @@ export class UsersService {
     this.logger.log(`Account deleted: user=${targetUserId} by=${userId}`);
   }
 
+  private async assertVisible(id: string, requesterId: string): Promise<void> {
+    if (id === requesterId) return;
+    const peers = await this.membersRepo.listPeerIds(requesterId);
+    if (!peers.includes(id)) {
+      throw new UsersException(
+        UsersErrorCode.USER_NOT_FOUND,
+        'User not found.',
+      );
+    }
+  }
+
+  public async getUserById(id: string, requesterId: string): Promise<UserRow> {
+    await this.assertVisible(id, requesterId);
+    return this.getProfile(id);
+  }
+
   public async listUsers(
     opts: {
       limit?: number;
@@ -103,19 +119,25 @@ export class UsersService {
       sortBy?: 'displayName' | 'email' | 'createdAt';
       sortOrder?: 'asc' | 'desc';
     } = {},
+    requesterId: string,
   ): Promise<{ users: UserRow[]; total: number }> {
-    const [users, total] = await Promise.all([
-      this.users.list(opts),
-      this.users.countFiltered(opts.search),
+    const ids = [
+      requesterId,
+      ...(await this.membersRepo.listPeerIds(requesterId)),
+    ];
+    const [rows, total] = await Promise.all([
+      this.users.list({ ...opts, ids }),
+      this.users.countFiltered(opts.search, ids),
     ]);
-    return { users, total };
+    return { users: rows, total };
   }
 
   /**
    * Workspace memberships for a user (public profile data — same shape the
    * workspace member list uses, with the workspace name resolved).
    */
-  public async getUserMemberships(userId: string) {
+  public async getUserMemberships(userId: string, requesterId: string) {
+    await this.assertVisible(userId, requesterId);
     const memberships = await this.membersRepo.listByUserWithWorkspace(userId);
     return memberships.map((m) => ({
       workspaceId: m.workspaceId,
@@ -129,7 +151,12 @@ export class UsersService {
    * Recent audit events authored by a user, newest first. Capped — the
    * user profile page renders a short timeline, not a full audit view.
    */
-  public async getUserActivity(userId: string, limit = 20) {
+  public async getUserActivity(
+    userId: string,
+    requesterId: string,
+    limit = 20,
+  ) {
+    await this.assertVisible(userId, requesterId);
     const rows = await this.auditRepo.listByUser(userId, limit);
     return rows.map((r) => ({
       id: r.id,

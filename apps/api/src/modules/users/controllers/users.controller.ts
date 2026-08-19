@@ -65,8 +65,11 @@ export class UsersController {
   @ApiOperation({ summary: 'Get user by ID' })
   @ApiOkResponse({ type: UserProfileDto })
   @ApiNotFoundResponse({ description: 'User not found.' })
-  public async getUserById(@Param('id') id: string): Promise<UserProfileDto> {
-    const profile = await this.users.getProfile(id);
+  public async getUserById(
+    @CurrentUser() user: CurrentUserModel,
+    @Param('id') id: string,
+  ): Promise<UserProfileDto> {
+    const profile = await this.users.getUserById(id, user.id);
     return toUserProfile(profile);
   }
 
@@ -74,16 +77,22 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'List workspace memberships for a user' })
   @ApiOkResponse({ description: 'Workspace memberships.' })
-  public async getUserMemberships(@Param('id') id: string) {
-    return this.users.getUserMemberships(id);
+  public async getUserMemberships(
+    @CurrentUser() user: CurrentUserModel,
+    @Param('id') id: string,
+  ) {
+    return this.users.getUserMemberships(id, user.id);
   }
 
   @Get(':id/activity')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Recent audit activity authored by a user' })
   @ApiOkResponse({ description: 'Recent activity events.' })
-  public async getUserActivity(@Param('id') id: string) {
-    return this.users.getUserActivity(id);
+  public async getUserActivity(
+    @CurrentUser() user: CurrentUserModel,
+    @Param('id') id: string,
+  ) {
+    return this.users.getUserActivity(id, user.id);
   }
 
   @Get()
@@ -101,6 +110,7 @@ export class UsersController {
   })
   @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'] })
   public async listUsers(
+    @CurrentUser() user: CurrentUserModel,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
     @Query('page') page?: string,
@@ -114,16 +124,21 @@ export class UsersController {
       offset !== undefined
         ? Math.max(Number(offset) || 0, 0)
         : (parsedPage - 1) * parsedLimit;
-    const result = await this.users.listUsers({
-      limit: parsedLimit,
-      offset: parsedOffset,
-      search: search?.trim() || undefined,
-      sortBy:
-        sortBy === 'displayName' || sortBy === 'email' || sortBy === 'createdAt'
-          ? sortBy
-          : undefined,
-      sortOrder: sortOrder === 'desc' ? 'desc' : 'asc',
-    });
+    const result = await this.users.listUsers(
+      {
+        limit: parsedLimit,
+        offset: parsedOffset,
+        search: search?.trim() || undefined,
+        sortBy:
+          sortBy === 'displayName' ||
+          sortBy === 'email' ||
+          sortBy === 'createdAt'
+            ? sortBy
+            : undefined,
+        sortOrder: sortOrder === 'desc' ? 'desc' : 'asc',
+      },
+      user.id,
+    );
     return {
       users: result.users.map(toUserProfile),
       total: result.total,

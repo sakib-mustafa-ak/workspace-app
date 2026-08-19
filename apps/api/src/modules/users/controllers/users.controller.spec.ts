@@ -36,6 +36,9 @@ describe('UsersController', () => {
             updateProfile: jest.fn(),
             deleteAccount: jest.fn(),
             listUsers: jest.fn(),
+            getUserById: jest.fn(),
+            getUserMemberships: jest.fn(),
+            getUserActivity: jest.fn(),
           },
         },
       ],
@@ -66,9 +69,9 @@ describe('UsersController', () => {
   });
 
   it('getUserById returns user profile', async () => {
-    usersService.getProfile.mockResolvedValue(mockUserRow);
+    usersService.getUserById.mockResolvedValue(mockUserRow);
 
-    const result = await controller.getUserById('u1');
+    const result = await controller.getUserById({ id: 'u1' } as never, 'u1');
     expect(result.id).toBe('u1');
   });
 
@@ -79,6 +82,7 @@ describe('UsersController', () => {
     });
 
     const result = await controller.listUsers(
+      { id: 'u1' } as never,
       '10',
       undefined,
       '1',

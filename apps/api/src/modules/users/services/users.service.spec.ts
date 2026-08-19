@@ -6,6 +6,7 @@ import { WorkspaceMembersRepository } from '../../workspaces/repositories/worksp
 import { AuditRepository } from '../../audit/repositories/audit.repository';
 import { UsersEventBus } from '../events/users.events';
 import { UsersRepository } from '../repositories/users.repository';
+import { UsersErrorCode, UsersException } from '../errors/users.errors';
 import { UsersService } from './users.service';
 
 const mockDb = {};
@@ -32,12 +33,35 @@ const mockSuspendedUser: UserRow = {
   status: 'SUSPENDED',
 };
 
+const makeUser = (id: string, displayName: string, email: string): UserRow => ({
+  id,
+  displayName,
+  email,
+  passwordHash: 'hash',
+  status: 'ACTIVE',
+  avatarUrl: null,
+  bio: null,
+  timezone: null,
+  locale: null,
+  lastLoginAt: null,
+  emailVerifiedAt: null,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  deletedAt: null,
+});
+
 describe('UsersService', () => {
   let service: UsersService;
   let usersRepo: jest.Mocked<UsersRepository>;
   let events: jest.Mocked<UsersEventBus>;
   let membersRepo: jest.Mocked<WorkspaceMembersRepository>;
   let auditRepo: jest.Mocked<AuditRepository>;
+  let users: jest.Mocked<UsersRepository>;
+  let members: jest.Mocked<WorkspaceMembersRepository>;
+  let audit: jest.Mocked<AuditRepository>;
+
+  const alice = makeUser('u1', 'Alice', 'alice@example.com');
+  const bob = makeUser('u2', 'Bob', 'bob@example.com');
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -68,6 +92,7 @@ describe('UsersService', () => {
           provide: WorkspaceMembersRepository,
           useValue: {
             listByUserWithWorkspace: jest.fn(),
+            listPeerIds: jest.fn(),
           },
         },
         {
@@ -84,6 +109,9 @@ describe('UsersService', () => {
     events = module.get(UsersEventBus);
     membersRepo = module.get(WorkspaceMembersRepository);
     auditRepo = module.get(AuditRepository);
+    users = module.get(UsersRepository);
+    members = module.get(WorkspaceMembersRepository);
+    audit = module.get(AuditRepository);
   });
 
   describe('getProfile', () => {
@@ -173,28 +201,42 @@ describe('UsersService', () => {
 
   describe('listUsers', () => {
     it('returns paginated users with total count', async () => {
+      membersRepo.listPeerIds.mockResolvedValue([]);
       usersRepo.list.mockResolvedValue([mockUser]);
       usersRepo.countFiltered.mockResolvedValue(1);
 
-      const result = await service.listUsers({ limit: 10, offset: 0 });
+      const result = await service.listUsers(
+        { limit: 10, offset: 0 },
+        'requesterId',
+      );
 
       expect(result.users).toHaveLength(1);
       expect(result.total).toBe(1);
-      expect(usersRepo.list).toHaveBeenCalledWith({ limit: 10, offset: 0 });
-      expect(usersRepo.countFiltered).toHaveBeenCalledWith(undefined);
+      expect(usersRepo.list).toHaveBeenCalledWith({
+        limit: 10,
+        offset: 0,
+        ids: ['requesterId'],
+      });
+      expect(usersRepo.countFiltered).toHaveBeenCalledWith(undefined, [
+        'requesterId',
+      ]);
     });
 
     it('passes search and sort to the repository', async () => {
+      membersRepo.listPeerIds.mockResolvedValue([]);
       usersRepo.list.mockResolvedValue([]);
       usersRepo.countFiltered.mockResolvedValue(0);
 
-      await service.listUsers({
-        limit: 10,
-        offset: 0,
-        search: 'ada',
-        sortBy: 'displayName',
-        sortOrder: 'desc',
-      });
+      await service.listUsers(
+        {
+          limit: 10,
+          offset: 0,
+          search: 'ada',
+          sortBy: 'displayName',
+          sortOrder: 'desc',
+        },
+        'requesterId',
+      );
 
       expect(usersRepo.list).toHaveBeenCalledWith({
         limit: 10,
@@ -202,13 +244,17 @@ describe('UsersService', () => {
         search: 'ada',
         sortBy: 'displayName',
         sortOrder: 'desc',
+        ids: ['requesterId'],
       });
-      expect(usersRepo.countFiltered).toHaveBeenCalledWith('ada');
+      expect(usersRepo.countFiltered).toHaveBeenCalledWith('ada', [
+        'requesterId',
+      ]);
     });
   });
 
   describe('getUserMemberships', () => {
     it('returns memberships with workspace names', async () => {
+      membersRepo.listPeerIds.mockResolvedValue(['user-1']);
       membersRepo.listByUserWithWorkspace.mockResolvedValue([
         {
           workspaceId: 'w1',
@@ -218,7 +264,7 @@ describe('UsersService', () => {
         },
       ]);
 
-      const result = await service.getUserMemberships('user-1');
+      const result = await service.getUserMemberships('user-1', 'requesterId');
 
       expect(result).toEqual([
         {
@@ -233,6 +279,7 @@ describe('UsersService', () => {
 
   describe('getUserActivity', () => {
     it('returns mapped audit events', async () => {
+      membersRepo.listPeerIds.mockResolvedValue(['user-1']);
       auditRepo.listByUser.mockResolvedValue([
         {
           id: 'a1',
@@ -246,7 +293,7 @@ describe('UsersService', () => {
         },
       ]);
 
-      const result = await service.getUserActivity('user-1');
+      const result = await service.getUserActivity('user-1', 'requesterId', 20);
 
       expect(result).toEqual([
         {
@@ -260,5 +307,52 @@ describe('UsersService', () => {
       ]);
       expect(auditRepo.listByUser).toHaveBeenCalledWith('user-1', 20);
     });
+  });
+
+  it('getUserById returns self without a peer query', async () => {
+    users.findById.mockResolvedValue(alice);
+    await expect(service.getUserById('u1', 'u1')).resolves.toBe(alice);
+    expect(members.listPeerIds).not.toHaveBeenCalled();
+  });
+
+  it('getUserById returns a peer profile', async () => {
+    users.findById.mockResolvedValue(bob);
+    members.listPeerIds.mockResolvedValue(['u2']);
+    await expect(service.getUserById('u2', 'u1')).resolves.toBe(bob);
+  });
+
+  it('getUserById 404s for a non-peer', async () => {
+    members.listPeerIds.mockResolvedValue(['u2']);
+    await expect(service.getUserById('u3', 'u1')).rejects.toThrow(
+      new UsersException(UsersErrorCode.USER_NOT_FOUND, 'User not found.'),
+    );
+    expect(users.findById).not.toHaveBeenCalled();
+  });
+
+  it('listUsers scopes to peers + self in SQL', async () => {
+    members.listPeerIds.mockResolvedValue(['u2']);
+    users.list.mockResolvedValue([alice, bob]);
+    users.countFiltered.mockResolvedValue(2);
+    await service.listUsers({}, 'u1');
+    expect(users.list).toHaveBeenCalledWith(
+      expect.objectContaining({ ids: ['u1', 'u2'] }),
+    );
+    expect(users.countFiltered).toHaveBeenCalledWith(undefined, ['u1', 'u2']);
+  });
+
+  it('getUserMemberships 404s for a non-peer', async () => {
+    members.listPeerIds.mockResolvedValue(['u2']);
+    await expect(service.getUserMemberships('u3', 'u1')).rejects.toThrow(
+      new UsersException(UsersErrorCode.USER_NOT_FOUND, 'User not found.'),
+    );
+    expect(members.listByUserWithWorkspace).not.toHaveBeenCalled();
+  });
+
+  it('getUserActivity 404s for a non-peer', async () => {
+    members.listPeerIds.mockResolvedValue(['u2']);
+    await expect(service.getUserActivity('u3', 'u1')).rejects.toThrow(
+      new UsersException(UsersErrorCode.USER_NOT_FOUND, 'User not found.'),
+    );
+    expect(audit.listByUser).not.toHaveBeenCalled();
   });
 });

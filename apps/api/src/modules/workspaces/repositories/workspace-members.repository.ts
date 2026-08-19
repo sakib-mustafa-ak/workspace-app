@@ -4,6 +4,8 @@ import {
   and,
   DATABASE,
   eq,
+  inArray,
+  ne,
   sql,
   type Db,
   type NewWorkspaceMemberRow,
@@ -182,5 +184,32 @@ export class WorkspaceMembersRepository {
         ),
       )
       .groupBy(workspaceMembers.workspaceId);
+  }
+
+  public async listPeerIds(userId: string): Promise<string[]> {
+    const shared = await this.db
+      .select({ workspaceId: workspaceMembers.workspaceId })
+      .from(workspaceMembers)
+      .where(
+        and(
+          eq(workspaceMembers.userId, userId),
+          eq(workspaceMembers.status, 'ACTIVE'),
+          sql`${workspaceMembers.deletedAt} IS NULL`,
+        ),
+      );
+    if (shared.length === 0) return [];
+    const ids = shared.map((r) => r.workspaceId);
+    const rows = await this.db
+      .selectDistinct({ userId: workspaceMembers.userId })
+      .from(workspaceMembers)
+      .where(
+        and(
+          inArray(workspaceMembers.workspaceId, ids),
+          eq(workspaceMembers.status, 'ACTIVE'),
+          sql`${workspaceMembers.deletedAt} IS NULL`,
+          ne(workspaceMembers.userId, userId),
+        ),
+      );
+    return rows.map((r) => r.userId);
   }
 }

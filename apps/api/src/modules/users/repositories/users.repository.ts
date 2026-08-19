@@ -4,6 +4,7 @@ import {
   and,
   DATABASE,
   eq,
+  inArray,
   sql,
   type Db,
   type NewUserRow,
@@ -86,10 +87,14 @@ export class UsersRepository {
       search?: string;
       sortBy?: 'displayName' | 'email' | 'createdAt';
       sortOrder?: 'asc' | 'desc';
+      ids?: string[];
     } = {},
   ): Promise<UserRow[]> {
     const { limit = 20, offset = 0 } = opts;
     const conditions = [sql`${users.deletedAt} IS NULL`];
+    if (opts.ids && opts.ids.length > 0) {
+      conditions.push(inArray(users.id, opts.ids));
+    }
     if (opts.search) {
       const like = `%${opts.search.toLowerCase()}%`;
       conditions.push(
@@ -114,8 +119,11 @@ export class UsersRepository {
       .offset(offset);
   }
 
-  public async countFiltered(search?: string): Promise<number> {
+  public async countFiltered(search?: string, ids?: string[]): Promise<number> {
     const conditions = [sql`${users.deletedAt} IS NULL`];
+    if (ids && ids.length > 0) {
+      conditions.push(inArray(users.id, ids));
+    }
     if (search) {
       const like = `%${search.toLowerCase()}%`;
       conditions.push(

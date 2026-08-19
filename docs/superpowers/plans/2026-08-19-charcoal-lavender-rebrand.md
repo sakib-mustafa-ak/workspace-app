@@ -1,6 +1,6 @@
 # Charcoal & Lavender Rebrand + Login Redesign — Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Rebrand the whole app to charcoal #2E2E2E + lavender gray #D6CFE1, redesign the login page with animation, a project description, and Facebook-style saved-profile banners.
 
@@ -26,9 +26,9 @@
 **Interfaces:**
 - Produces: new `--color-primary-*` and `--color-surface-*` token values (dark theme block and `.light` block). All component code keeps using the same class names — nothing else changes.
 
-- [ ] **Step 1: Read the current `globals.css`** to find both palette blocks (the default `@theme` dark palette at the top and the `.light` override block) plus the `.light` amber remap.
+- [x] **Step 1: Read the current `globals.css`** to find both palette blocks (the default `@theme` dark palette at the top and the `.light` override block) plus the `.light` amber remap.
 
-- [ ] **Step 2: Replace the dark-theme primary ramp** (currently blues #eff6ff → #1e3a8a) with:
+- [x] **Step 2: Replace the dark-theme primary ramp** (currently blues #eff6ff → #1e3a8a) with:
 ```css
 --color-primary-50:  #f8f6fb;
 --color-primary-100: #f0edf6;
@@ -42,7 +42,7 @@
 --color-primary-900: #1a1a1a;
 ```
 
-- [ ] **Step 3: Replace the dark-theme surface ramp** (currently slate #f8fafc → #020617) with:
+- [x] **Step 3: Replace the dark-theme surface ramp** (currently slate #f8fafc → #020617) with:
 ```css
 --color-surface-50:  #f8f6fb;
 --color-surface-100: #f4f1f8;
@@ -57,7 +57,7 @@
 --color-surface-950: #121212;
 ```
 
-- [ ] **Step 4: Update the `.light` override block** to lavender-tinted whites + charcoal text (surface ramp) and dark lavender accents:
+- [x] **Step 4: Update the `.light` override block** to lavender-tinted whites + charcoal text (surface ramp) and dark lavender accents:
 ```css
 .light {
   color-scheme: light;
@@ -83,9 +83,9 @@
 ```
 Keep the existing `.light` amber remap (verify the amber values still read well on the new light surfaces).
 
-- [ ] **Step 5: Verify** — `pnpm run lint` passes. Rebuild + restart web, then visually check over the public IP (dashboard, board, canvas grid, toasts) and confirm body text is high-contrast in both themes.
+- [x] **Step 5: Verify** — `pnpm run lint` passes. Rebuild + restart web, then visually check over the public IP (dashboard, board, canvas grid, toasts) and confirm body text is high-contrast in both themes.
 
-- [ ] **Step 6: Ask the user to commit** (do not commit automatically).
+- [x] **Step 6: Ask the user to commit** (do not commit automatically).
 
 ---
 
@@ -102,7 +102,7 @@ Keep the existing `.light` amber remap (verify the amber values still read well 
   - `recordRecentProfile(p: { id: string; displayName: string; email: string }): void`
   - `removeRecentProfile(id: string): void`
 
-- [ ] **Step 1: Create `apps/web/lib/recent-profiles.ts`**
+- [x] **Step 1: Create `apps/web/lib/recent-profiles.ts`**
 ```ts
 export type RecentProfile = {
   id: string;
@@ -152,15 +152,15 @@ export function removeRecentProfile(id: string): void {
 }
 ```
 
-- [ ] **Step 2: Hook into `apps/web/lib/auth.ts`** — in `login()` after `localStorage.setItem('refreshToken', ...)` add:
+- [x] **Step 2: Hook into `apps/web/lib/auth.ts`** — in `login()` after `localStorage.setItem('refreshToken', ...)` add:
 ```ts
 recordRecentProfile({ id: data.user.id, displayName: data.user.displayName ?? '', email: data.user.email });
 ```
 Same in `register()`. Import `recordRecentProfile` from `./recent-profiles`.
 
-- [ ] **Step 3: Verify** — `pnpm --filter web exec tsc --noEmit` and `pnpm run lint` pass.
+- [x] **Step 3: Verify** — `pnpm --filter web exec tsc --noEmit` and `pnpm run lint` pass.
 
-- [ ] **Step 4: Ask the user to commit.**
+- [x] **Step 4: Ask the user to commit.**
 
 ---
 
@@ -174,7 +174,7 @@ Same in `register()`. Import `recordRecentProfile` from `./recent-profiles`.
 - Consumes: `getRecentProfiles`, `removeRecentProfile` from Task 2; `getStoredUser`, `clearSession`, `getMe` from `@/lib/auth`; `useAuth` from `@/contexts/auth-context`.
 - Produces: redesigned `/auth/login` with left brand panel (project description), staggered entrance animation, and profile banner chips.
 
-- [ ] **Step 1: Add animation keyframes to `globals.css`**
+- [x] **Step 1: Add animation keyframes to `globals.css`**
 ```css
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(12px); }
@@ -194,7 +194,7 @@ Same in `register()`. Import `recordRecentProfile` from `./recent-profiles`.
 .animate-breathe { animation: breathe 3s ease-in-out infinite; }
 ```
 
-- [ ] **Step 2: Rewrite `apps/web/app/auth/login/page.tsx`** — split layout:
+- [x] **Step 2: Rewrite `apps/web/app/auth/login/page.tsx`** — split layout:
   - Left panel (`hidden lg:flex`, flex-1): animated orbs (`bg-primary-400/10` blurred circles with `animate-drift`), logo mark (`animate-breathe`), "Workspace OS" title, short description: "A collaborative workspace — teams, boards, tasks, canvas, and notifications in one place."
   - Right column (`max-w-md`): keep the theme toggle segmented control, then profile banners row, then the existing login card.
   - Profile banners: `const [profiles, setProfiles] = useState(getRecentProfiles())`; render chips only when `profiles.length > 0`:
@@ -245,15 +245,15 @@ async function handleProfileClick(p: RecentProfile) {
   - Add `emailRef`/`passwordRef` to the inputs; entrance stagger via `animate-fadeUp` + inline `style={{ animationDelay: '0.1s' }}` (0.1s/0.2s/0.3s on logo/card/banners).
   - Import `useRouter` from `next/navigation`; `RecentProfile`, `getRecentProfiles`, `removeRecentProfile` from `@/lib/recent-profiles`; `getStoredUser`, `clearSession`, `getMe` from `@/lib/auth`.
 
-- [ ] **Step 3: Verify** — `pnpm --filter web exec tsc --noEmit`, `pnpm run lint`.
+- [x] **Step 3: Verify** — `pnpm --filter web exec tsc --noEmit`, `pnpm run lint`.
 
-- [ ] **Step 4: Rebuild + restart web** (`pnpm --filter web build`, restart `next start`), then browser-verify over `http://103.176.2.252:3000`:
+- [x] **Step 4: Rebuild + restart web** (`pnpm --filter web build`, restart `next start`), then browser-verify over `http://103.176.2.252:3000`:
   1. Register a fresh user → lands on `/dashboard`.
   2. Log out → login page shows a profile chip with the saved user.
   3. Click the chip → pre-fills email + focuses password (session cleared, so no auto-login).
   4. Check contrast: body text readable in dark and light themes; canvas page still visible.
 
-- [ ] **Step 5: Ask the user to commit.**
+- [x] **Step 5: Ask the user to commit.**
 
 ---
 
@@ -262,9 +262,9 @@ async function handleProfileClick(p: RecentProfile) {
 **Files:**
 - Modify: `DESIGN.md`
 
-- [ ] **Step 1: Read `DESIGN.md`**, find the color/palette section (currently "instrument blue" + slate).
-- [ ] **Step 2: Replace with:** brand = charcoal `#2E2E2E` (core UI color: surfaces, buttons) + soft lavender gray `#D6CFE1` (accent: links, active states, focus seams). Text rule: keep body text high-contrast (near-white on dark, near-black on light); lavender is accent only, never dim body text.
-- [ ] **Step 3: Ask the user to commit.**
+- [x] **Step 1: Read `DESIGN.md`**, find the color/palette section (currently "instrument blue" + slate).
+- [x] **Step 2: Replace with:** brand = charcoal `#2E2E2E` (core UI color: surfaces, buttons) + soft lavender gray `#D6CFE1` (accent: links, active states, focus seams). Text rule: keep body text high-contrast (near-white on dark, near-black on light); lavender is accent only, never dim body text.
+- [x] **Step 3: Ask the user to commit.**
 
 ---
 
@@ -273,8 +273,8 @@ async function handleProfileClick(p: RecentProfile) {
 **Files:**
 - None (verification only)
 
-- [ ] **Step 1: Run `pnpm run lint`** — expect clean (web has `--max-warnings 0`).
-- [ ] **Step 2: Run `pnpm --filter web exec tsc --noEmit`** — expect clean.
-- [ ] **Step 3: Browser test over `http://103.176.2.252:3000`** (Playwright, headless chromium from `/tmp/opencode`): register → dashboard → logout → banner chip appears → click chip → email prefilled + password focused. Screenshot both themes.
-- [ ] **Step 4: Confirm `http://103.176.2.252:4000/api/v1/health` still 200** and the API untouched.
-- [ ] **Step 5: Ask the user to commit anything remaining.**
+- [x] **Step 1: Run `pnpm run lint`** — expect clean (web has `--max-warnings 0`).
+- [x] **Step 2: Run `pnpm --filter web exec tsc --noEmit`** — expect clean.
+- [x] **Step 3: Browser test over `http://103.176.2.252:3000`** (Playwright, headless chromium from `/tmp/opencode`): register → dashboard → logout → banner chip appears → click chip → email prefilled + password focused. Screenshot both themes.
+- [x] **Step 4: Confirm `http://103.176.2.252:4000/api/v1/health` still 200** and the API untouched.
+- [x] **Step 5: Ask the user to commit anything remaining.**

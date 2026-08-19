@@ -1,4 +1,5 @@
 import { api } from './api';
+import { recordRecentProfile } from './recent-profiles';
 
 export type User = {
   id: string;
@@ -32,6 +33,7 @@ export async function login(
   });
   localStorage.setItem('accessToken', data.tokens.accessToken);
   localStorage.setItem('refreshToken', data.tokens.refreshToken);
+  recordRecentProfile({ id: data.user.id, displayName: data.user.displayName ?? '', email: data.user.email });
   return data;
 }
 
@@ -47,6 +49,7 @@ export async function register(
   });
   localStorage.setItem('accessToken', data.tokens.accessToken);
   localStorage.setItem('refreshToken', data.tokens.refreshToken);
+  recordRecentProfile({ id: data.user.id, displayName: data.user.displayName ?? '', email: data.user.email });
   return data;
 }
 

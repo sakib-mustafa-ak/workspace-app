@@ -165,7 +165,7 @@ export function Sidebar() {
                   <Link
                     key={ws.id}
                     href={`/workspaces/${ws.id}`}
-                    className={`flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                    className={`group flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
                       wsActive
                         ? 'bg-surface-800 text-white'
                         : 'text-surface-400 hover:bg-surface-800/50 hover:text-surface-200'

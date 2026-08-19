@@ -39,7 +39,7 @@ The API currently has 15 modules. Let me walk through what's complete:
 
 The frontend is organized by route groups: authentication screens, a dashboard with recent-boards and skeleton loading, notifications, settings, a user directory, and the workspace area — board lists, kanban boards, and the canvas page.
 
-Every UI detail follows a written design system in `DESIGN.md` — a "quiet-reactive" visual language: calm blue accents used sparingly, compact work text, and both dark and light themes.
+Every UI detail follows a written design system in `DESIGN.md` — a "quiet-reactive" visual language: charcoal surfaces with lavender-gray accents used sparingly, compact work text, and both dark and light themes.
 
 The kanban board supports full drag-and-drop with @dnd-kit. The canvas supports panning, zooming with Ctrl+scroll, drawing tools, layers, undo/redo, a context menu with paste, and keyboard shortcuts — with an image-decode cache and theme-aware rendering.
 

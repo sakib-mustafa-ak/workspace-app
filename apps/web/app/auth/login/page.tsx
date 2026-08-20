@@ -98,36 +98,6 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {mounted && profiles.length > 0 && (
-            <div
-              className="mb-4 flex flex-wrap items-center gap-2 animate-fadeUp"
-              style={{ animationDelay: '0.3s' }}
-            >
-              {profiles.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => handleProfileClick(p)}
-                  title={p.email}
-                  className="group relative flex items-center gap-2 rounded-full border border-surface-700/60 bg-surface-800/40 py-1 pl-1 pr-3 text-sm transition-colors hover:border-primary-500/50"
-                >
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-600 text-xs font-semibold text-surface-100">
-                    {(p.displayName || p.email)[0]?.toUpperCase()}
-                  </span>
-                  <span className="text-warm-300">{p.displayName || p.email}</span>
-                  <span
-                    role="button"
-                    aria-label={`Remove ${p.displayName}`}
-                    onClick={(e) => { e.stopPropagation(); removeRecentProfile(p.id); setProfiles(getRecentProfiles()); }}
-                    className="absolute -right-1 -top-1 hidden h-4 w-4 items-center justify-center rounded-full bg-surface-600 text-[10px] text-surface-100 group-hover:flex"
-                  >
-                    ×
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-
           <div className="animate-fadeUp" style={{ animationDelay: '0.2s' }}>
             <div className="rounded-2xl border border-surface-800/50 bg-gradient-to-br from-surface-900 to-surface-900/60 p-6 sm:p-8 shadow-xl shadow-black/20 backdrop-blur-xl">
               <div className="mb-8 text-center">
@@ -139,6 +109,35 @@ export default function LoginPage() {
                   Access your workspace
                 </p>
               </div>
+
+              {mounted && profiles.length > 0 && (
+                <div
+                  className="mb-6 flex flex-wrap items-center justify-center gap-2"
+                >
+                  {profiles.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => handleProfileClick(p)}
+                      title={p.email}
+                      className="group relative flex items-center gap-2 rounded-full border border-surface-700/60 bg-surface-800/40 py-1 pl-1 pr-3 text-sm transition-colors hover:border-primary-500/50"
+                    >
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-600 text-xs font-semibold text-surface-100">
+                        {(p.displayName || p.email)[0]?.toUpperCase()}
+                      </span>
+                      <span className="text-warm-300">{p.displayName || p.email}</span>
+                      <span
+                        role="button"
+                        aria-label={`Remove ${p.displayName}`}
+                        onClick={(e) => { e.stopPropagation(); removeRecentProfile(p.id); setProfiles(getRecentProfiles()); }}
+                        className="absolute -right-1 -top-1 hidden h-4 w-4 items-center justify-center rounded-full bg-surface-600 text-[10px] text-surface-100 group-hover:flex"
+                      >
+                        ×
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 {error && (

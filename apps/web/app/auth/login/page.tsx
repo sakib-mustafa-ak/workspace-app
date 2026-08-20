@@ -111,31 +111,32 @@ export default function LoginPage() {
               </div>
 
               {mounted && profiles.length > 0 && (
-                <div
-                  className="mb-6 flex flex-wrap items-center justify-center gap-2"
-                >
-                  {profiles.map((p) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => handleProfileClick(p)}
-                      title={p.email}
-                      className="group relative flex items-center gap-2 rounded-full border border-surface-700/60 bg-surface-800/40 py-1 pl-1 pr-3 text-sm transition-colors hover:border-primary-500/50"
-                    >
-                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-600 text-xs font-semibold text-surface-100">
-                        {(p.displayName || p.email)[0]?.toUpperCase()}
-                      </span>
-                      <span className="text-warm-300">{p.displayName || p.email}</span>
-                      <span
-                        role="button"
-                        aria-label={`Remove ${p.displayName}`}
-                        onClick={(e) => { e.stopPropagation(); removeRecentProfile(p.id); setProfiles(getRecentProfiles()); }}
-                        className="absolute -right-1 -top-1 hidden h-4 w-4 items-center justify-center rounded-full bg-surface-600 text-[10px] text-surface-100 group-hover:flex"
+                <div className="mb-6">
+                  <p className="mb-2 text-center text-xs font-medium text-surface-500">Last login</p>
+                  <div className="flex flex-col items-stretch gap-2">
+                    {profiles.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => handleProfileClick(p)}
+                        title={p.email}
+                        className="group relative flex w-full items-center justify-center gap-2 rounded-full border border-surface-700/60 bg-surface-800/40 py-1 pl-1 pr-3 text-sm transition-colors hover:border-primary-500/50"
                       >
-                        ×
-                      </span>
-                    </button>
-                  ))}
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-600 text-xs font-semibold text-surface-100">
+                          {(p.displayName || p.email)[0]?.toUpperCase()}
+                        </span>
+                        <span className="text-warm-300">{p.displayName || p.email}</span>
+                        <span
+                          role="button"
+                          aria-label={`Remove ${p.displayName}`}
+                          onClick={(e) => { e.stopPropagation(); removeRecentProfile(p.id); setProfiles(getRecentProfiles()); }}
+                          className="absolute -right-1 -top-1 hidden h-4 w-4 items-center justify-center rounded-full bg-surface-600 text-[10px] text-surface-100 group-hover:flex"
+                        >
+                          ×
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 

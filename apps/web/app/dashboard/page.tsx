@@ -98,9 +98,12 @@ function TodoList() {
     const fetchTasks = async () => {
       try {
         const allTasks = await tasksApi.listByUser(20);
-        const sortedTasks = allTasks
-          .filter((t) => t.dueDate)
-          .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime());
+        const sortedTasks = allTasks.sort((a, b) => {
+          if (a.dueDate && b.dueDate) return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+          if (a.dueDate) return -1;
+          if (b.dueDate) return 1;
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
         setTasks(sortedTasks);
 
         const boardIds = [...new Set(sortedTasks.map((t) => t.boardId))];
@@ -180,7 +183,7 @@ function TodoList() {
                       : 'text-surface-400'
                   }`}
                 >
-                  {task.dueDate && formatDate(task.dueDate)}
+                  {task.dueDate ? formatDate(task.dueDate) : 'No due date'}
                 </span>
                 {(() => {
                   const board = boards[task.boardId];

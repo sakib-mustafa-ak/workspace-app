@@ -120,7 +120,7 @@ export default function LoginPage() {
                         type="button"
                         onClick={() => handleProfileClick(p)}
                         title={p.email}
-                        className="group relative flex w-full items-center justify-center gap-2 rounded-full border border-surface-700/60 bg-surface-800/40 py-1 pl-1 pr-3 text-sm transition-colors hover:border-primary-500/50"
+                        className="group relative flex w-full items-center gap-2.5 rounded-lg border border-surface-700/60 bg-surface-800/40 px-3 py-2 text-sm transition-colors hover:border-primary-500/50"
                       >
                         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-600 text-xs font-semibold text-surface-100">
                           {(p.displayName || p.email)[0]?.toUpperCase()}
@@ -158,7 +158,7 @@ export default function LoginPage() {
                     autoFocus
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded-lg border border-surface-700/60 bg-surface-800/40 px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-surface-500 hover:border-surface-700 focus:border-primary-500/50"
+                    className="w-full rounded-lg border border-surface-700 bg-surface-950/50 px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-surface-500 focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50"
                     placeholder="you@example.com"
                   />
                 </div>
@@ -173,7 +173,7 @@ export default function LoginPage() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full rounded-lg border border-surface-700/60 bg-surface-800/40 px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-surface-500 hover:border-surface-700 focus:border-primary-500/50"
+                    className="w-full rounded-lg border border-surface-700 bg-surface-950/50 px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-surface-500 focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50"
                     placeholder="••••••••"
                   />
                 </div>

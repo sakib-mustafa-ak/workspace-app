@@ -9,6 +9,7 @@ import { api } from '@/lib/api';
 import { workspacesApi, type Workspace } from '@/lib/workspaces';
 import { boardsApi, type Board } from '@/lib/boards';
 import { notificationsApi } from '@/lib/notifications';
+import { WorkspaceLogo } from '@/components/workspace-logo';
 import {
   LayoutDashboard,
   Settings,
@@ -111,9 +112,7 @@ export function Sidebar() {
     <aside className="flex h-full w-60 flex-shrink-0 flex-col border-r border-surface-800 bg-gradient-to-b from-surface-900 to-surface-900/95">
       <div className="flex h-14 items-center border-b border-surface-800 px-4">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br from-primary-500 to-primary-700 text-xs font-bold text-white shadow-sm shadow-primary-600/30">
-            W
-          </div>
+          <WorkspaceLogo className="h-7 w-7" />
           <span className="font-display text-sm font-semibold tracking-tight">Workspace OS</span>
         </div>
       </div>

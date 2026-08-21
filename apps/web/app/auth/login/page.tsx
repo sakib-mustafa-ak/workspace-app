@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/hooks/use-theme';
 import { LogIn, Loader2, Moon, Sun } from 'lucide-react';
+import { WorkspaceLogo } from '@/components/workspace-logo';
 import {
   getRecentProfiles,
   removeRecentProfile,
@@ -82,8 +83,8 @@ export default function LoginPage() {
         />
 
         <div className="relative px-16 animate-fadeUp" style={{ animationDelay: '0.1s' }}>
-          <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-600/30 to-primary-600/10 shadow-lg shadow-primary-600/20 animate-breathe">
-            <LogIn size={24} className="text-primary-400" />
+          <div className="mb-6">
+            <WorkspaceLogo className="h-14 w-14" />
           </div>
           <h1 className="text-3xl font-bold text-surface-100">Workspace OS</h1>
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-surface-400">

@@ -243,9 +243,25 @@ function DashboardContent() {
   }, []);
 
   return (
-    <div className="relative mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-      <ParticleField count={30} />
-      <EmailVerificationBanner />
+    <div className="relative min-h-screen">
+      {/* Desktop background */}
+      <div
+        className="pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat dark:hidden"
+        style={{ backgroundImage: 'url(/bg-desktop.jpeg)' }}
+      />
+      <div className="pointer-events-none absolute inset-0 bg-surface-950/80 dark:hidden" />
+      {/* Mobile background */}
+      <div
+        className="pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat sm:hidden"
+        style={{ backgroundImage: 'url(/bg-mobile.jpeg)' }}
+      />
+      <div className="pointer-events-none absolute inset-0 bg-surface-950/80 sm:hidden" />
+      {/* Dark theme background */}
+      <div className="pointer-events-none absolute inset-0 bg-surface-950/90 hidden dark:block" />
+
+      <div className="relative mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+        <ParticleField count={30} />
+        <EmailVerificationBanner />
 
       {/* Welcome header */}
       <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -388,6 +404,7 @@ function DashboardContent() {
             View Calendar
           </Link>
         </div>
+      </div>
       </div>
     </div>
   );

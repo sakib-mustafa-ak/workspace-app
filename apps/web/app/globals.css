@@ -165,6 +165,16 @@
   }
 }
 
+.light .bg-cover {
+  filter: invert(1) brightness(0.9);
+}
+
+.light .bg-surface-950\/70,
+.light .bg-surface-950\/80,
+.light .bg-surface-950\/90 {
+  background-color: rgb(255 255 255 / 0.85);
+}
+
 .light {
   color-scheme: light;
   --color-surface-50: #1a1a1a;

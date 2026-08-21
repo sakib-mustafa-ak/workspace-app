@@ -112,6 +112,20 @@ export default function CalendarPage() {
 
   return (
     <div className="relative flex h-full flex-col">
+      {/* Desktop background */}
+      <div
+        className="pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat dark:hidden"
+        style={{ backgroundImage: 'url(/bg-desktop.jpeg)' }}
+      />
+      <div className="pointer-events-none absolute inset-0 bg-surface-950/80 dark:hidden" />
+      {/* Mobile background */}
+      <div
+        className="pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat sm:hidden"
+        style={{ backgroundImage: 'url(/bg-mobile.jpeg)' }}
+      />
+      <div className="pointer-events-none absolute inset-0 bg-surface-950/80 sm:hidden" />
+      {/* Dark theme background */}
+      <div className="pointer-events-none absolute inset-0 bg-surface-950/90 hidden dark:block" />
       <ParticleField count={25} />
       <header className="border-b border-surface-800 bg-surface-900/50 px-6 py-4">
         <div className="flex items-center gap-3">

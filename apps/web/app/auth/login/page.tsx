@@ -61,8 +61,23 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen overflow-hidden bg-surface-950">
+    <div className="relative flex min-h-screen overflow-hidden">
       <ParticleField count={35} />
+      {/* Desktop background */}
+      <div
+        className="pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat dark:hidden"
+        style={{ backgroundImage: 'url(/bg-desktop.jpeg)' }}
+      />
+      <div className="pointer-events-none absolute inset-0 bg-surface-950/70 dark:hidden" />
+      {/* Mobile background */}
+      <div
+        className="pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat sm:hidden"
+        style={{ backgroundImage: 'url(/bg-mobile.jpeg)' }}
+      />
+      <div className="pointer-events-none absolute inset-0 bg-surface-950/70 sm:hidden" />
+      {/* Dark theme background */}
+      <div className="pointer-events-none absolute inset-0 bg-surface-950 dark:bg-surface-950/80 hidden dark:block" />
+
       <div className="relative hidden flex-1 items-center justify-center overflow-hidden lg:flex">
         <div className="pointer-events-none absolute -left-24 top-1/4 h-80 w-80 rounded-full bg-primary-400/10 blur-3xl animate-drift" />
         <div

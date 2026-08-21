@@ -47,6 +47,13 @@ export function CanvasSurface() {
     rows: number;
     cols: number;
   } | null>(null);
+  // Insert-table dialog: canvas position + chosen grid size.
+  const [tableInsert, setTableInsert] = useState<{
+    x: number;
+    y: number;
+    rows: number;
+    cols: number;
+  } | null>(null);
 
   const lockedObjectIds = useRef(new Set<string>());
   lockedObjectIds.current = new Set(
@@ -161,6 +168,37 @@ export function CanvasSurface() {
     if (!editingPad) return;
     releaseLock(editingPad.id);
     setEditingPad(null);
+  }
+
+  function handleTableInsert() {
+    if (!tableInsert) return;
+    const { x, y, rows, cols } = tableInsert;
+    const cells = Array.from({ length: rows }, () =>
+      Array.from({ length: cols }, () => ''),
+    );
+    const newObj: CanvasObject = {
+      id: crypto.randomUUID(),
+      type: 'table',
+      x,
+      y,
+      width: 240,
+      height: 140,
+      rotation: 0,
+      fill: state.fillColor,
+      stroke: state.strokeColor,
+      strokeWidth: state.strokeWidth,
+      opacity: state.opacity / 100,
+      zIndex: state.objects.length,
+      table: { rows, cols, cells },
+    };
+    setTableInsert(null);
+    dispatch({ type: 'ADD_OBJECT', payload: newObj, batch: true });
+    dispatch({ type: 'SELECT', payload: [newObj.id] });
+    dispatch({ type: 'SET_ACTIVE_TOOL', payload: 'select' });
+    void persistCreate(newObj);
+    const grid = cells.map((row) => row.join('\t')).join('\n');
+    setEditingPad({ id: newObj.id, value: grid, rows, cols });
+    requestLock(newObj.id);
   }
 
   function handleTextEditCommit() {
@@ -336,9 +374,13 @@ export function CanvasSurface() {
       startLivePaint();
       return;
     }
-    const isContainer = state.activeTool === 'table' || state.activeTool === 'codeSnippet';
-    const containerW = state.activeTool === 'table' ? 240 : 260;
-    const containerH = state.activeTool === 'table' ? 140 : 120;
+    if (state.activeTool === 'table') {
+      setTableInsert({ x: pos.x, y: pos.y, rows: 3, cols: 3 });
+      return;
+    }
+    const isContainer = state.activeTool === 'codeSnippet';
+    const containerW = 260;
+    const containerH = 120;
     const newObj: CanvasObject = {
       id,
       type: state.activeTool as CanvasObject['type'],
@@ -355,11 +397,7 @@ export function CanvasSurface() {
       strokeWidth: state.strokeWidth,
       opacity: state.opacity / 100,
       zIndex: state.objects.length,
-      ...(state.activeTool === 'table'
-        ? { table: { rows: 3, cols: 3, cells: [['', '', ''], ['', '', ''], ['', '', '']] } }
-        : state.activeTool === 'codeSnippet'
-          ? { text: '' }
-          : {}),
+      ...(state.activeTool === 'codeSnippet' ? { text: '' } : {}),
     };
     dispatch({ type: 'ADD_OBJECT', payload: newObj, batch: true });
     drawingRef.current = id;
@@ -925,6 +963,76 @@ export function CanvasSurface() {
                   }`}
                   onClick={e => e.stopPropagation()}
                 />
+              </div>
+            </>
+          );
+        })()}
+        {tableInsert && (() => {
+          const left = tableInsert.x * state.zoom + state.pan.x;
+          const top = tableInsert.y * state.zoom + state.pan.y;
+          return (
+            <>
+              <div className="absolute inset-0 z-50" onClick={() => setTableInsert(null)} />
+              <div
+                className="absolute z-50 w-56 rounded-lg border border-primary-500/60 bg-surface-800/95 p-3 shadow-xl backdrop-blur-sm"
+                style={{ left, top }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <p className="mb-2 text-[10px] font-medium uppercase tracking-wider text-surface-500">
+                  Insert table
+                </p>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-surface-400">Rows</span>
+                    <div className="flex items-center gap-1.5 text-xs text-surface-200">
+                      <button
+                        onClick={() => setTableInsert((t) => t ? { ...t, rows: Math.max(1, t.rows - 1) } : t)}
+                        className="flex h-5 w-5 items-center justify-center rounded bg-surface-700 hover:bg-surface-600"
+                        title="Remove row"
+                        aria-label="Remove row"
+                      >−</button>
+                      <span className="w-6 text-center tabular-nums">{tableInsert.rows}</span>
+                      <button
+                        onClick={() => setTableInsert((t) => t ? { ...t, rows: Math.min(20, t.rows + 1) } : t)}
+                        className="flex h-5 w-5 items-center justify-center rounded bg-surface-700 hover:bg-surface-600"
+                        title="Add row"
+                        aria-label="Add row"
+                      >+</button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-surface-400">Columns</span>
+                    <div className="flex items-center gap-1.5 text-xs text-surface-200">
+                      <button
+                        onClick={() => setTableInsert((t) => t ? { ...t, cols: Math.max(1, t.cols - 1) } : t)}
+                        className="flex h-5 w-5 items-center justify-center rounded bg-surface-700 hover:bg-surface-600"
+                        title="Remove column"
+                        aria-label="Remove column"
+                      >−</button>
+                      <span className="w-6 text-center tabular-nums">{tableInsert.cols}</span>
+                      <button
+                        onClick={() => setTableInsert((t) => t ? { ...t, cols: Math.min(12, t.cols + 1) } : t)}
+                        className="flex h-5 w-5 items-center justify-center rounded bg-surface-700 hover:bg-surface-600"
+                        title="Add column"
+                        aria-label="Add column"
+                      >+</button>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={handleTableInsert}
+                    className="flex-1 rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-primary-500"
+                  >
+                    Insert
+                  </button>
+                  <button
+                    onClick={() => setTableInsert(null)}
+                    className="rounded-lg border border-surface-700 px-3 py-1.5 text-xs text-surface-400 hover:text-white"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             </>
           );

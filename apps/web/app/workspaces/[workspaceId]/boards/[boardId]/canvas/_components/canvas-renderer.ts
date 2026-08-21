@@ -221,22 +221,15 @@ export function renderObject(
       ctx.fillStyle = PAD;
       roundRect(ctx, 0, 0, obj.width, obj.height, 6);
       ctx.fill();
-      // Title bar with traffic lights
+      // Title bar
       ctx.fillStyle = BAR;
       roundRect(ctx, 0, 0, obj.width, barH, 6);
       ctx.fill();
       ctx.fillRect(0, barH / 2, obj.width, barH / 2);
-      const dots = ['#ff5f56', '#ffbd2e', '#27c93f'] as const;
-      for (let i = 0; i < 3; i++) {
-        ctx.beginPath();
-        ctx.arc(9 + i * 11, 12, 4, 0, Math.PI * 2);
-        ctx.fillStyle = dots[i]!;
-        ctx.fill();
-      }
       // Filename in the title bar
       ctx.fillStyle = 'rgba(226, 232, 240, 0.75)';
       ctx.font = '10px ui-monospace, monospace';
-      ctx.fillText('snippet', 44, 15);
+      ctx.fillText('snippet', 12, 15);
       // Tab bar (single tab)
       ctx.fillStyle = '#0f172a';
       ctx.fillRect(0, barH, 60, tabH);

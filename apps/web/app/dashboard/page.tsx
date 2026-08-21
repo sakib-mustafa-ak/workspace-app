@@ -18,6 +18,7 @@ import { tasksApi, type Task } from '@/lib/tasks';
 import { boardsApi, type Board } from '@/lib/boards';
 import { EmailVerificationBanner } from '@/components/email-verification-banner';
 import { getRecentBoards, type RecentBoard } from '@/lib/recent-activity';
+import { ParticleField } from '@/components/particle-field';
 
 function CreateWorkspaceForm({
   onCreated,
@@ -242,7 +243,8 @@ function DashboardContent() {
   }, []);
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+    <div className="relative mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+      <ParticleField count={30} />
       <EmailVerificationBanner />
 
       {/* Welcome header */}

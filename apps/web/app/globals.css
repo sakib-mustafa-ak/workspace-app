@@ -148,6 +148,23 @@
   font-variant-numeric: tabular-nums;
 }
 
+@keyframes particleDrift {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(var(--drift-x), calc(var(--drift-y) * -0.5)); }
+  50% { transform: translate(calc(var(--drift-x) * -0.3), var(--drift-y)); }
+  75% { transform: translate(calc(var(--drift-x) * 0.7), calc(var(--drift-y) * -0.3)); }
+}
+
+.particle {
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .particle {
+    animation: none !important;
+  }
+}
+
 .light {
   color-scheme: light;
   --color-surface-50: #1a1a1a;

@@ -12,6 +12,7 @@ import {
   type RecentProfile,
 } from '@/lib/recent-profiles';
 import { getStoredUser, clearSession, getMe } from '@/lib/auth';
+import { ParticleField } from '@/components/particle-field';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -61,6 +62,7 @@ export default function LoginPage() {
 
   return (
     <div className="relative flex min-h-screen overflow-hidden bg-surface-950">
+      <ParticleField count={35} />
       <div className="relative hidden flex-1 items-center justify-center overflow-hidden lg:flex">
         <div className="pointer-events-none absolute -left-24 top-1/4 h-80 w-80 rounded-full bg-primary-400/10 blur-3xl animate-drift" />
         <div

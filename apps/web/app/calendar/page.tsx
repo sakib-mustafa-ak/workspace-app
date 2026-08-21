@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { tasksApi, type Task } from '@/lib/tasks';
 import { Calendar } from 'lucide-react';
+import { ParticleField } from '@/components/particle-field';
 
 type CalendarDay = {
   date: Date;
@@ -110,7 +111,8 @@ export default function CalendarPage() {
   const selectedDateTasks = selectedDate ? getTasksForDate(selectedDate) : [];
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="relative flex h-full flex-col">
+      <ParticleField count={25} />
       <header className="border-b border-surface-800 bg-surface-900/50 px-6 py-4">
         <div className="flex items-center gap-3">
           <Calendar size={20} className="text-primary-400" />

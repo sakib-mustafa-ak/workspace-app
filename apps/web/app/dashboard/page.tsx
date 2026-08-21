@@ -248,35 +248,37 @@ function DashboardContent() {
         className="pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: 'url(/bg-desktop.jpeg)' }}
       />
-      <div className="pointer-events-none absolute inset-0 bg-surface-950/70" />
+      <div className="pointer-events-none absolute inset-0 bg-surface-950/75" />
       {/* Mobile background */}
       <div
         className="pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat sm:hidden"
         style={{ backgroundImage: 'url(/bg-mobile.jpeg)' }}
       />
-      <div className="pointer-events-none absolute inset-0 bg-surface-950/70 sm:hidden" />
+      <div className="pointer-events-none absolute inset-0 bg-surface-950/75 sm:hidden" />
 
       <div className="relative mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
         <EmailVerificationBanner />
 
-      {/* Welcome header */}
-      <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="mb-1.5 text-label text-surface-500">Workspace OS</p>
-          <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-            Hello, <span className="text-warm-300">{user?.displayName || 'there'}</span>
-          </h1>
-          <p className="mt-2 text-sm text-surface-500">
-            {workspaces.length} workspace{workspaces.length !== 1 ? 's' : ''} · {user?.email}
-          </p>
+      {/* Welcome card */}
+      <div className="mb-8 rounded-xl border border-surface-800/50 bg-surface-900/60 p-6 backdrop-blur-sm sm:p-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-surface-500">Workspace OS</p>
+            <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
+              Hello, <span className="text-warm-300">{user?.displayName || 'there'}</span>
+            </h1>
+            <p className="mt-2 text-sm text-surface-400">
+              {workspaces.length} workspace{workspaces.length !== 1 ? 's' : ''} · {user?.email}
+            </p>
+          </div>
+          <button
+            onClick={() => setShowCreate(true)}
+            className="flex shrink-0 items-center gap-2 rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-500 hover:shadow-primary-500/30 active:scale-[0.98]"
+          >
+            <Plus size={16} />
+            New workspace
+          </button>
         </div>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="flex shrink-0 items-center gap-2 rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-500 hover:shadow-primary-500/30 active:scale-[0.98]"
-        >
-          <Plus size={16} />
-          New workspace
-        </button>
       </div>
 
       {/* Invitations banner */}

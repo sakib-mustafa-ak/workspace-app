@@ -211,11 +211,12 @@
 .light .border-surface-800 { border-color: #e4e0ec; }
 .light .border-surface-700 { border-color: #e4e0ec; }
 
-.light .bg-surface-900\/60 { background-color: rgb(248 246 251 / 0.6); }
-.light .bg-surface-800\/40 { background-color: rgb(240 237 246 / 0.4); }
-.light .bg-surface-800\/50 { background-color: rgb(240 237 246 / 0.5); }
+.light .bg-surface-900\/60 { background-color: rgb(255 255 255 / 0.95); }
+.light .bg-surface-900\/50 { background-color: rgb(255 255 255 / 0.95); }
+.light .bg-surface-800\/40 { background-color: rgb(255 255 255 / 0.9); }
+.light .bg-surface-800\/50 { background-color: rgb(255 255 255 / 0.9); }
 
-.light .shadow-black\/20 { --tw-shadow-color: rgb(0 0 0 / 0.1); }
+.light .shadow-black\/20 { --tw-shadow-color: rgb(0 0 0 / 0.08); }
 
 .light .text-primary-400 { color: #4a4454; }
 .light .text-primary-300 { color: #6e637e; }

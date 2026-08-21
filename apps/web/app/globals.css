@@ -220,3 +220,6 @@
 
 .light .text-primary-400 { color: #4a4454; }
 .light .text-primary-300 { color: #6e637e; }
+
+.light .bg-surface-950\/98 { background-color: rgb(255 255 255 / 0.92); }
+.light .bg-surface-950\/97 { background-color: rgb(255 255 255 / 0.90); }

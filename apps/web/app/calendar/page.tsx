@@ -116,13 +116,13 @@ export default function CalendarPage() {
         className="pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: 'url(/bg-desktop.jpeg)' }}
       />
-      <div className="pointer-events-none absolute inset-0 bg-surface-950/75" />
+      <div className="pointer-events-none absolute inset-0 bg-surface-950/97" />
       {/* Mobile background */}
       <div
         className="pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat sm:hidden"
         style={{ backgroundImage: 'url(/bg-mobile.jpeg)' }}
       />
-      <div className="pointer-events-none absolute inset-0 bg-surface-950/75 sm:hidden" />
+      <div className="pointer-events-none absolute inset-0 bg-surface-950/97 sm:hidden" />
       <header className="border-b border-surface-800 bg-surface-900/50 px-6 py-4">
         <div className="flex items-center gap-3">
           <Calendar size={20} className="text-primary-400" />

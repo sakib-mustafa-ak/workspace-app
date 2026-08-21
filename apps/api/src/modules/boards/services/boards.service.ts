@@ -75,11 +75,13 @@ export class BoardsService {
   ): Promise<BoardRow> {
     await this.requireRole(workspaceId, userId, 'EDITOR');
 
+    const existing = await this.listByWorkspace(workspaceId, userId);
+    const nextPosition = existing.length;
     const board = await this.boardsRepo.create({
       workspaceId,
       name: input.name,
       description: input.description ?? null,
-      position: 0,
+      position: nextPosition,
     });
 
     await this.columnsRepo.create({

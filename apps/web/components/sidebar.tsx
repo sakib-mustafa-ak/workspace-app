@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/hooks/use-theme';
 import { api } from '@/lib/api';
 import { workspacesApi, type Workspace } from '@/lib/workspaces';
+import { boardsApi, type Board } from '@/lib/boards';
 import { notificationsApi } from '@/lib/notifications';
 import {
   LayoutDashboard,
@@ -15,15 +16,18 @@ import {
   Users,
   LogOut,
   ChevronRight,
+  ChevronDown,
   Sun,
   Moon,
   Monitor,
   Search,
+  Calendar,
 } from 'lucide-react';
 
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/calendar', label: 'Calendar', icon: Calendar },
   { href: '/notifications', label: 'Notifications', icon: Bell },
   { href: '/users', label: 'Users', icon: Users },
   { href: '/settings', label: 'Settings', icon: Settings },
@@ -35,6 +39,8 @@ export function Sidebar() {
   const { theme, setTheme } = useTheme();
 
   const [userWorkspaces, setUserWorkspaces] = useState<Workspace[]>([]);
+  const [expandedWorkspaces, setExpandedWorkspaces] = useState<Set<string>>(new Set());
+  const [workspaceBoards, setWorkspaceBoards] = useState<Record<string, Board[]>>({});
   const [searchQuery, setSearchQuery] = useState('');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [searchResults, setSearchResults] = useState<any>(null);
@@ -71,6 +77,24 @@ export function Sidebar() {
   useEffect(() => {
     workspacesApi.list().then(setUserWorkspaces).catch(() => {});
   }, []);
+
+  const toggleWorkspace = async (wsId: string) => {
+    const newExpanded = new Set(expandedWorkspaces);
+    if (newExpanded.has(wsId)) {
+      newExpanded.delete(wsId);
+    } else {
+      newExpanded.add(wsId);
+      if (!workspaceBoards[wsId]) {
+        try {
+          const boards = await boardsApi.list(wsId);
+          setWorkspaceBoards((prev) => ({ ...prev, [wsId]: boards }));
+        } catch {
+          // Silently handle errors
+        }
+      }
+    }
+    setExpandedWorkspaces(newExpanded);
+  };
 
   // Poll unread notification count every 30s so the badge stays fresh.
   useEffect(() => {
@@ -161,23 +185,58 @@ export function Sidebar() {
             <div className="space-y-1">
               {userWorkspaces.map((ws) => {
                 const wsActive = pathname.startsWith(`/workspaces/${ws.id}`);
+                const isExpanded = expandedWorkspaces.has(ws.id);
+                const boards = workspaceBoards[ws.id] || [];
                 return (
-                  <Link
-                    key={ws.id}
-                    href={`/workspaces/${ws.id}`}
-                    className={`group flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
-                      wsActive
-                        ? 'bg-surface-800 text-white'
-                        : 'text-surface-400 hover:bg-surface-800/50 hover:text-surface-200'
-                    }`}
-                  >
-                    <div className="flex h-5 w-5 items-center justify-center rounded bg-surface-700 text-[9px] font-bold text-surface-300">
-                      {ws.name.charAt(0).toUpperCase()}
-                    </div>
-                    <span className={`underline-grow truncate transition-colors ${wsActive ? 'text-white' : 'text-primary-400 hover:text-white'}`}>
-                      {ws.name}
-                    </span>
-                  </Link>
+                  <div key={ws.id}>
+                    <button
+                      onClick={() => toggleWorkspace(ws.id)}
+                      className={`group flex w-full items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                        wsActive
+                          ? 'bg-surface-800 text-white'
+                          : 'text-surface-400 hover:bg-surface-800/50 hover:text-surface-200'
+                      }`}
+                    >
+                      <div className="flex h-5 w-5 items-center justify-center rounded bg-surface-700 text-[9px] font-bold text-surface-300">
+                        {ws.name.charAt(0).toUpperCase()}
+                      </div>
+                      <span className={`flex-1 truncate text-left transition-colors ${wsActive ? 'text-white' : 'text-primary-400 hover:text-white'}`}>
+                        {ws.name}
+                      </span>
+                      <ChevronDown
+                        size={14}
+                        className={`transition-transform duration-200 ${isExpanded ? 'rotate-0' : '-rotate-90'}`}
+                      />
+                    </button>
+                    {isExpanded && (
+                      <div className="ml-6 mt-1 space-y-0.5">
+                        <Link
+                          href={`/workspaces/${ws.id}`}
+                          className="flex items-center gap-2 rounded-md px-2 py-1 text-xs text-surface-400 hover:bg-surface-800/50 hover:text-surface-200"
+                        >
+                          <div className="h-1 w-1 rounded-full bg-surface-500" />
+                          All boards
+                        </Link>
+                        {boards.map((board) => {
+                          const boardActive = pathname === `/workspaces/${ws.id}/boards/${board.id}`;
+                          return (
+                            <Link
+                              key={board.id}
+                              href={`/workspaces/${ws.id}/boards/${board.id}`}
+                              className={`flex items-center gap-2 rounded-md px-2 py-1 text-xs transition-colors ${
+                                boardActive
+                                  ? 'bg-surface-800 text-white'
+                                  : 'text-surface-400 hover:bg-surface-800/50 hover:text-surface-200'
+                              }`}
+                            >
+                              <div className="h-1 w-1 rounded-full bg-surface-500" />
+                              <span className="truncate">{board.name}</span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>

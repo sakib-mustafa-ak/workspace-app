@@ -16,6 +16,8 @@ export type Task = {
   completedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  boardName?: string;
+  workspaceName?: string;
 };
 
 export type CreateTaskData = {
@@ -40,6 +42,8 @@ export type UpdateTaskData = {
 export const tasksApi = {
   listByBoard: (workspaceId: string, boardId: string) =>
     api.get<Task[]>(`/workspaces/${workspaceId}/boards/${boardId}/tasks`),
+  listByUser: (limit?: number) =>
+    api.get<Task[]>(`/tasks${limit ? `?limit=${limit}` : ''}`),
   create: (workspaceId: string, boardId: string, columnId: string, data: CreateTaskData) =>
     api.post<Task>(`/workspaces/${workspaceId}/boards/${boardId}/tasks/columns/${columnId}`, data),
   update: (workspaceId: string, boardId: string, taskId: string, data: UpdateTaskData) =>

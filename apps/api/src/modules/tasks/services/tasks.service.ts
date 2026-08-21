@@ -3,11 +3,17 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import {
   and,
   DATABASE,
+  desc,
   eq,
+  inArray,
+  isNull,
+  or,
   type Db,
   type TaskRow,
   type WorkspaceRole,
   workspaceMembers,
+  tasks,
+  boards,
 } from '@repo/database';
 
 import { TasksErrorCode, TasksException } from '../errors/tasks.errors';
@@ -233,6 +239,48 @@ export class TasksService {
       title: task.title,
       assigneeId: task.assigneeId,
     });
+  }
+
+  public async listByUser(
+    userId: string,
+    opts?: { limit?: number; includeDone?: boolean },
+  ): Promise<(TaskRow & { boardName: string; workspaceName: string })[]> {
+    const memberships = await this.db
+      .select({ workspaceId: workspaceMembers.workspaceId })
+      .from(workspaceMembers)
+      .where(
+        and(
+          eq(workspaceMembers.userId, userId),
+          eq(workspaceMembers.status, 'ACTIVE'),
+        ),
+      );
+
+    if (memberships.length === 0) return [];
+
+    const workspaceIds = memberships.map((m) => m.workspaceId);
+
+    const rows = await this.db
+      .select({
+        task: tasks,
+        boardName: boards.name,
+      })
+      .from(tasks)
+      .innerJoin(boards, eq(tasks.boardId, boards.id))
+      .where(
+        and(
+          inArray(tasks.workspaceId, workspaceIds),
+          or(eq(tasks.status, 'TODO'), eq(tasks.status, 'IN_PROGRESS')),
+          isNull(tasks.deletedAt),
+        ),
+      )
+      .orderBy(tasks.dueDate ? desc(tasks.dueDate) : desc(tasks.createdAt))
+      .limit(opts?.limit ?? 100);
+
+    return rows.map((r) => ({
+      ...r.task,
+      boardName: r.boardName,
+      workspaceName: '',
+    }));
   }
 
   private async requireAssigneeIsMember(

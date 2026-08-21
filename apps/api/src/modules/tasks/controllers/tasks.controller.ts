@@ -9,6 +9,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -142,6 +143,28 @@ export class TasksController {
     @Param('taskId') taskId: string,
   ): Promise<void> {
     await this.tasks.delete(taskId, user.id);
+  }
+}
+
+@ApiTags('Tasks')
+@ApiBearerAuth()
+@Controller({ path: 'tasks', version: '1' })
+export class GlobalTasksController {
+  constructor(@Inject(TasksService) private readonly tasks: TasksService) {}
+
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'List all tasks for the current user across all workspaces',
+  })
+  public async listByUser(
+    @CurrentUser() user: CurrentUserModel,
+    @Query('limit') limit?: string,
+  ): Promise<TaskResponseDto[]> {
+    const list = await this.tasks.listByUser(user.id, {
+      limit: limit ? parseInt(limit, 10) : undefined,
+    });
+    return list.map(toTaskResponse);
   }
 }
 

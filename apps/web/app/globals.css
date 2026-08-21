@@ -223,3 +223,7 @@
 
 .light .bg-surface-950\/98 { background-color: rgb(255 255 255 / 0.92); }
 .light .bg-surface-950\/97 { background-color: rgb(255 255 255 / 0.90); }
+
+.light .bg-surface-800 { background-color: #e4e0ec; }
+.light .text-surface-400 { color: #6b6573; }
+.light .hover\:text-surface-200:hover { color: #2e2e2e; }

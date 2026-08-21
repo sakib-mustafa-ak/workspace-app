@@ -313,7 +313,7 @@ function DashboardContent() {
                     href={`/workspaces/${rb.workspaceId}/boards/${rb.id}`}
                     className="group shrink-0 rounded-xl border border-surface-800 bg-surface-900 p-4 transition-all hover:border-surface-700 hover:bg-surface-800/50"
                   >
-                    <p className="text-sm font-medium text-surface-200 group-hover:text-surface-950">{rb.name}</p>
+                    <p className="text-sm font-medium text-surface-200">{rb.name}</p>
                     <p className="mt-0.5 text-xs text-primary-400">{rb.workspaceName}</p>
                   </Link>
                 ))}
@@ -367,7 +367,7 @@ function DashboardContent() {
                       {ws.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-semibold text-surface-200 group-hover:text-surface-950">{ws.name}</h3>
+                      <h3 className="text-sm font-semibold text-surface-200">{ws.name}</h3>
                       <p className="mt-0.5 line-clamp-1 text-xs text-surface-500">{ws.description || 'No description'}</p>
                       <div className="mt-1.5 flex items-center gap-3 text-[11px] text-surface-600">
                         <span className="flex items-center gap-1"><Users size={11} />{ws.memberCount ?? 1}</span>

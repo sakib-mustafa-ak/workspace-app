@@ -12,7 +12,6 @@ import {
   type RecentProfile,
 } from '@/lib/recent-profiles';
 import { getStoredUser, clearSession, getMe } from '@/lib/auth';
-import { ParticleField } from '@/components/particle-field';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -62,7 +61,6 @@ export default function LoginPage() {
 
   return (
     <div className="relative flex min-h-screen overflow-hidden">
-      <ParticleField count={35} />
       {/* Desktop background */}
       <div
         className="pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat dark:hidden"

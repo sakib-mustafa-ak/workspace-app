@@ -10,7 +10,6 @@ import {
   Users,
   LayoutGrid,
   CheckSquare,
-  Calendar,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { workspacesApi, type Invitation, type Workspace } from '@/lib/workspaces';
@@ -18,7 +17,7 @@ import { tasksApi, type Task } from '@/lib/tasks';
 import { boardsApi, type Board } from '@/lib/boards';
 import { EmailVerificationBanner } from '@/components/email-verification-banner';
 import { getRecentBoards, type RecentBoard } from '@/lib/recent-activity';
-import { ParticleField } from '@/components/particle-field';
+import { CalendarDropdown } from '@/components/calendar-dropdown';
 
 function CreateWorkspaceForm({
   onCreated,
@@ -260,7 +259,6 @@ function DashboardContent() {
       <div className="pointer-events-none absolute inset-0 bg-surface-950/90 hidden dark:block" />
 
       <div className="relative mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-        <ParticleField count={30} />
         <EmailVerificationBanner />
 
       {/* Welcome header */}
@@ -315,7 +313,7 @@ function DashboardContent() {
                     href={`/workspaces/${rb.workspaceId}/boards/${rb.id}`}
                     className="group shrink-0 rounded-xl border border-surface-800 bg-surface-900 p-4 transition-all hover:border-surface-700 hover:bg-surface-800/50"
                   >
-                    <p className="text-sm font-medium text-surface-200 group-hover:text-white">{rb.name}</p>
+                    <p className="text-sm font-medium text-surface-200 group-hover:text-surface-950">{rb.name}</p>
                     <p className="mt-0.5 text-xs text-primary-400">{rb.workspaceName}</p>
                   </Link>
                 ))}
@@ -323,7 +321,7 @@ function DashboardContent() {
             </div>
           )}
 
-              {/* Workspace grid */}
+          {/* Workspace list */}
           {loadError ? (
             <div className="flex flex-col items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/5 py-24">
               <p className="text-sm font-medium text-red-400">{loadError}</p>
@@ -335,9 +333,9 @@ function DashboardContent() {
               </button>
             </div>
           ) : loading ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-36 rounded-xl bg-surface-800/50 overflow-hidden relative">
+            <div className="space-y-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-20 rounded-xl bg-surface-800/50 overflow-hidden relative">
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-surface-700/20 to-transparent animate-shimmer" />
                 </div>
               ))}
@@ -357,36 +355,32 @@ function DashboardContent() {
           ) : (
             <div>
               <h2 className="mb-3 text-label text-surface-500">All workspaces</h2>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="space-y-3">
                 {workspaces.map((ws, i) => (
                   <Link
                     key={ws.id}
                     href={`/workspaces/${ws.id}`}
-                    className="group relative overflow-hidden rounded-xl border border-surface-800 bg-surface-900 p-5 transition-all hover:border-surface-700 hover:bg-surface-800/50 animate-fadeIn"
+                    className="group flex items-center gap-4 rounded-xl border border-surface-800 bg-surface-900 p-4 transition-all hover:border-surface-700 hover:bg-surface-800/50 animate-fadeIn"
                     style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'backwards' }}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary-600/20 to-primary-600/10 text-sm font-bold text-primary-400 shadow-sm shadow-primary-600/10">
-                        {ws.name.charAt(0).toUpperCase()}
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-600/20 to-primary-600/10 text-sm font-bold text-primary-400 shadow-sm shadow-primary-600/10">
+                      {ws.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-semibold text-surface-200 group-hover:text-surface-950">{ws.name}</h3>
+                      <p className="mt-0.5 line-clamp-1 text-xs text-surface-500">{ws.description || 'No description'}</p>
+                      <div className="mt-1.5 flex items-center gap-3 text-[11px] text-surface-600">
+                        <span className="flex items-center gap-1"><Users size={11} />{ws.memberCount ?? 1}</span>
+                        <span className="text-surface-700">·</span>
+                        <span className="flex items-center gap-1"><LayoutGrid size={11} />{ws.boardCount ?? 0}</span>
+                        <span className="text-surface-700">·</span>
+                        <span>/{ws.slug}</span>
                       </div>
-                      <ExternalLink
-                        size={14}
-                        className="mt-1 text-surface-600 opacity-0 transition-opacity group-hover:opacity-100"
-                      />
                     </div>
-                    <h3 className="underline-grow mt-4 text-sm font-semibold text-primary-400 group-hover:text-white">
-                      {ws.name}
-                    </h3>
-                    <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-surface-500">
-                      {ws.description || 'No description'}
-                    </p>
-                    <div className="mt-3 flex items-center gap-3 text-[11px] text-surface-600">
-                      <span className="flex items-center gap-1"><Users size={11} />{ws.memberCount ?? 1}</span>
-                      <span className="text-surface-700">·</span>
-                      <span className="flex items-center gap-1"><LayoutGrid size={11} />{ws.boardCount ?? 0}</span>
-                      <span className="text-surface-700">·</span>
-                      <span>/{ws.slug}</span>
-                    </div>
+                    <ExternalLink
+                      size={14}
+                      className="shrink-0 text-surface-600 opacity-0 transition-opacity group-hover:opacity-100"
+                    />
                   </Link>
                 ))}
               </div>
@@ -394,15 +388,9 @@ function DashboardContent() {
           )}
         </div>
 
-        <div className="w-full lg:w-80">
+        <div className="w-full space-y-4 lg:w-80">
           <TodoList />
-          <Link
-            href="/calendar"
-            className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-surface-800 bg-surface-900 p-4 text-sm text-surface-400 transition-colors hover:border-surface-700 hover:text-surface-200"
-          >
-            <Calendar size={16} />
-            View Calendar
-          </Link>
+          <CalendarDropdown />
         </div>
       </div>
       </div>

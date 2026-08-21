@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { tasksApi, type Task } from '@/lib/tasks';
 import { Calendar } from 'lucide-react';
-import { ParticleField } from '@/components/particle-field';
 
 type CalendarDay = {
   date: Date;
@@ -126,7 +125,6 @@ export default function CalendarPage() {
       <div className="pointer-events-none absolute inset-0 bg-surface-950/80 sm:hidden" />
       {/* Dark theme background */}
       <div className="pointer-events-none absolute inset-0 bg-surface-950/90 hidden dark:block" />
-      <ParticleField count={25} />
       <header className="border-b border-surface-800 bg-surface-900/50 px-6 py-4">
         <div className="flex items-center gap-3">
           <Calendar size={20} className="text-primary-400" />
@@ -134,8 +132,8 @@ export default function CalendarPage() {
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
-        <div className="flex-1 overflow-auto p-6">
+      <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
+        <div className="flex-1 overflow-auto p-4 sm:p-6">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
@@ -149,7 +147,7 @@ export default function CalendarPage() {
                 >
                   Previous
                 </button>
-                <h2 className="text-lg font-medium text-surface-200">
+                <h2 className="text-base font-medium text-surface-200 sm:text-lg">
                   {currentDate.toLocaleDateString('en-US', {
                     month: 'long',
                     year: 'numeric',
@@ -167,7 +165,7 @@ export default function CalendarPage() {
                 {weekDays.map((day) => (
                   <div
                     key={day}
-                    className="bg-surface-900 px-2 py-2 text-center text-xs font-medium text-surface-500"
+                    className="bg-surface-900 px-1 py-1.5 text-center text-[10px] font-medium text-surface-500 sm:px-2 sm:py-2 sm:text-xs"
                   >
                     {day}
                   </div>
@@ -177,7 +175,7 @@ export default function CalendarPage() {
                   <button
                     key={index}
                     onClick={() => setSelectedDate(day.date)}
-                    className={`relative min-h-[80px] bg-surface-900 p-2 text-left transition-colors hover:bg-surface-800/50 ${
+                    className={`relative min-h-[50px] bg-surface-900 p-1 text-left transition-colors hover:bg-surface-800/50 sm:min-h-[80px] sm:p-2 ${
                       !day.isCurrentMonth ? 'opacity-40' : ''
                     } ${
                       selectedDate?.getTime() === day.date.getTime()
@@ -186,9 +184,9 @@ export default function CalendarPage() {
                     }`}
                   >
                     <div
-                      className={`mb-1 text-xs ${
+                      className={`mb-0.5 text-[10px] sm:mb-1 sm:text-xs ${
                         isToday(day.date)
-                          ? 'flex h-5 w-5 items-center justify-center rounded-full bg-primary-500 text-white'
+                          ? 'flex h-4 w-4 items-center justify-center rounded-full bg-primary-500 text-white sm:h-5 sm:w-5'
                           : 'text-surface-400'
                       }`}
                     >
@@ -199,14 +197,14 @@ export default function CalendarPage() {
                         {day.tasks.slice(0, 2).map((task) => (
                           <div
                             key={task.id}
-                            className="truncate rounded bg-primary-500/20 px-1 py-0.5 text-[10px] text-primary-300"
+                            className="hidden truncate rounded bg-primary-500/20 px-1 py-0.5 text-[9px] text-primary-300 sm:block sm:text-[10px]"
                           >
                             {task.title}
                           </div>
                         ))}
-                        {day.tasks.length > 2 && (
-                          <div className="text-[10px] text-surface-500">
-                            +{day.tasks.length - 2} more
+                        {day.tasks.length > 0 && (
+                          <div className="text-[8px] text-surface-500 sm:text-[10px]">
+                            {day.tasks.length > 2 ? `+${day.tasks.length - 2}` : day.tasks.length === 1 ? '' : day.tasks.length}
                           </div>
                         )}
                       </div>
@@ -218,7 +216,7 @@ export default function CalendarPage() {
           )}
         </div>
 
-        <div className="w-80 border-l border-surface-800 bg-surface-900/50 p-4">
+        <div className="w-full border-t border-surface-800 bg-surface-900/50 p-4 sm:w-80 sm:border-l sm:border-t-0 lg:w-80">
           <h3 className="mb-3 text-sm font-medium text-surface-300">
             {selectedDate
               ? selectedDate.toLocaleDateString('en-US', {

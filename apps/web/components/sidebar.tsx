@@ -21,13 +21,11 @@ import {
   Moon,
   Monitor,
   Search,
-  Calendar,
 } from 'lucide-react';
 
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/calendar', label: 'Calendar', icon: Calendar },
   { href: '/notifications', label: 'Notifications', icon: Bell },
   { href: '/users', label: 'Users', icon: Users },
   { href: '/settings', label: 'Settings', icon: Settings },

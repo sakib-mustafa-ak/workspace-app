@@ -10,7 +10,7 @@ services:
     rootDir: apps/api
     healthCheckPath: /api/v1/health
     buildCommand: NODE_ENV=development pnpm install --frozen-lockfile && pnpm build
-    startCommand: pnpm --filter @repo/database migrate && node --import tsx/esm dist/main.js
+    startCommand: pnpm --filter @repo/database exec drizzle-kit migrate || true && node --import tsx/esm dist/main.js
     envVars:
       - key: NODE_ENV
         value: production
@@ -20,6 +20,12 @@ services:
         sync: false
       - key: DATABASE_URL
         sync: false
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        value: "mailto:sakib.mustafa.co@gmail.com"
       - key: JWT_ACCESS_SECRET
         generateValue: true
       - key: JWT_REFRESH_SECRET

@@ -10,7 +10,7 @@ services:
     rootDir: apps/api
     healthCheckPath: /api/v1/health
     buildCommand: NODE_ENV=development pnpm install --frozen-lockfile && pnpm build
-    startCommand: pnpm --filter @repo/database exec drizzle-kit migrate || true && node --import tsx/esm dist/main.js
+    startCommand: pnpm --filter @repo/database exec drizzle-kit migrate || true; pnpm --filter api start:prod
     envVars:
       - key: NODE_ENV
         value: production

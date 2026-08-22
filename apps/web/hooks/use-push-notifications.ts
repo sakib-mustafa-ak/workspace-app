@@ -22,12 +22,6 @@ function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
   return arr;
 }
 
-const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
-
-if (typeof window !== 'undefined' && !VAPID_PUBLIC_KEY) {
-  console.warn('NEXT_PUBLIC_VAPID_PUBLIC_KEY not set — push notifications will not work');
-}
-
 export function usePushNotifications() {
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [loading, setLoading] = useState(false);
@@ -57,13 +51,15 @@ export function usePushNotifications() {
   }, []);
 
   const subscribe = useCallback(async () => {
-    if (!VAPID_PUBLIC_KEY) return;
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
 
     setLoading(true);
     try {
       const granted = await requestPermission();
       if (!granted) { setLoading(false); return; }
+
+      const { publicKey } = await api.get<{ publicKey: string }>('/push-subscriptions/vapid-public-key');
+      if (!publicKey) { setLoading(false); return; }
 
       const registration = await navigator.serviceWorker.register('/sw.js');
       await navigator.serviceWorker.ready;
@@ -73,7 +69,7 @@ export function usePushNotifications() {
 
       const sub = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        applicationServerKey: urlBase64ToUint8Array(publicKey),
       });
 
       const raw = JSON.parse(JSON.stringify(sub));

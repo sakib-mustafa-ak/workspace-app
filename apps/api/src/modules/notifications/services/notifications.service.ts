@@ -153,4 +153,8 @@ export class NotificationsService {
     }
     await this.notificationsRepo.archive(notificationId, userId);
   }
+
+  public async totalCount(userId: string): Promise<number> {
+    return this.notificationsRepo.totalCount(userId);
+  }
 }

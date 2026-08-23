@@ -44,12 +44,15 @@ export class NotificationsController {
     @CurrentUser() user: CurrentUserModel,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
-  ): Promise<NotificationResponseDto[]> {
-    const list = await this.notifications.list(user.id, {
-      limit: limit ? parseInt(limit, 10) : undefined,
-      offset: offset ? parseInt(offset, 10) : undefined,
-    });
-    return list.map(toNotificationResponse);
+  ): Promise<{ data: NotificationResponseDto[]; total: number }> {
+    const limitNum = limit ? parseInt(limit, 10) : undefined;
+    const offsetNum = offset ? parseInt(offset, 10) : undefined;
+    const list = await this.notifications.list(user.id, { limit: limitNum, offset: offsetNum });
+    const total = await this.notifications.totalCount(user.id);
+    return {
+      data: list.map(toNotificationResponse),
+      total,
+    };
   }
 
   @Get('unread/count')

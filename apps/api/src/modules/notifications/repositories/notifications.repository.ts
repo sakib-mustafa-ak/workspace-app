@@ -150,4 +150,17 @@ export class NotificationsRepository {
         and(eq(notifications.id, id), eq(notifications.status, 'CREATED')),
       );
   }
+
+  public async totalCount(userId: string): Promise<number> {
+    const [result] = await this.db
+      .select({ count: sql<number>`count(*)` })
+      .from(notifications)
+      .where(
+        and(
+          eq(notifications.userId, userId),
+          sql`${notifications.archivedAt} IS NULL`,
+        ),
+      );
+    return Number(result?.count ?? 0);
+  }
 }

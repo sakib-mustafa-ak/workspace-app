@@ -4,6 +4,7 @@ import {
   eq,
   identities,
   type Db,
+  type DbExecutor,
   type IdentityRow,
   sql,
 } from '@repo/database';
@@ -23,9 +24,11 @@ export class IdentityRepository {
     userId: string,
     providerUserId: string,
     passwordHash: string,
+    tx?: DbExecutor,
   ): Promise<IdentityRow> {
+    const exec = tx ?? this.db;
     const now = new Date();
-    const [row] = await this.db
+    const [row] = await exec
       .insert(identities)
       .values({
         userId,

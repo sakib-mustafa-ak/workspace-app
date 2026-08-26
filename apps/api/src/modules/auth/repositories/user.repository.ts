@@ -4,6 +4,7 @@ import {
   eq,
   sql,
   type Db,
+  type DbExecutor,
   type UserRow,
   users,
 } from '@repo/database';
@@ -20,12 +21,16 @@ import {
 export class UserRepository {
   constructor(@Inject(DATABASE) private readonly db: Db) {}
 
-  public async create(row: {
-    displayName: string;
-    email: string;
-    passwordHash: string;
-  }): Promise<UserRow> {
-    const [created] = await this.db
+  public async create(
+    row: {
+      displayName: string;
+      email: string;
+      passwordHash: string;
+    },
+    tx?: DbExecutor,
+  ): Promise<UserRow> {
+    const exec = tx ?? this.db;
+    const [created] = await exec
       .insert(users)
       .values({
         displayName: row.displayName,

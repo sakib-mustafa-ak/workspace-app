@@ -4,6 +4,7 @@ import {
   eq,
   sessions,
   type Db,
+  type DbExecutor,
   type IdentityRow,
   type SessionRow,
   type UserRow,
@@ -86,19 +87,29 @@ export class AuthService {
     }
 
     const passwordHash = await this.passwords.hash(input.password);
-    const user = await this.users.create({
-      displayName: input.displayName,
-      email: input.email,
-      passwordHash,
-    });
-    const identity = await this.identities.createEmailIdentity(
-      user.id,
-      user.email,
-      passwordHash,
-    );
 
-    const result = await this.openSession(user, identity, input.meta);
-    this.events.publishUserRegistered(user.id);
+    // User, identity and first session share one transaction: a failure
+    // in any step leaves no partial account behind.
+    const result = await this.db.transaction(async (tx) => {
+      const user = await this.users.create(
+        {
+          displayName: input.displayName,
+          email: input.email,
+          passwordHash,
+        },
+        tx,
+      );
+      const identity = await this.identities.createEmailIdentity(
+        user.id,
+        user.email,
+        passwordHash,
+        tx,
+      );
+
+      return this.createSessionOn(tx, user, identity, input.meta);
+    });
+
+    this.events.publishUserRegistered(result.user.id);
     return result;
   }
 
@@ -299,41 +310,54 @@ export class AuthService {
     identity: IdentityRow,
     meta: LoginMetadata,
   ): Promise<AuthenticatedSession> {
+    return this.db.transaction(async (tx) =>
+      this.createSessionOn(tx, user, identity, meta),
+    );
+  }
+
+  /**
+   * Session creation against an explicit executor so register can run
+   * it inside its own transaction. Mutates nothing outside `tx`.
+   */
+  private async createSessionOn(
+    tx: DbExecutor,
+    user: UserRow,
+    identity: IdentityRow,
+    meta: LoginMetadata,
+  ): Promise<AuthenticatedSession> {
     const expiresAt = new Date(Date.now() + SESSION_DEFAULT_TTL_SECONDS * 1000);
 
-    return this.db.transaction(async (tx) => {
-      const [persisted] = await tx
-        .insert(sessions)
-        .values({
-          userId: user.id,
-          refreshTokenHash:
-            'placeholder-' + Math.random().toString(36).slice(2, 12),
-          ipAddress: meta.ip,
-          userAgent: meta.userAgent,
-          expiresAt,
-          lastUsedAt: new Date(),
-        })
-        .returning();
+    const [persisted] = await tx
+      .insert(sessions)
+      .values({
+        userId: user.id,
+        refreshTokenHash:
+          'placeholder-' + Math.random().toString(36).slice(2, 12),
+        ipAddress: meta.ip,
+        userAgent: meta.userAgent,
+        expiresAt,
+        lastUsedAt: new Date(),
+      })
+      .returning();
 
-      if (!persisted) {
-        throw new Error('Failed to insert session.');
-      }
+    if (!persisted) {
+      throw new Error('Failed to insert session.');
+    }
 
-      const tokens = await this.sessionTokensFor(user, persisted.id, expiresAt);
+    const tokens = await this.sessionTokensFor(user, persisted.id, expiresAt);
 
-      await tx
-        .update(sessions)
-        .set({ refreshTokenHash: this.tokenHash.hash(tokens.refreshToken) })
-        .where(
-          // `drizzle-orm` operators are re-exported through
-          // `@repo/database` to keep a single TypeScript resolution
-          // path active across the workspace.
+    await tx
+      .update(sessions)
+      .set({ refreshTokenHash: this.tokenHash.hash(tokens.refreshToken) })
+      .where(
+        // `drizzle-orm` operators are re-exported through
+        // `@repo/database` to keep a single TypeScript resolution
+        // path active across the workspace.
 
-          eq(sessions.id, persisted.id),
-        );
+        eq(sessions.id, persisted.id),
+      );
 
-      return { user, identity, session: persisted, tokens };
-    });
+    return { user, identity, session: persisted, tokens };
   }
 
   private async sessionTokensFor(

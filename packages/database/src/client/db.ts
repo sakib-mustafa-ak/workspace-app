@@ -42,3 +42,17 @@ export const db: Db = drizzle(client);
  * apps (workers, scripts, second backend) reuse the same wiring.
  */
 export const DATABASE = Symbol.for('WORKSPACE_OS.DATABASE');
+
+/**
+ * A transaction handle handed to a `db.transaction(async (tx) => ...)`
+ * callback. Structurally compatible with `Db` for insert/update/select,
+ * which is what repositories accepting a `DbExecutor` rely on.
+ */
+export type DbTx = Parameters<Parameters<Db['transaction']>[0]>[0];
+
+/**
+ * Either the root database handle or an open transaction. Repositories
+ * that support caller-managed atomicity accept this and default to the
+ * root handle.
+ */
+export type DbExecutor = Db | DbTx;

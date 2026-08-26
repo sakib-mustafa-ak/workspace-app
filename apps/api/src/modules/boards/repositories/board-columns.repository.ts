@@ -7,6 +7,7 @@ import {
   sql,
   type BoardColumnRow,
   type Db,
+  type DbExecutor,
   type NewBoardColumnRow,
   boardColumns,
 } from '@repo/database';
@@ -15,11 +16,12 @@ import {
 export class BoardColumnsRepository {
   constructor(@Inject(DATABASE) private readonly db: Db) {}
 
-  public async create(row: NewBoardColumnRow): Promise<BoardColumnRow> {
-    const [created] = await this.db
-      .insert(boardColumns)
-      .values(row)
-      .returning();
+  public async create(
+    row: NewBoardColumnRow,
+    tx?: DbExecutor,
+  ): Promise<BoardColumnRow> {
+    const exec = tx ?? this.db;
+    const [created] = await exec.insert(boardColumns).values(row).returning();
     if (!created) throw new Error('Failed to insert board column.');
     return created;
   }

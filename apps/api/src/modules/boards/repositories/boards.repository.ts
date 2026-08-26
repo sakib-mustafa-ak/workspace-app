@@ -7,6 +7,7 @@ import {
   eq,
   sql,
   type Db,
+  type DbExecutor,
   type BoardRow,
   type NewBoardRow,
   boards,
@@ -16,8 +17,9 @@ import {
 export class BoardsRepository {
   constructor(@Inject(DATABASE) private readonly db: Db) {}
 
-  public async create(row: NewBoardRow): Promise<BoardRow> {
-    const [created] = await this.db.insert(boards).values(row).returning();
+  public async create(row: NewBoardRow, tx?: DbExecutor): Promise<BoardRow> {
+    const exec = tx ?? this.db;
+    const [created] = await exec.insert(boards).values(row).returning();
     if (!created) throw new Error('Failed to insert board.');
     return created;
   }

@@ -86,7 +86,13 @@ describe('BoardsService', () => {
 
   beforeEach(async () => {
     db = {
-      transaction: jest.fn(),
+      // Services run multi-step writes through transactions; forward the
+      // callback so mocked repos observe the same executor production uses.
+      transaction: jest
+        .fn()
+        .mockImplementation((cb: (tx: unknown) => Promise<unknown>) =>
+          cb({ __tx: true }),
+        ),
       insert: jest.fn(),
       select: jest.fn(),
     };
@@ -168,12 +174,19 @@ describe('BoardsService', () => {
       });
 
       expect(result.id).toBe('b1');
-      expect(boardsRepo.create).toHaveBeenCalledWith({
-        workspaceId: 'w1',
-        name: 'Sprint 24',
-        description: null,
-        position: 0,
-      });
+      expect(boardsRepo.create).toHaveBeenCalledWith(
+        {
+          workspaceId: 'w1',
+          name: 'Sprint 24',
+          description: null,
+          position: 0,
+        },
+        { __tx: true },
+      );
+      expect(columnsRepo.create).toHaveBeenCalledWith(
+        { boardId: 'b1', name: 'To Do', position: 0 },
+        { __tx: true },
+      );
       expect(events.publishBoardCreated).toHaveBeenCalledWith({
         boardId: 'b1',
         workspaceId: 'w1',

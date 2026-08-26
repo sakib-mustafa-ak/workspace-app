@@ -9,6 +9,7 @@ import {
   type BoardColumnRow,
   type BoardRow,
   type Db,
+  type DbExecutor,
   type NewTaskRow,
   type TaskRow,
   boardColumns,
@@ -20,8 +21,9 @@ import {
 export class TasksRepository {
   constructor(@Inject(DATABASE) private readonly db: Db) {}
 
-  public async create(row: NewTaskRow): Promise<TaskRow> {
-    const [created] = await this.db.insert(tasks).values(row).returning();
+  public async create(row: NewTaskRow, tx?: DbExecutor): Promise<TaskRow> {
+    const exec = tx ?? this.db;
+    const [created] = await exec.insert(tasks).values(row).returning();
     if (!created) throw new Error('Failed to insert task.');
     return created;
   }

@@ -43,21 +43,31 @@ export class BoardsService {
   ): Promise<BoardRow> {
     await this.requireRole(workspaceId, userId, 'EDITOR');
 
-    const board = await this.boardsRepo.create({
-      workspaceId,
-      name: input.name,
-      description: null,
-      position: 0,
-    });
+    const board = await this.db.transaction(async (tx) => {
+      const created = await this.boardsRepo.create(
+        {
+          workspaceId,
+          name: input.name,
+          description: null,
+          position: 0,
+        },
+        tx,
+      );
 
-    const columns = getTemplateColumns(input.template);
-    for (let i = 0; i < columns.length; i++) {
-      await this.columnsRepo.create({
-        boardId: board.id,
-        name: columns[i],
-        position: i,
-      });
-    }
+      const columns = getTemplateColumns(input.template);
+      for (let i = 0; i < columns.length; i++) {
+        await this.columnsRepo.create(
+          {
+            boardId: created.id,
+            name: columns[i],
+            position: i,
+          },
+          tx,
+        );
+      }
+
+      return created;
+    });
 
     this.events.publishBoardCreated({
       boardId: board.id,
@@ -75,29 +85,35 @@ export class BoardsService {
   ): Promise<BoardRow> {
     await this.requireRole(workspaceId, userId, 'EDITOR');
 
-    const existing = await this.listByWorkspace(workspaceId, userId);
-    const nextPosition = existing.length;
-    const board = await this.boardsRepo.create({
-      workspaceId,
-      name: input.name,
-      description: input.description ?? null,
-      position: nextPosition,
-    });
+    // Board and its default columns are one atomic unit: a partial
+    // board without all three columns would break the kanban view.
+    const board = await this.db.transaction(async (tx) => {
+      const existing = await this.listByWorkspace(workspaceId, userId);
+      const nextPosition = existing.length;
+      const created = await this.boardsRepo.create(
+        {
+          workspaceId,
+          name: input.name,
+          description: input.description ?? null,
+          position: nextPosition,
+        },
+        tx,
+      );
 
-    await this.columnsRepo.create({
-      boardId: board.id,
-      name: 'To Do',
-      position: 0,
-    });
-    await this.columnsRepo.create({
-      boardId: board.id,
-      name: 'In Progress',
-      position: 1,
-    });
-    await this.columnsRepo.create({
-      boardId: board.id,
-      name: 'Done',
-      position: 2,
+      await this.columnsRepo.create(
+        { boardId: created.id, name: 'To Do', position: 0 },
+        tx,
+      );
+      await this.columnsRepo.create(
+        { boardId: created.id, name: 'In Progress', position: 1 },
+        tx,
+      );
+      await this.columnsRepo.create(
+        { boardId: created.id, name: 'Done', position: 2 },
+        tx,
+      );
+
+      return created;
     });
 
     this.events.publishBoardCreated({
@@ -378,37 +394,50 @@ export class BoardsService {
   ): Promise<BoardRow> {
     await this.requireRole(workspaceId, userId, 'EDITOR');
 
-    const board = await this.boardsRepo.create({
-      workspaceId,
-      name: data.board.name,
-      description: data.board.description ?? null,
-      position: 0,
+    const board = await this.db.transaction(async (tx) => {
+      const created = await this.boardsRepo.create(
+        {
+          workspaceId,
+          name: data.board.name,
+          description: data.board.description ?? null,
+          position: 0,
+        },
+        tx,
+      );
+
+      const columnMap = new Map<string, string>();
+      for (const col of data.columns) {
+        const column = await this.columnsRepo.create(
+          {
+            boardId: created.id,
+            name: col.name,
+            position: col.position,
+          },
+          tx,
+        );
+        columnMap.set(col.name, column.id);
+      }
+
+      for (const task of data.tasks) {
+        const columnId = columnMap.get(task.columnName);
+        if (!columnId) continue;
+        await this.tasksRepo.create(
+          {
+            boardId: created.id,
+            workspaceId,
+            columnId,
+            title: task.title,
+            description: task.description ?? null,
+            position: task.position,
+            priority: task.priority as TaskPriority,
+            createdById: userId,
+          },
+          tx,
+        );
+      }
+
+      return created;
     });
-
-    const columnMap = new Map<string, string>();
-    for (const col of data.columns) {
-      const created = await this.columnsRepo.create({
-        boardId: board.id,
-        name: col.name,
-        position: col.position,
-      });
-      columnMap.set(col.name, created.id);
-    }
-
-    for (const task of data.tasks) {
-      const columnId = columnMap.get(task.columnName);
-      if (!columnId) continue;
-      await this.tasksRepo.create({
-        boardId: board.id,
-        workspaceId,
-        columnId,
-        title: task.title,
-        description: task.description ?? null,
-        position: task.position,
-        priority: task.priority as TaskPriority,
-        createdById: userId,
-      });
-    }
 
     return board;
   }

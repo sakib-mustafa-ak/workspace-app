@@ -162,4 +162,156 @@ describe('AuthService session lifecycle', () => {
       expect(actualTtlMs).toBeLessThanOrEqual(expectedTtlMs + 1000);
     });
   });
+
+  describe('register atomicity', () => {
+    it('creates the user and identity inside one transaction', async () => {
+      // Regression: register used to await users.create then
+      // identities.createEmailIdentity on independent connections — an
+      // identity failure left an orphaned user row that could not log in
+      // or re-register. Both writes must now run on the SAME tx handle.
+      const txHandle = {
+        insert: jest.fn().mockReturnThis(),
+        values: jest.fn().mockReturnThis(),
+        returning: jest.fn().mockResolvedValue([{ id: 's-tx' }]),
+        update: jest.fn().mockReturnThis(),
+        set: jest.fn().mockReturnThis(),
+        where: jest.fn().mockResolvedValue(undefined),
+      };
+      const db = {
+        transaction: jest
+          .fn()
+          .mockImplementation((cb: (tx: unknown) => Promise<unknown>) =>
+            cb(txHandle),
+          ),
+      };
+
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          AuthService,
+          { provide: DATABASE, useValue: db },
+          {
+            provide: UserRepository,
+            useValue: {
+              findByEmailWithPassword: jest.fn().mockResolvedValue(undefined),
+              create: jest.fn().mockResolvedValue(mockUser),
+            },
+          },
+          {
+            provide: IdentityRepository,
+            useValue: {
+              createEmailIdentity: jest.fn().mockResolvedValue(mockIdentity),
+            },
+          },
+          { provide: SessionRepository, useValue: {} },
+          {
+            provide: PasswordService,
+            useValue: { hash: jest.fn().mockResolvedValue('argon2$hash') },
+          },
+          {
+            provide: TokenService,
+            useValue: {
+              signAccessToken: jest
+                .fn()
+                .mockResolvedValue({ token: 'a', expiresInSeconds: 900 }),
+              signRefreshToken: jest
+                .fn()
+                .mockResolvedValue({ token: 'r', expiresInSeconds: 30 }),
+            },
+          },
+          {
+            provide: TokenHashService,
+            useValue: { hash: jest.fn().mockReturnValue('hashed') },
+          },
+          {
+            provide: AuthEventBus,
+            useValue: {
+              publishUserRegistered: jest.fn(),
+              publishUserLoggedIn: jest.fn(),
+            },
+          },
+        ],
+      }).compile();
+
+      const registerService = module.get<AuthService>(AuthService);
+
+      await registerService.register({
+        displayName: 'Test',
+        email: 'new@test.com',
+        password: 'long-enough-password',
+        meta: { ip: null, userAgent: null },
+      });
+
+      expect(db.transaction).toHaveBeenCalledTimes(1);
+      // The tx handle is forwarded so both writes share its fate.
+      expect(module.get(UserRepository).create).toHaveBeenCalledWith(
+        {
+          displayName: 'Test',
+          email: 'new@test.com',
+          passwordHash: 'argon2$hash',
+        },
+        txHandle,
+      );
+      expect(
+        module.get(IdentityRepository).createEmailIdentity,
+      ).toHaveBeenCalledWith('u1', 'test@test.com', 'argon2$hash', txHandle);
+    });
+
+    it('does not publish UserRegistered when the transaction fails', async () => {
+      const db = {
+        transaction: jest
+          .fn()
+          .mockRejectedValue(new Error('identity insert failed')),
+      };
+
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          AuthService,
+          { provide: DATABASE, useValue: db },
+          {
+            provide: UserRepository,
+            useValue: {
+              findByEmailWithPassword: jest.fn().mockResolvedValue(undefined),
+            },
+          },
+          {
+            provide: IdentityRepository,
+            useValue: {},
+          },
+          { provide: SessionRepository, useValue: {} },
+          {
+            provide: PasswordService,
+            useValue: { hash: jest.fn().mockResolvedValue('argon2$hash') },
+          },
+          {
+            provide: TokenService,
+            useValue: {
+              signAccessToken: jest.fn(),
+              signRefreshToken: jest.fn(),
+            },
+          },
+          {
+            provide: TokenHashService,
+            useValue: { hash: jest.fn().mockReturnValue('hashed') },
+          },
+          {
+            provide: AuthEventBus,
+            useValue: { publishUserRegistered: jest.fn() },
+          },
+        ],
+      }).compile();
+
+      const failingService = module.get<AuthService>(AuthService);
+      const events = module.get<AuthEventBus>(AuthEventBus);
+
+      await expect(
+        failingService.register({
+          displayName: 'Test',
+          email: 'boom@test.com',
+          password: 'long-enough-password',
+          meta: { ip: null, userAgent: null },
+        }),
+      ).rejects.toThrow('identity insert failed');
+      expect(events.publishUserRegistered).not.toHaveBeenCalled();
+    });
+  });
 });

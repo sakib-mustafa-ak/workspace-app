@@ -184,16 +184,18 @@ export class PasswordResetService {
       // mass-revocation here stays inside the transaction so the
       // atomicity is preserved.  We keep the ids to surface in the
       // auth event.
-      const liveSessions = await this.sessions.listLiveForUser(row.userId);
+      // Revocations run on the SAME tx: previously they used the
+      // repository's own connection, so a mid-loop failure would leave
+      // some sessions revoked and others live.
+      const liveSessions = await this.sessions.listLiveForUser(row.userId, tx);
       const revokedIds: string[] = [];
       for (const s of liveSessions) {
-        await this.sessions.revoke(s.id);
+        await this.sessions.revoke(s.id, tx);
         revokedIds.push(s.id);
       }
 
       this.eventBus.publishPasswordChanged(row.userId, revokedIds);
 
-      void tx; // ensure tx is referenced when no row was ever revoked
       return {
         userId: row.userId,
         revokedSessionIds: revokedIds,

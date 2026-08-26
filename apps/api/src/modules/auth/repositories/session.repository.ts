@@ -6,6 +6,7 @@ import {
   isNull,
   sessions,
   type Db,
+  type DbExecutor,
   type NewSessionRow,
   type SessionRow,
 } from '@repo/database';
@@ -79,8 +80,9 @@ export class SessionRepository {
       .where(eq(sessions.id, sessionId));
   }
 
-  public async revoke(sessionId: string): Promise<void> {
-    await this.db
+  public async revoke(sessionId: string, tx?: DbExecutor): Promise<void> {
+    const exec = tx ?? this.db;
+    await exec
       .update(sessions)
       .set({ revokedAt: new Date() })
       .where(and(eq(sessions.id, sessionId), isNull(sessions.revokedAt)));
@@ -95,8 +97,12 @@ export class SessionRepository {
    * Lives here (rather than in the requesting service) because the
    * row-mutation contract is a Session concept, not a Reset concept.
    */
-  public async listLiveForUser(userId: string): Promise<SessionRow[]> {
-    return this.db
+  public async listLiveForUser(
+    userId: string,
+    tx?: DbExecutor,
+  ): Promise<SessionRow[]> {
+    const exec = tx ?? this.db;
+    return exec
       .select()
       .from(sessions)
       .where(and(eq(sessions.userId, userId), isNull(sessions.revokedAt)));

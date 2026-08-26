@@ -194,7 +194,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-surface-800 bg-surface-900/50 p-6">
+    <div className="rounded-xl border border-surface-800 bg-surface-900/50 p-4">
       <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-surface-300">
         <Icon size={14} className="text-surface-500" />
         {title}

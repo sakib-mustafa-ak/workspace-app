@@ -45,7 +45,7 @@ export function ConfirmModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onCancel}>
-      <div className="w-full max-w-sm rounded-xl border border-surface-800 bg-surface-900 p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-sm rounded-xl border border-surface-800 bg-surface-900 p-6 shadow-xl shadow-black/20" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start gap-4">
           {variant === 'danger' && (
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">

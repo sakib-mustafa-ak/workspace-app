@@ -92,7 +92,7 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
 
       {showCheatSheet && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60" onClick={() => setShowCheatSheet(false)}>
-          <div className="w-full max-w-sm rounded-xl border border-surface-800 bg-surface-900 p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-sm rounded-xl border border-surface-800 bg-surface-900 p-6 shadow-xl shadow-black/20" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-sm font-semibold mb-4">Keyboard Shortcuts</h3>
             <div className="space-y-2">
               {shortcuts.map((s) => (

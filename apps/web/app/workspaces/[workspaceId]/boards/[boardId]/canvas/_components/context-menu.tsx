@@ -102,7 +102,7 @@ export function ContextMenu({ x, y, onClose, onEditText }: Props) {
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
       <div
-        className="fixed z-50 min-w-[160px] rounded-xl border border-surface-700 bg-surface-900 py-1 shadow-2xl"
+        className="fixed z-50 min-w-[160px] rounded-xl border border-surface-700 bg-surface-900 py-1 shadow-xl"
         style={{ left, top }}
       >
         <button onClick={handleDuplicate} className="flex w-full items-center px-3 py-1.5 text-xs text-surface-300 hover:bg-surface-800">Duplicate</button>

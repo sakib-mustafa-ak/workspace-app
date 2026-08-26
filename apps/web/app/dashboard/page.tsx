@@ -47,7 +47,7 @@ function CreateWorkspaceForm({
   return (
     <form
       onSubmit={handleCreate}
-      className="rounded-xl border border-surface-800 bg-surface-900 p-5 sm:p-6"
+      className="rounded-xl border border-surface-800 bg-surface-900 p-4"
     >
       <h2 className="mb-4 text-sm font-semibold text-surface-200">Create workspace</h2>
       <div className="space-y-3">
@@ -260,7 +260,7 @@ function DashboardContent() {
         <EmailVerificationBanner />
 
       {/* Welcome card */}
-      <div className="mb-8 rounded-xl border border-surface-800/50 bg-surface-900/60 p-6 backdrop-blur-sm sm:p-8">
+      <div className="mb-8 rounded-xl border border-surface-800/50 bg-surface-900/60 p-4 backdrop-blur-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-surface-500">Workspace OS</p>

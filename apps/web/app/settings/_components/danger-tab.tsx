@@ -20,7 +20,7 @@ export function DangerTab() {
   }
 
   return (
-    <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-6">
+    <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4">
       <div className="flex items-center gap-2">
         <AlertTriangle size={18} className="text-red-400" />
         <h2 className="text-lg font-semibold text-red-400">Danger Zone</h2>

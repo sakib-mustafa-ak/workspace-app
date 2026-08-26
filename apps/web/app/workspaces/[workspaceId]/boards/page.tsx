@@ -93,7 +93,7 @@ export default function BoardsPage() {
       {showCreate && (
         <form
           onSubmit={handleCreate}
-          className="mb-8 rounded-xl border border-surface-700/50 bg-gradient-to-br from-surface-800 to-surface-800/50 p-5 sm:p-6"
+          className="mb-8 rounded-xl border border-surface-700/50 bg-gradient-to-br from-surface-800 to-surface-800/50 p-4"
         >
           <h2 className="mb-4 text-sm font-semibold text-surface-200">Create board</h2>
           <div className="space-y-3">
@@ -161,7 +161,7 @@ export default function BoardsPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredBoards.map((board) => (
-            <div key={board.id} className="group relative overflow-hidden rounded-xl border border-surface-800 bg-gradient-to-br from-surface-900 to-surface-900/50 p-5 transition-all hover:border-surface-700 hover:shadow-lg hover:shadow-primary-600/5">
+            <div key={board.id} className="group relative overflow-hidden rounded-xl border border-surface-800 bg-gradient-to-br from-surface-900 to-surface-900/50 p-4 transition-all hover:border-surface-700 hover:shadow-lg hover:shadow-primary-600/5">
               <Link href={`/workspaces/${workspaceId}/boards/${board.id}`}>
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600/20 to-emerald-600/10 text-sm font-bold text-emerald-400 shadow-sm shadow-emerald-600/10">
                   {board.name.charAt(0).toUpperCase()}

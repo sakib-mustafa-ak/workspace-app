@@ -26,7 +26,7 @@ export function AiIdeasDialog({ onClose, onCreateIdea }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
-      <div className="w-full max-w-md rounded-xl border border-surface-800 bg-surface-900 shadow-2xl" onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-md rounded-xl border border-surface-800 bg-surface-900 shadow-xl shadow-black/20" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-surface-800 px-6 py-4">
           <div className="flex items-center gap-2">
             <Sparkles size={16} className="text-primary-400" />

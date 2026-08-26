@@ -38,7 +38,7 @@ export function OverviewTab({ workspaceId, onInvite }: Props) {
     <div className="space-y-6 p-6">
       <div className="grid gap-4 sm:grid-cols-3">
         {cards.map((c) => (
-          <div key={c.label} className="rounded-xl border border-surface-800 bg-surface-900 p-5">
+          <div key={c.label} className="rounded-xl border border-surface-800 bg-surface-900 p-4">
             <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${c.bg}`}>
               <c.icon size={18} className={c.color} />
             </div>

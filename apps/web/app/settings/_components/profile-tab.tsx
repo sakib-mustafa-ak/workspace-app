@@ -98,7 +98,7 @@ export function ProfileTab() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-surface-800 bg-surface-900/50 p-6">
+    <div className="rounded-xl border border-surface-800 bg-surface-900/50 p-4">
       <h3 className="mb-3 text-sm font-semibold text-surface-300">{title}</h3>
       {children}
     </div>

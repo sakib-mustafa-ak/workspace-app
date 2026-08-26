@@ -45,7 +45,7 @@ export function BoardsTab({ workspaceId, boards }: Props) {
             <Link
               key={board.id}
               href={`/workspaces/${workspaceId}/boards/${board.id}`}
-              className="group rounded-xl border border-surface-800 bg-surface-900 p-5 transition-colors hover:border-surface-700"
+              className="group rounded-xl border border-surface-800 bg-surface-900 p-4 transition-colors hover:border-surface-700"
             >
               <div className="flex items-start justify-between">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600/10 text-sm font-bold text-emerald-400">

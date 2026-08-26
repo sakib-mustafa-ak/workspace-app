@@ -2,21 +2,22 @@
 name: Workspace OS — The Infinite Desk
 description: Dark-first collaborative workspace. Deep charcoal surfaces, calm lavender-gray accent, flat at rest with quiet glow on interaction.
 colors:
-  primary: "#2563eb"
-  primary-bright: "#3b82f6"
-  primary-soft: "#60a5fa"
-  primary-deep: "#1d4ed8"
-  surface: "#020617"
-  surface-panel: "#0f172a"
-  surface-raised: "#1e293b"
-  surface-edge: "#334155"
-  text: "#f1f5f9"
-  text-muted: "#94a3b8"
-  text-faint: "#64748b"
+  primary: "#2e2e2e"
+  primary-bright: "#3a3a3a"
+  primary-soft: "#b9b0c8"
+  primary-deep: "#1a1a1a"
+  surface: "#121212"
+  surface-panel: "#1a1a1a"
+  surface-raised: "#242424"
+  surface-edge: "#2e2e2e"
+  text: "#f4f1f8"
+  text-muted: "#9b93a8"
+  text-faint: "#7a7385"
   danger: "#ef4444"
   danger-soft: "#f87171"
   success: "#34d399"
   warning: "#fbbf24"
+  accent: "#d6cfe1"
 typography:
   body:
     fontFamily: "Geist, ui-sans-serif, system-ui, sans-serif"

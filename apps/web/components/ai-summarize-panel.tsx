@@ -21,7 +21,7 @@ export function AiSummarizePanel({ boardId, onClose }: Props) {
   }, [boardId]);
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 w-96 border-l border-surface-800 bg-surface-900 shadow-2xl animate-slideIn">
+    <div className="fixed inset-y-0 right-0 z-50 w-96 border-l border-surface-800 bg-surface-900 shadow-xl shadow-black/20 animate-slideIn">
       <div className="flex items-center justify-between border-b border-surface-800 px-6 py-4">
         <div className="flex items-center gap-2">
           <Sparkles size={16} className="text-primary-400" />

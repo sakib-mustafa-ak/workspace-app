@@ -141,37 +141,11 @@ export class CanvasService {
     userId: string,
     dto: UpdateCanvasObjectDto,
   ) {
-    const object = await this.canvasRepo.findObjectById(objectId);
-    if (!object) {
-      throw new CanvasException(
-        CanvasErrorCode.OBJECT_NOT_FOUND,
-        'Object not found',
-      );
-    }
-
-    const board = await this.boardsRepo.findById(boardId);
-    if (!board) {
-      throw new CanvasException(
-        CanvasErrorCode.BOARD_NOT_FOUND,
-        'Board not found',
-      );
-    }
-    const membership = await this.membersRepo.findByWorkspaceAndUser(
-      board.workspaceId,
-      userId,
+    const { object, workspaceId } = await this.loadObjectForBoard(
+      boardId,
+      objectId,
     );
-    if (!membership) {
-      throw new CanvasException(
-        CanvasErrorCode.NOT_A_MEMBER,
-        'Not a workspace member',
-      );
-    }
-    if (!this.policy.canEdit(membership.role)) {
-      throw new CanvasException(
-        CanvasErrorCode.INSUFFICIENT_ROLE,
-        'Insufficient role',
-      );
-    }
+    await this.assertCanEdit(workspaceId, userId);
 
     const updated = await this.canvasRepo.updateObject(objectId, dto);
     if (!updated) {
@@ -192,6 +166,39 @@ export class CanvasService {
   }
 
   async deleteObject(boardId: string, objectId: string, userId: string) {
+    const { object, workspaceId } = await this.loadObjectForBoard(
+      boardId,
+      objectId,
+    );
+    await this.assertCanEdit(workspaceId, userId);
+
+    await this.canvasRepo.softDeleteObject(objectId);
+
+    this.eventBus.publishObjectDeleted({
+      objectId,
+      canvasId: object.canvasId,
+      boardId,
+      deletedBy: userId,
+    });
+  }
+
+  /**
+   * Resolve an object through its parent canvas and verify the ownership
+   * chain object → canvas → board before any authorization decision.
+   *
+   * Authorizing against the path `boardId` alone allowed a member of one
+   * workspace to mutate objects belonging to another workspace by pairing
+   * their own boardId with a foreign objectId.
+   */
+  private async loadObjectForBoard(
+    boardId: string,
+    objectId: string,
+  ): Promise<{
+    object: NonNullable<
+      Awaited<ReturnType<CanvasRepository['findObjectById']>>
+    >;
+    workspaceId: string;
+  }> {
     const object = await this.canvasRepo.findObjectById(objectId);
     if (!object) {
       throw new CanvasException(
@@ -200,15 +207,25 @@ export class CanvasService {
       );
     }
 
-    const board = await this.boardsRepo.findById(boardId);
-    if (!board) {
+    const canvasRow = await this.canvasRepo.findById(object.canvasId);
+    if (!canvasRow || canvasRow.boardId !== boardId) {
+      // Same error whether missing or foreign: never leak existence
+      // across tenant boundaries.
       throw new CanvasException(
-        CanvasErrorCode.BOARD_NOT_FOUND,
-        'Board not found',
+        CanvasErrorCode.OBJECT_NOT_FOUND,
+        'Object not found',
       );
     }
+
+    return { object, workspaceId: canvasRow.workspaceId };
+  }
+
+  private async assertCanEdit(
+    workspaceId: string,
+    userId: string,
+  ): Promise<void> {
     const membership = await this.membersRepo.findByWorkspaceAndUser(
-      board.workspaceId,
+      workspaceId,
       userId,
     );
     if (!membership) {
@@ -223,14 +240,5 @@ export class CanvasService {
         'Insufficient role',
       );
     }
-
-    await this.canvasRepo.softDeleteObject(objectId);
-
-    this.eventBus.publishObjectDeleted({
-      objectId,
-      canvasId: object.canvasId,
-      boardId,
-      deletedBy: userId,
-    });
   }
 }

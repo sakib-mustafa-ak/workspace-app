@@ -17,6 +17,7 @@ describe('CanvasService', () => {
   beforeEach(async () => {
     canvasRepo = {
       findByBoard: jest.fn(),
+      findById: jest.fn(),
       findObjectsByCanvas: jest.fn(),
       create: jest.fn(),
       createObject: jest.fn(),
@@ -155,6 +156,11 @@ describe('CanvasService', () => {
       canvasId: 'c-1',
       type: 'RECTANGLE',
     } as any);
+    canvasRepo.findById.mockResolvedValue({
+      id: 'c-1',
+      boardId: 'b-1',
+      workspaceId: 'ws-1',
+    } as any);
     canvasRepo.updateObject.mockResolvedValue({
       id: 'obj-1',
       canvasId: 'c-1',
@@ -172,6 +178,65 @@ describe('CanvasService', () => {
     });
   });
 
+  it('rejects updating an object whose canvas belongs to a different board (cross-workspace path)', async () => {
+    // Regression: updateObject used to authorize against the PATH board's
+    // workspace while mutating the object found by raw objectId, so a
+    // member of workspace A could edit workspace B's objects by pairing
+    // their own boardId with a foreign objectId.
+    boardsRepo.findById.mockResolvedValue({
+      id: 'b-mine',
+      workspaceId: 'ws-mine',
+    } as any);
+    membersRepo.findByWorkspaceAndUser.mockResolvedValue({
+      id: 'm-1',
+      workspaceId: 'ws-mine',
+      userId: 'user-1',
+      role: 'OWNER',
+    } as any);
+    canvasRepo.findObjectById.mockResolvedValue({
+      id: 'obj-foreign',
+      canvasId: 'c-foreign',
+      type: 'RECTANGLE',
+    } as any);
+    canvasRepo.findById.mockResolvedValue({
+      id: 'c-foreign',
+      boardId: 'b-theirs',
+      workspaceId: 'ws-theirs',
+    } as any);
+
+    await expect(
+      service.updateObject('b-mine', 'obj-foreign', 'user-1', { x: 1 }),
+    ).rejects.toThrow(CanvasException);
+    expect(canvasRepo.updateObject).not.toHaveBeenCalled();
+  });
+
+  it('rejects deleting an object whose canvas belongs to a different board (cross-workspace path)', async () => {
+    boardsRepo.findById.mockResolvedValue({
+      id: 'b-mine',
+      workspaceId: 'ws-mine',
+    } as any);
+    membersRepo.findByWorkspaceAndUser.mockResolvedValue({
+      id: 'm-1',
+      workspaceId: 'ws-mine',
+      userId: 'user-1',
+      role: 'OWNER',
+    } as any);
+    canvasRepo.findObjectById.mockResolvedValue({
+      id: 'obj-foreign',
+      canvasId: 'c-foreign',
+    } as any);
+    canvasRepo.findById.mockResolvedValue({
+      id: 'c-foreign',
+      boardId: 'b-theirs',
+      workspaceId: 'ws-theirs',
+    } as any);
+
+    await expect(
+      service.deleteObject('b-mine', 'obj-foreign', 'user-1'),
+    ).rejects.toThrow(CanvasException);
+    expect(canvasRepo.softDeleteObject).not.toHaveBeenCalled();
+  });
+
   it('should publish objectDeleted event when deleting an object', async () => {
     boardsRepo.findById.mockResolvedValue({
       id: 'b-1',
@@ -186,6 +251,11 @@ describe('CanvasService', () => {
     canvasRepo.findObjectById.mockResolvedValue({
       id: 'obj-1',
       canvasId: 'c-1',
+    } as any);
+    canvasRepo.findById.mockResolvedValue({
+      id: 'c-1',
+      boardId: 'b-1',
+      workspaceId: 'ws-1',
     } as any);
     canvasRepo.softDeleteObject.mockResolvedValue(undefined);
 

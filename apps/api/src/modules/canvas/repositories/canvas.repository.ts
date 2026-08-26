@@ -30,6 +30,15 @@ export class CanvasRepository {
     return row;
   }
 
+  async findById(canvasId: string): Promise<CanvasRow | undefined> {
+    const [row] = await this.db
+      .select()
+      .from(canvas)
+      .where(sql`${canvas.id} = ${canvasId}`)
+      .limit(1);
+    return row;
+  }
+
   async create(data: NewCanvasRow): Promise<CanvasRow> {
     const [row] = await this.db.insert(canvas).values(data).returning();
     if (!row) throw new Error('Failed to create canvas.');

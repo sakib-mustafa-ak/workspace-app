@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { type UserProfile } from '@/lib/users';
 import { Save, Loader2, Globe, Clock, Check, ChevronDown, Search } from 'lucide-react';
+import { SkeletonBlock } from '@/components/skeleton';
 
 const LOCALES = [
   { value: '', label: 'System default' },
@@ -93,8 +94,8 @@ export function PreferencesTab() {
 
       {loading ? (
         <div className="space-y-4">
-          <div className="h-40 animate-pulse rounded-xl bg-surface-800/50" />
-          <div className="h-40 animate-pulse rounded-xl bg-surface-800/50" />
+          <SkeletonBlock className="h-40" />
+          <SkeletonBlock className="h-40" />
         </div>
       ) : (
         <>

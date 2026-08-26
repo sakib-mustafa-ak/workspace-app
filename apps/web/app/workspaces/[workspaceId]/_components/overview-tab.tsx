@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
-  Columns, Users, ListTodo, Plus, Mail, Loader2,
+  Columns, Users, ListTodo, Plus, Mail,
 } from 'lucide-react';
 import { workspacesApi, type AuditEvent } from '@/lib/workspaces';
 import { boardsApi } from '@/lib/boards';
+import { SkeletonBlock } from '@/components/skeleton';
 
 type Props = {
   workspaceId: string;
@@ -26,7 +27,20 @@ export function OverviewTab({ workspaceId, onInvite }: Props) {
     ]).catch(() => {}).finally(() => setLoading(false));
   }, [workspaceId]);
 
-  if (loading) return <div className="flex justify-center p-8"><Loader2 className="animate-spin" /></div>;
+  if (loading) return (
+    <div className="space-y-6 p-6">
+      <div className="grid gap-4 sm:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <SkeletonBlock key={i} className="h-24" />
+        ))}
+      </div>
+      <div className="space-y-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <SkeletonBlock key={i} className="h-16" />
+        ))}
+      </div>
+    </div>
+  );
 
   const cards = [
     { label: 'Boards', value: stats.boards, icon: Columns, color: 'text-emerald-400', bg: 'bg-emerald-600/10' },

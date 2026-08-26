@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, ArrowLeft, Columns, Loader2, Search, Archive, Trash2 } from 'lucide-react';
+import { Plus, ArrowLeft, Columns, Search, Archive, Trash2 } from 'lucide-react';
 import { workspacesApi, type Workspace } from '@/lib/workspaces';
 import { boardsApi, type Board } from '@/lib/boards';
+import { SkeletonCard } from '@/components/skeleton';
 
 export default function BoardsPage() {
   const params = useParams();
@@ -134,8 +135,10 @@ export default function BoardsPage() {
           </button>
         </div>
       ) : loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 size={24} className="animate-spin text-primary-500" />
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
         </div>
       ) : filteredBoards.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-surface-700/50 bg-surface-900/30 py-20">

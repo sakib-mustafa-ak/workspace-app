@@ -18,6 +18,7 @@ import { boardsApi, type Board } from '@/lib/boards';
 import { EmailVerificationBanner } from '@/components/email-verification-banner';
 import { getRecentBoards, type RecentBoard } from '@/lib/recent-activity';
 import { CalendarDropdown } from '@/components/calendar-dropdown';
+import { SkeletonCard } from '@/components/skeleton';
 
 function CreateWorkspaceForm({
   onCreated,
@@ -335,9 +336,9 @@ function DashboardContent() {
           ) : loading ? (
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-20 rounded-xl bg-surface-800/50 overflow-hidden relative">
+                <SkeletonCard key={i} className="overflow-hidden relative">
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-surface-700/20 to-transparent animate-shimmer" />
-                </div>
+                </SkeletonCard>
               ))}
             </div>
           ) : workspaces.length === 0 ? (

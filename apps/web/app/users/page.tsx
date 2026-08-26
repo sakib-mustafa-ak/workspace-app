@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usersApi, type UserProfile } from '@/lib/users';
 import { Search, ChevronLeft, ChevronRight, Mail, Calendar } from 'lucide-react';
+import { SkeletonCard } from '@/components/skeleton';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -70,7 +71,7 @@ export default function UsersPage() {
       ) : loading ? (
         <div className="space-y-3">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-16 animate-pulse rounded-xl bg-surface-800/50" />
+            <SkeletonCard key={i} className="h-16" />
           ))}
         </div>
       ) : users.length === 0 ? (

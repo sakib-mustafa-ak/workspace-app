@@ -1,7 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { workspacesApi, type AuditEvent } from '@/lib/workspaces';
-import { History, Loader2 } from 'lucide-react';
+import { History } from 'lucide-react';
+import { SkeletonBlock } from '@/components/skeleton';
 
 export function ActivityTabContent({ workspaceId }: { workspaceId: string }) {
   const [events, setEvents] = useState<AuditEvent[]>([]);
@@ -25,7 +26,13 @@ export function ActivityTabContent({ workspaceId }: { workspaceId: string }) {
     return action.replace(/\./g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
   }
 
-  if (loading && events.length === 0) return <div className="flex justify-center p-8"><Loader2 className="animate-spin" /></div>;
+  if (loading && events.length === 0) return (
+    <div className="space-y-3 p-6">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <SkeletonBlock key={i} className="h-16" />
+      ))}
+    </div>
+  );
 
   return (
     <div className="p-6">

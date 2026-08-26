@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { usersApi, type UserProfile, type UserMembership, type AuditLogEntry } from '@/lib/users';
 import { ArrowLeft, Mail, Calendar, Shield, BadgeCheck, BadgeX, ExternalLink, Clock, LogIn, Edit3, Trash2, UserPlus, MapPin, Languages } from 'lucide-react';
+import { SkeletonBlock, SkeletonCircle } from '@/components/skeleton';
 
 export default function UserDetailPage() {
   const params = useParams();
@@ -51,22 +52,22 @@ export default function UserDetailPage() {
   if (loading) {
     return (
       <div className="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-8">
-        <div className="mb-6 h-4 w-28 animate-pulse rounded bg-surface-800/60" />
+        <SkeletonBlock className="mb-6 h-4 w-28 rounded" />
         <div className="overflow-hidden rounded-2xl border border-surface-800/50 bg-surface-900/60">
           <div className="flex items-center gap-4 bg-gradient-to-br from-primary-600/10 to-primary-600/5 p-6 sm:p-8">
-            <div className="h-16 w-16 animate-pulse rounded-full bg-surface-700/60" />
+            <SkeletonCircle className="h-16 w-16" />
             <div className="flex-1 space-y-2">
-              <div className="h-5 w-40 animate-pulse rounded bg-surface-700/60" />
-              <div className="h-3 w-56 animate-pulse rounded bg-surface-800/60" />
+              <SkeletonBlock className="h-5 w-40 rounded" />
+              <SkeletonBlock className="h-3 w-56 rounded" />
             </div>
           </div>
           <div className="grid gap-4 p-6 sm:grid-cols-2 sm:p-8">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-8 animate-pulse rounded bg-surface-800/50" />
+              <SkeletonBlock key={i} className="h-8 rounded" />
             ))}
           </div>
         </div>
-        <div className="mt-6 h-40 animate-pulse rounded-2xl border border-surface-800/50 bg-surface-900/50" />
+        <SkeletonBlock className="mt-6 h-40 rounded-2xl border border-surface-800/50 bg-surface-900/50" />
       </div>
     );
   }

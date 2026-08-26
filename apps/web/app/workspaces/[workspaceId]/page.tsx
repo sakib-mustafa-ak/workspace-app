@@ -14,6 +14,7 @@ import {
   type Invitation,
 } from '@/lib/workspaces';
 import { boardsApi, type Board } from '@/lib/boards';
+import { SkeletonBlock, SkeletonCard } from '@/components/skeleton';
 import { OverviewTab } from './_components/overview-tab';
 import { BoardsTab } from './_components/boards-tab';
 import { MembersTab } from './_components/members-tab';
@@ -96,8 +97,33 @@ export default function WorkspaceDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-surface-600 border-t-primary-500" />
+      <div className="flex h-full flex-col">
+        <header className="border-b border-surface-800">
+          <div className="flex items-center gap-3 px-8 py-4">
+            <SkeletonBlock className="h-4 w-4 rounded" />
+            <div>
+              <SkeletonBlock className="h-5 w-40 rounded" />
+              <SkeletonBlock className="mt-1 h-3 w-28 rounded" />
+            </div>
+          </div>
+          <nav className="flex gap-1 px-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonBlock key={i} className="h-8 w-20 rounded-t-lg" />
+            ))}
+          </nav>
+        </header>
+        <div className="flex-1 space-y-4 p-6">
+          <div className="grid gap-4 sm:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+          <div className="space-y-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <SkeletonBlock key={i} className="h-12" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

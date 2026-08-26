@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Bell, CheckCheck, Archive, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { notificationsApi, type Notification } from '@/lib/notifications';
+import { SkeletonBlock, SkeletonCircle } from '@/components/skeleton';
 
 const PAGE_SIZE = 20;
 
@@ -74,8 +75,16 @@ export default function NotificationsPage() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-surface-600 border-t-primary-500" />
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-start gap-3 rounded-lg border border-surface-800 px-4 py-3.5 sm:gap-4 sm:px-5 sm:py-4">
+              <SkeletonCircle className="h-10 w-10 shrink-0" />
+              <div className="flex-1 space-y-2">
+                <SkeletonBlock className="h-4 w-3/4 rounded" />
+                <SkeletonBlock className="h-3 w-1/2 rounded" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : notifications.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-surface-700 py-16">

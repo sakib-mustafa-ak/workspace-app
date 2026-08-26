@@ -17,6 +17,7 @@ import {
 import { workspacesApi } from '@/lib/workspaces';
 import { boardsApi, type Board, type BoardColumn } from '@/lib/boards';
 import { tasksApi, type Task } from '@/lib/tasks';
+import { SkeletonBlock, SkeletonCard } from '@/components/skeleton';
 import { CommentsPanel } from '@/components/comments-panel';
 import { TaskModal } from '@/components/task-modal';
 import { SortableTaskCard } from '@/components/sortable-task-card';
@@ -236,8 +237,37 @@ export default function BoardDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-surface-600 border-t-primary-500" />
+      <div className="flex h-full flex-col">
+        <header className="flex items-center justify-between border-b border-surface-800 px-8 py-4">
+          <div className="flex items-center gap-3">
+            <SkeletonBlock className="h-4 w-4 rounded" />
+            <div>
+              <SkeletonBlock className="h-5 w-48 rounded" />
+              <SkeletonBlock className="mt-1 h-3 w-32 rounded" />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <SkeletonBlock key={i} className="h-8 w-20 rounded-lg" />
+            ))}
+          </div>
+        </header>
+        <div className="flex flex-1 gap-4 p-6">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="w-72 shrink-0 space-y-3">
+              <SkeletonBlock className="h-1 rounded-xl" />
+              <div className="flex items-center justify-between px-4 py-3">
+                <SkeletonBlock className="h-4 w-24 rounded" />
+                <SkeletonBlock className="h-4 w-6 rounded" />
+              </div>
+              <div className="space-y-2 px-3">
+                {Array.from({ length: 3 }).map((_, j) => (
+                  <SkeletonCard key={j} className="h-16" />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

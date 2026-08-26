@@ -76,7 +76,7 @@ export default function RegisterPage() {
 
       <div className="relative w-full max-w-sm">
         <div className="animate-fadeIn">
-          <div className="rounded-2xl border border-surface-800/50 bg-gradient-to-br from-surface-900 to-surface-900/60 p-6 sm:p-8 shadow-xl shadow-black/20 backdrop-blur-xl">
+          <div className="rounded-2xl border border-surface-800/50 bg-gradient-to-br from-surface-900 to-surface-900/60 p-6 sm:p-8 shadow-2xl shadow-black/20 backdrop-blur-xl">
           <div className="mb-8 text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-600/20 to-primary-600/10 shadow-sm shadow-primary-600/10">
               <UserPlus size={20} className="text-primary-400" />

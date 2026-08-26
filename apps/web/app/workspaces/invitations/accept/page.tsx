@@ -50,7 +50,7 @@ function AcceptInvitationInner() {
       <div className="pointer-events-none absolute -bottom-40 -right-40 h-[500px] w-[500px] rounded-full bg-primary-500/5 blur-3xl" />
 
       <div className="relative w-full max-w-sm">
-        <div className="rounded-2xl border border-surface-800/50 bg-gradient-to-br from-surface-900 to-surface-900/60 p-8 shadow-xl shadow-black/20 backdrop-blur-xl">
+        <div className="rounded-2xl border border-surface-800/50 bg-gradient-to-br from-surface-900 to-surface-900/60 p-8 shadow-2xl shadow-black/20 backdrop-blur-xl">
           {status === 'loading' && (
             <div className="text-center">
               <Loader2 size={40} className="mx-auto mb-4 animate-spin text-primary-500" />

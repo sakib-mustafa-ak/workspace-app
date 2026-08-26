@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { ConfigService } from '@nestjs/config';
 
 import { AuthController } from './controllers/auth.controller';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { MAIL_PROVIDER, RecordingMailProvider } from './mail/mail.provider';
+import { ResendMailProvider } from './mail/resend-mail.provider';
 import { EmailVerificationTokenRepository } from './repositories/email-verification-token.repository';
 import { IdentityRepository } from './repositories/identity.repository';
 import { PasswordResetTokenRepository } from './repositories/password-reset-token.repository';
@@ -64,11 +66,19 @@ import { AuthEventBus } from './events/auth.events';
     SessionRepository,
     EmailVerificationTokenRepository,
     PasswordResetTokenRepository,
-    // Mail provider — abstract (MAIL_PROVIDER), concrete (Recorder)
+    // Mail provider — abstract (MAIL_PROVIDER), concrete (Recorder or Resend)
+    // When RESEND_API_KEY is configured, production email is sent via Resend;
+    // otherwise the in-memory recorder captures messages for dev/test.
     RecordingMailProvider,
+    ResendMailProvider,
     {
       provide: MAIL_PROVIDER,
-      useExisting: RecordingMailProvider,
+      useFactory: (
+        recorder: RecordingMailProvider,
+        resend: ResendMailProvider,
+        config: ConfigService,
+      ) => (config.get('RESEND_API_KEY') ? resend : recorder),
+      inject: [RecordingMailProvider, ResendMailProvider, ConfigService],
     },
     // Cross-cutting
     AuthEventBus,

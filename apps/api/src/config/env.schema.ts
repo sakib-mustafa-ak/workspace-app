@@ -61,6 +61,12 @@ export const envSchema = z.object({
   S3_BUCKET: z.string().optional(),
   S3_ACCESS_KEY_ID: z.string().optional(),
   S3_SECRET_ACCESS_KEY: z.string().optional(),
+
+  // Mail delivery. When RESEND_API_KEY is set, the Resend provider is used
+  // for transactional email (verification, password reset, invites). When
+  // absent, the in-memory RecordingMailProvider captures messages for dev/test.
+  RESEND_API_KEY: z.string().optional(),
+  MAIL_FROM: z.string().optional(),
 });
 
 // Cross-field rule: the s3 driver is useless (and fails at first upload,

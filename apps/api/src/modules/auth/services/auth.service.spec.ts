@@ -44,6 +44,8 @@ const mockIdentity: IdentityRow = {
 
 describe('AuthService session lifecycle', () => {
   let service: AuthService;
+  let sessions: jest.Mocked<SessionRepository>;
+  let events: jest.Mocked<AuthEventBus>;
 
   const persistedSession = () => ({
     id: 's1',
@@ -101,6 +103,7 @@ describe('AuthService session lifecycle', () => {
           provide: SessionRepository,
           useValue: {
             findByRefreshTokenHash: jest.fn(),
+            findById: jest.fn(),
             revoke: jest.fn(),
             replaceRefreshToken: jest.fn(),
             touch: jest.fn(),
@@ -135,12 +138,85 @@ describe('AuthService session lifecycle', () => {
             publishUserRegistered: jest.fn(),
             publishUserLoggedIn: jest.fn(),
             publishRefreshTokenRotated: jest.fn(),
+            publishRefreshTokenReused: jest.fn(),
           },
         },
       ],
     }).compile();
 
     service = module.get<AuthService>(AuthService);
+    sessions = module.get(SessionRepository);
+    events = module.get(AuthEventBus);
+  });
+
+  describe('refresh token reuse detection', () => {
+    const liveSession = {
+      id: 's1',
+      userId: 'u1',
+      refreshTokenHash: 'different-hash',
+      expiresAt: new Date(Date.now() + 3_600_000),
+      revokedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastUsedAt: null,
+      deviceName: null,
+      userAgent: null,
+      ipAddress: null,
+      publicKeys: null,
+    };
+
+    it('revokes the session and signals compromise when a superseded token is replayed', async () => {
+      // Regression: replaying a rotated-out token used to throw a generic
+      // INVALID_REFRESH_TOKEN with no revocation — an attacker holding a
+      // stolen old token could keep probing indefinitely.
+      sessions.findByRefreshTokenHash.mockResolvedValue(undefined);
+      sessions.findById.mockResolvedValue(liveSession);
+
+      await expect(
+        service.refresh({
+          refreshToken: 'stolen-superseded-token',
+          meta: { ip: null, userAgent: null },
+        }),
+      ).rejects.toThrow('Refresh token is unknown.');
+
+      expect(sessions.revoke).toHaveBeenCalledWith('s1');
+      expect(events.publishRefreshTokenReused).toHaveBeenCalledWith(
+        expect.objectContaining({ userId: 'u1', sessionId: 's1' }),
+      );
+    });
+
+    it('does not revoke when no live session matches the sid', async () => {
+      sessions.findByRefreshTokenHash.mockResolvedValue(undefined);
+      sessions.findById.mockResolvedValue(undefined);
+
+      await expect(
+        service.refresh({
+          refreshToken: 'forged-token',
+          meta: { ip: null, userAgent: null },
+        }),
+      ).rejects.toThrow('Refresh token is unknown.');
+
+      expect(sessions.revoke).not.toHaveBeenCalled();
+      expect(events.publishRefreshTokenReused).not.toHaveBeenCalled();
+    });
+
+    it('signals reuse when a revoked session token is presented again', async () => {
+      sessions.findByRefreshTokenHash.mockResolvedValue({
+        ...liveSession,
+        revokedAt: new Date(),
+      });
+
+      await expect(
+        service.refresh({
+          refreshToken: 'current-but-revoked-token',
+          meta: { ip: null, userAgent: null },
+        }),
+      ).rejects.toThrow('Refresh token has been revoked.');
+
+      expect(events.publishRefreshTokenReused).toHaveBeenCalledWith(
+        expect.objectContaining({ userId: 'u1', sessionId: 's1' }),
+      );
+    });
   });
 
   describe('login opens a session with the configured TTL', () => {

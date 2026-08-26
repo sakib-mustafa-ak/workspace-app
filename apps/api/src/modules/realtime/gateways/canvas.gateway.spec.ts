@@ -6,15 +6,17 @@ import { UsersService } from '../../users/services/users.service';
 import { NotificationsEventBus } from '../../notifications/events/notifications.events';
 import { BoardsRepository } from '../../boards/repositories/boards.repository';
 import { WorkspaceMembersRepository } from '../../workspaces/repositories/workspace-members.repository';
+import { WorkspacesEventBus } from '../../workspaces/events/workspaces.events';
 
 describe('CanvasGateway', () => {
   let gateway: CanvasGateway;
   let membersRepo: { findByWorkspaceAndUser: jest.Mock };
-  let boardsRepo: { findById: jest.Mock };
+  let boardsRepo: { findById: jest.Mock; listByWorkspace: jest.Mock };
 
   beforeEach(async () => {
     boardsRepo = {
       findById: jest.fn().mockResolvedValue({ id: 'b-1', workspaceId: 'w-1' }),
+      listByWorkspace: jest.fn().mockResolvedValue([]),
     };
     membersRepo = {
       findByWorkspaceAndUser: jest.fn().mockResolvedValue({ id: 'm-1' }),
@@ -39,6 +41,13 @@ describe('CanvasGateway', () => {
         },
         { provide: BoardsRepository, useValue: boardsRepo },
         { provide: WorkspaceMembersRepository, useValue: membersRepo },
+        {
+          provide: WorkspacesEventBus,
+          useValue: {
+            onMemberRemoved: jest.fn(),
+            onMemberRoleChanged: jest.fn(),
+          },
+        },
         {
           provide: ConfigService,
           useValue: { get: jest.fn().mockReturnValue('test-secret') },
@@ -167,9 +176,11 @@ describe('CanvasGateway', () => {
     expect(join).toHaveBeenCalledWith('board:b-1');
   });
 
-  it('grants a lock and broadcasts object:locked to the room', () => {
-    const to = jest.fn().mockReturnValue({ emit: jest.fn() });
+  it('grants a lock and broadcasts object:locked to the room', async () => {
+    const emit = jest.fn();
+    const to = jest.fn().mockReturnValue({ emit });
     const client = {
+      id: 'sock-1',
       userId: 'u-1',
       displayName: 'Test User',
       to,
@@ -179,25 +190,30 @@ describe('CanvasGateway', () => {
       boardId: 'b-1',
       objectId: 'o-1',
     } as never);
+    await new Promise((r) => setImmediate(r));
 
     expect(to).toHaveBeenCalledWith('board:b-1');
   });
 
-  it('denies a lock held by another user and notifies the requester', () => {
+  it('denies a lock held by another user and notifies the requester', async () => {
     const emit = jest.fn();
     const a = {
+      id: 'sock-a',
       userId: 'u-1',
       displayName: 'Alice',
       to: jest.fn().mockReturnValue({ emit: jest.fn() }),
     } as unknown as AuthenticatedSocket;
     const b = {
+      id: 'sock-b',
       userId: 'u-2',
       displayName: 'Bob',
       emit,
     } as unknown as AuthenticatedSocket;
 
     gateway.handleObjectLock(a, { boardId: 'b-1', objectId: 'o-1' } as never);
+    await new Promise((r) => setImmediate(r));
     gateway.handleObjectLock(b, { boardId: 'b-1', objectId: 'o-1' } as never);
+    await new Promise((r) => setImmediate(r));
 
     expect(emit).toHaveBeenCalledWith('object:lock:denied', {
       objectId: 'o-1',
@@ -205,17 +221,20 @@ describe('CanvasGateway', () => {
     });
   });
 
-  it('releases a lock on unlock and broadcasts object:unlocked', () => {
+  it('releases a lock on unlock and broadcasts object:unlocked', async () => {
     const emit = jest.fn();
     const to = jest.fn().mockReturnValue({ emit });
     const a = {
+      id: 'sock-a',
       userId: 'u-1',
       displayName: 'Alice',
       to,
     } as unknown as AuthenticatedSocket;
 
     gateway.handleObjectLock(a, { boardId: 'b-1', objectId: 'o-1' } as never);
+    await new Promise((r) => setImmediate(r));
     gateway.handleObjectUnlock(a, { boardId: 'b-1', objectId: 'o-1' } as never);
+    await new Promise((r) => setImmediate(r));
 
     expect(to).toHaveBeenCalledWith('board:b-1');
     expect(emit).toHaveBeenCalledWith('object:unlocked', {

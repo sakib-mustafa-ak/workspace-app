@@ -501,7 +501,7 @@ export class WorkspacesService {
   ): Promise<void> {
     await this.requireRole(workspaceId, userId, 'ADMIN');
 
-    const invitation = await this.invitations.findBySelector(invitationId);
+    const invitation = await this.invitations.findById(invitationId);
     if (!invitation) {
       throw new WorkspacesException(
         WorkspacesErrorCode.INVITATION_NOT_FOUND,

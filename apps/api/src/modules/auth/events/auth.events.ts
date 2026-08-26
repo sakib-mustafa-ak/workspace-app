@@ -25,6 +25,11 @@ export type UserRegisteredPayload = { userId: string };
 export type UserLoggedInPayload = { userId: string; identityId: string };
 export type UserLoggedOutPayload = { userId: string; sessionId: string };
 export type RefreshTokenRotatedPayload = { userId: string; sessionId: string };
+export type RefreshTokenReusedPayload = {
+  userId: string;
+  sessionId: string;
+  revokedAt: string;
+};
 
 /**
  * Dispatched when a user requests a verification email, *after* the
@@ -74,6 +79,7 @@ export const AUTH_EVENTS = {
   userLoggedIn: 'UserLoggedIn',
   userLoggedOut: 'UserLoggedOut',
   refreshTokenRotated: 'RefreshTokenRotated',
+  refreshTokenReused: 'RefreshTokenReused',
   emailVerificationRequested: 'EmailVerificationRequested',
   emailVerified: 'EmailVerified',
   passwordResetRequested: 'PasswordResetRequested',
@@ -115,6 +121,11 @@ export class AuthEventBus {
       userId,
       sessionId,
     } satisfies UserLoggedOutPayload);
+  }
+
+  /** Compromise signal: a superseded or revoked refresh token was replayed. */
+  publishRefreshTokenReused(payload: RefreshTokenReusedPayload): void {
+    this.emit(AUTH_EVENTS.refreshTokenReused, payload);
   }
 
   publishRefreshTokenRotated(userId: string, sessionId: string): void {

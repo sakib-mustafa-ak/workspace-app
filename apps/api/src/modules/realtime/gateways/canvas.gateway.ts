@@ -17,6 +17,7 @@ import { UsersService } from '../../users/services/users.service';
 import { NotificationsEventBus } from '../../notifications/events/notifications.events';
 import { BoardsRepository } from '../../boards/repositories/boards.repository';
 import { WorkspaceMembersRepository } from '../../workspaces/repositories/workspace-members.repository';
+import { WorkspacesEventBus } from '../../workspaces/events/workspaces.events';
 import type {
   PresenceUser,
   ObjectLock,
@@ -50,6 +51,17 @@ export class CanvasGateway
 
   private static readonly LOCK_TTL_MS = 30_000;
 
+  /** Caps for attacker-influenceable in-memory maps. Without bounds, an
+   *  authenticated user could grow these indefinitely (memory DoS) by
+   *  joining random board ids or locking random object ids. */
+  private static readonly MAX_BOARDS = 10_000;
+  private static readonly MAX_SOCKETS_TRACKED = 10_000;
+  private static readonly MAX_LOCKED_BOARDS = 10_000;
+
+  /** socket id -> authenticated user id, so membership cache and room
+   *  eviction can find a user's sockets when their membership ends. */
+  private socketUsers = new Map<string, string>();
+
   private readonly jwtSecret: string;
 
   constructor(
@@ -60,6 +72,8 @@ export class CanvasGateway
     private readonly boardsRepo: BoardsRepository,
     @Inject(WorkspaceMembersRepository)
     private readonly membersRepo: WorkspaceMembersRepository,
+    @Inject(WorkspacesEventBus)
+    private readonly workspacesEvents: WorkspacesEventBus,
     config: ConfigService,
   ) {
     const secret = config.get<string>('auth.jwt.access.secret');
@@ -75,6 +89,75 @@ export class CanvasGateway
         .to(`user:${payload.userId}`)
         .emit('notification:created', payload);
     });
+
+    // Membership changes must take effect immediately: without eviction,
+    // a removed member keeps receiving board events until they reconnect.
+    this.workspacesEvents.onMemberRemoved(({ workspaceId, userId }) => {
+      void this.evictUserFromWorkspace(workspaceId, userId);
+    });
+    this.workspacesEvents.onMemberRoleChanged(({ workspaceId, userId }) => {
+      // A role change can revoke privileges; drop cached decisions now.
+      void this.evictUserFromWorkspace(workspaceId, userId);
+    });
+  }
+
+  /**
+   * Drop all cached membership decisions and board-room presence for one
+   * user's sockets, and release their object locks. Called on removal or
+   * role change; the next relayed event re-verifies against the DB.
+   */
+  async evictUserFromWorkspace(
+    workspaceId: string,
+    userId: string,
+  ): Promise<void> {
+    let boards: { id: string }[] = [];
+    try {
+      boards = await this.boardsRepo.listByWorkspace(workspaceId);
+    } catch {
+      return;
+    }
+
+    for (const [socketId, trackedUser] of this.socketUsers) {
+      if (trackedUser !== userId) continue;
+      this.membershipCache.delete(socketId);
+
+      const socket = this.server?.sockets?.sockets.get(socketId) as
+        | AuthenticatedSocket
+        | undefined;
+      if (!socket) {
+        this.socketUsers.delete(socketId);
+        continue;
+      }
+      for (const board of boards) {
+        await socket.leave(`board:${board.id}`);
+        this.removePresence(board.id, userId);
+        socket.emit('board:join:denied', {
+          boardId: board.id,
+          reason: 'membership_changed',
+        });
+      }
+      this.releaseUserLocks(userId, socketId);
+    }
+  }
+
+  private trackSocket(socketId: string, userId: string): void {
+    if (this.socketUsers.size >= CanvasGateway.MAX_SOCKETS_TRACKED) {
+      const oldest = [...this.socketUsers.keys()][0];
+      if (oldest !== undefined) this.socketUsers.delete(oldest);
+    }
+    this.socketUsers.set(socketId, userId);
+  }
+
+  private removePresence(boardId: string, userId?: string): void {
+    const users = this.boardRooms.get(boardId);
+    if (!users || !userId) return;
+    if (users.delete(userId)) {
+      if (users.size === 0) this.boardRooms.delete(boardId);
+      else this.boardRooms.set(boardId, users);
+      this.server
+        .to(`board:${boardId}`)
+        .emit('presence:update', Array.from(users.values()));
+    }
   }
 
   async handleConnection(client: AuthenticatedSocket): Promise<void> {
@@ -90,6 +173,7 @@ export class CanvasGateway
       const { payload } = await jwtVerify(token, secret);
       const userId = payload.sub as string;
       client.userId = userId;
+      this.trackSocket(client.id, userId);
       client.displayName = await this.resolveDisplayName(userId);
       await client.join(`user:${userId}`);
       this.syncStaleName(client);
@@ -191,6 +275,10 @@ export class CanvasGateway
       }
       await client.join(`board:${data.boardId}`);
       if (!this.boardRooms.has(data.boardId)) {
+        if (this.boardRooms.size >= CanvasGateway.MAX_BOARDS) {
+          const oldest = [...this.boardRooms.keys()][0];
+          if (oldest !== undefined) this.boardRooms.delete(oldest);
+        }
         this.boardRooms.set(data.boardId, new Map());
       }
       const users = this.boardRooms.get(data.boardId)!;
@@ -286,6 +374,12 @@ export class CanvasGateway
     for (const [objectId, lock] of locks) {
       if (lock.expiresAt <= now) locks.delete(objectId);
     }
+    if (!this.objectLocks.has(boardId)) {
+      if (this.objectLocks.size >= CanvasGateway.MAX_LOCKED_BOARDS) {
+        const oldest = [...this.objectLocks.keys()][0];
+        if (oldest !== undefined) this.objectLocks.delete(oldest);
+      }
+    }
     this.objectLocks.set(boardId, locks);
     return locks;
   }
@@ -312,6 +406,19 @@ export class CanvasGateway
     @MessageBody() data: { boardId: string; objectId: string },
   ): void {
     if (!client.userId || !data.objectId) return;
+    // Lock frames used to be trusted on the room name alone — any authed
+    // user could push lock/unlock into arbitrary board rooms.
+    void (async () => {
+      if (!(await this.isBoardMember(client.id, client.userId!, data.boardId)))
+        return;
+      this.applyObjectLock(client, data);
+    })();
+  }
+
+  private applyObjectLock(
+    client: AuthenticatedSocket,
+    data: { boardId: string; objectId: string },
+  ): void {
     const locks = this.getBoardLocks(data.boardId);
     const held = locks.get(data.objectId);
     if (held && held.expiresAt <= Date.now()) {
@@ -328,7 +435,7 @@ export class CanvasGateway
     }
     locks.set(data.objectId, {
       objectId: data.objectId,
-      userId: client.userId,
+      userId: client.userId!,
       displayName: client.displayName || 'Unknown',
       expiresAt: Date.now() + CanvasGateway.LOCK_TTL_MS,
       socketId: client.id,
@@ -345,7 +452,18 @@ export class CanvasGateway
     @ConnectedSocket() client: AuthenticatedSocket,
     @MessageBody() data: { boardId: string; objectId: string },
   ): void {
-    if (!client.userId) return;
+    if (!client.userId || !data.objectId) return;
+    void (async () => {
+      if (!(await this.isBoardMember(client.id, client.userId!, data.boardId)))
+        return;
+      this.applyObjectUnlock(client, data);
+    })();
+  }
+
+  private applyObjectUnlock(
+    client: AuthenticatedSocket,
+    data: { boardId: string; objectId: string },
+  ): void {
     const locks = this.getBoardLocks(data.boardId);
     const held = locks.get(data.objectId);
     if (held && held.userId === client.userId && held.socketId === client.id) {

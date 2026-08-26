@@ -22,6 +22,15 @@ export class InvitationsRepository {
     return created;
   }
 
+  public async findById(id: string): Promise<InvitationRow | undefined> {
+    const [row] = await this.db
+      .select()
+      .from(invitations)
+      .where(eq(invitations.id, id))
+      .limit(1);
+    return row;
+  }
+
   public async findBySelector(
     selector: string,
   ): Promise<InvitationRow | undefined> {

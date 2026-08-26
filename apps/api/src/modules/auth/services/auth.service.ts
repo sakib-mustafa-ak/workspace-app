@@ -188,6 +188,24 @@ export class AuthService {
     const storedHash = this.tokenHash.hash(input.refreshToken);
     const session = await this.sessions.findByRefreshTokenHash(storedHash);
     if (!session) {
+      // Signature is valid but the hash is unknown: the token was rotated
+      // out (replay of a superseded token) or forged. If a live session
+      // with this sid exists, treat replay as a compromise signal and
+      // kill it — the whole family IS this session under per-session
+      // rotation.
+      const candidate = await this.sessions.findById(sessionId);
+      if (candidate && candidate.revokedAt === null) {
+        await this.sessions.revoke(candidate.id);
+        this.events.publishRefreshTokenReused({
+          userId: candidate.userId,
+          sessionId: candidate.id,
+          revokedAt: new Date().toISOString(),
+        });
+        this.logger.warn(
+          { sessionId: candidate.id, userId: candidate.userId },
+          'Refresh token reuse detected — session revoked.',
+        );
+      }
       throw new AuthException(
         AuthErrorCode.INVALID_REFRESH_TOKEN,
         'Refresh token is unknown.',
@@ -203,6 +221,13 @@ export class AuthService {
       );
     }
     if (session.revokedAt !== null) {
+      // Presenting a revoked session's current token after revocation
+      // is itself a replay attempt; surface it for observability.
+      this.events.publishRefreshTokenReused({
+        userId: session.userId,
+        sessionId: session.id,
+        revokedAt: session.revokedAt.toISOString(),
+      });
       throw new AuthException(
         AuthErrorCode.REFRESH_TOKEN_REVOKED,
         'Refresh token has been revoked.',

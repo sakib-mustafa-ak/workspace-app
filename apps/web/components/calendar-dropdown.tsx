@@ -142,7 +142,7 @@ export function CalendarDropdown() {
             <>
               <div className="mb-1 grid grid-cols-7 gap-px">
                 {weekDays.map((day) => (
-                  <div key={day} className="py-1 text-center text-[10px] font-medium text-surface-500">
+                  <div key={day} className="py-1 text-center text-caption font-medium text-surface-500">
                     {day}
                   </div>
                 ))}
@@ -153,7 +153,7 @@ export function CalendarDropdown() {
                   <button
                     key={index}
                     onClick={() => setSelectedDate(day.date)}
-                    className={`relative flex h-8 items-center justify-center rounded text-[11px] transition-colors hover:bg-surface-800 ${
+                    className={`relative flex h-8 items-center justify-center rounded text-xs transition-colors hover:bg-surface-800 ${
                       !day.isCurrentMonth ? 'text-surface-600' : 'text-surface-300'
                     } ${
                       isToday(day.date) ? 'bg-primary-500/20 text-primary-400 font-medium' : ''
@@ -171,7 +171,7 @@ export function CalendarDropdown() {
 
               {selectedDate && selectedDateTasks.length > 0 && (
                 <div className="mt-3 border-t border-surface-800 pt-3">
-                  <p className="mb-2 text-[10px] font-medium text-surface-500">
+                  <p className="mb-2 text-caption font-medium text-surface-500">
                     {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
                   </p>
                   <div className="space-y-1">
@@ -181,7 +181,7 @@ export function CalendarDropdown() {
                       </div>
                     ))}
                     {selectedDateTasks.length > 3 && (
-                      <p className="text-[10px] text-surface-500">+{selectedDateTasks.length - 3} more</p>
+                      <p className="text-caption text-surface-500">+{selectedDateTasks.length - 3} more</p>
                     )}
                   </div>
                 </div>

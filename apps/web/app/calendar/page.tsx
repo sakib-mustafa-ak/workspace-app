@@ -163,7 +163,7 @@ export default function CalendarPage() {
                 {weekDays.map((day) => (
                   <div
                     key={day}
-                    className="bg-surface-900 px-1 py-1.5 text-center text-[10px] font-medium text-surface-500 sm:px-2 sm:py-2 sm:text-xs"
+                    className="bg-surface-900 px-1 py-1.5 text-center text-caption font-medium text-surface-500 sm:px-2 sm:py-2 sm:text-xs"
                   >
                     {day}
                   </div>
@@ -182,7 +182,7 @@ export default function CalendarPage() {
                     }`}
                   >
                     <div
-                      className={`mb-0.5 text-[10px] sm:mb-1 sm:text-xs ${
+                      className={`mb-0.5 text-caption sm:mb-1 sm:text-xs ${
                         isToday(day.date)
                           ? 'flex h-4 w-4 items-center justify-center rounded-full bg-primary-500 text-white sm:h-5 sm:w-5'
                           : 'text-surface-400'
@@ -195,13 +195,13 @@ export default function CalendarPage() {
                         {day.tasks.slice(0, 2).map((task) => (
                           <div
                             key={task.id}
-                            className="hidden truncate rounded bg-primary-500/20 px-1 py-0.5 text-[9px] text-primary-300 sm:block sm:text-[10px]"
+                            className="hidden truncate rounded bg-primary-500/20 px-1 py-0.5 text-[9px] text-primary-300 sm:block sm:text-caption"
                           >
                             {task.title}
                           </div>
                         ))}
                         {day.tasks.length > 0 && (
-                          <div className="text-[8px] text-surface-500 sm:text-[10px]">
+                          <div className="text-[8px] text-surface-500 sm:text-caption">
                             {day.tasks.length > 2 ? `+${day.tasks.length - 2}` : day.tasks.length === 1 ? '' : day.tasks.length}
                           </div>
                         )}
@@ -237,7 +237,7 @@ export default function CalendarPage() {
                     <p className="text-sm text-surface-200">{task.title}</p>
                     <div className="mt-1 flex items-center gap-2">
                       <span
-                        className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
+                        className={`rounded px-1.5 py-0.5 text-caption font-medium ${
                           task.status === 'DONE'
                             ? 'bg-green-500/20 text-green-400'
                             : task.status === 'IN_PROGRESS'
@@ -248,7 +248,7 @@ export default function CalendarPage() {
                         {task.status}
                       </span>
                       <span
-                        className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
+                        className={`rounded px-1.5 py-0.5 text-caption font-medium ${
                           task.priority === 'HIGH'
                             ? 'bg-red-500/20 text-red-400'
                             : task.priority === 'MEDIUM'

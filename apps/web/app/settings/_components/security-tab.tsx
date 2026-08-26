@@ -83,7 +83,7 @@ export function SecurityTab() {
                 <div className="flex items-center gap-2">
                   <Laptop size={16} className="text-surface-400" />
                   <span className="text-sm font-medium text-surface-200">{s.deviceName || s.browser || 'Unknown device'}</span>
-                  {s.isCurrent && <span className="rounded bg-primary-600/20 px-1.5 py-0.5 text-[10px] text-primary-400">Current</span>}
+                  {s.isCurrent && <span className="rounded bg-primary-600/20 px-1.5 py-0.5 text-caption text-primary-400">Current</span>}
                 </div>
                 <p className="mt-0.5 text-xs text-surface-500">{s.ip} &middot; {new Date(s.lastActiveAt).toLocaleDateString()}</p>
               </div>

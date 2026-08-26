@@ -22,7 +22,7 @@ const ROLE_STYLES: Record<string, string> = {
 
 function RoleBadge({ role }: { role: string }) {
   return (
-    <span className={`rounded border px-1.5 py-0.5 text-[10px] font-medium ${ROLE_STYLES[role] || ROLE_STYLES.VIEWER}`}>
+    <span className={`rounded border px-1.5 py-0.5 text-caption font-medium ${ROLE_STYLES[role] || ROLE_STYLES.VIEWER}`}>
       {role}
     </span>
   );

@@ -167,7 +167,7 @@ export function Sidebar() {
                 <item.icon size={16} className={active ? 'text-primary-400' : ''} />
                 <span className="flex-1">{item.label}</span>
                 {item.href === '/notifications' && unreadCount > 0 && (
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-caption font-bold text-white">
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 )}

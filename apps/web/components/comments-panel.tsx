@@ -198,15 +198,15 @@ function CommentRow({
                 className="h-6 w-6 shrink-0 rounded-full object-cover"
               />
             ) : (
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-500/30 to-primary-700/30 text-[10px] font-bold text-primary-300">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary-500/30 to-primary-700/30 text-caption font-bold text-primary-300">
                 {avatarInitial}
               </div>
             )}
             <span className="text-xs font-semibold text-warm-300">{authorName}</span>
-            <span className="text-[10px] text-surface-500">
+            <span className="text-caption text-surface-500">
               {new Date(comment.createdAt).toLocaleString()}
             </span>
-            {comment.editedAt && <span className="text-[10px] text-surface-600">(edited)</span>}
+            {comment.editedAt && <span className="text-caption text-surface-600">(edited)</span>}
             {isOwner && (
               <div className="ml-auto flex gap-1 shrink-0">
                 <button onClick={onStartEdit} title="Edit comment" aria-label="Edit comment" className="text-surface-500 hover:text-surface-300">
@@ -221,7 +221,7 @@ function CommentRow({
           <p className="mt-1.5 text-xs text-surface-200">{comment.content}</p>
           <div className="mt-1.5 flex items-center gap-2">
             {!comment.parentId && (
-              <button onClick={onReply} className="text-[10px] text-surface-500 hover:text-surface-300">
+              <button onClick={onReply} className="text-caption text-surface-500 hover:text-surface-300">
                 Reply
               </button>
             )}

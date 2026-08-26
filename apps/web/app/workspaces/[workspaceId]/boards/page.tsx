@@ -174,7 +174,7 @@ export default function BoardsPage() {
                 </p>
               </Link>
               {board.archivedAt && (
-                <span className="mt-3 inline-flex items-center rounded border border-amber-500/20 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-400">
+                <span className="mt-3 inline-flex items-center rounded border border-amber-500/20 bg-amber-500/10 px-1.5 py-0.5 text-caption font-medium text-amber-400">
                   Archived
                 </span>
               )}
@@ -182,21 +182,21 @@ export default function BoardsPage() {
                 {board.archivedAt ? (
                   <button
                     onClick={() => boardsApi.unarchive(workspaceId, board.id).then(() => loadBoards())}
-                    className="flex items-center gap-1 rounded px-2 py-1 text-[11px] text-surface-400 hover:bg-surface-800 hover:text-white"
+                    className="flex items-center gap-1 rounded px-2 py-1 text-xs text-surface-400 hover:bg-surface-800 hover:text-white"
                   >
                     <Archive size={12} /> Unarchive
                   </button>
                 ) : (
                   <button
                     onClick={() => boardsApi.archive(workspaceId, board.id).then(() => loadBoards())}
-                    className="flex items-center gap-1 rounded px-2 py-1 text-[11px] text-surface-400 hover:bg-surface-800 hover:text-white"
+                    className="flex items-center gap-1 rounded px-2 py-1 text-xs text-surface-400 hover:bg-surface-800 hover:text-white"
                   >
                     <Archive size={12} /> Archive
                   </button>
                 )}
                 <button
                   onClick={() => { if (confirm('Delete this board?')) boardsApi.delete(workspaceId, board.id).then(() => loadBoards()); }}
-                  className="flex items-center gap-1 rounded px-2 py-1 text-[11px] text-red-400 hover:bg-red-500/10"
+                  className="flex items-center gap-1 rounded px-2 py-1 text-xs text-red-400 hover:bg-red-500/10"
                 >
                   <Trash2 size={12} /> Delete
                 </button>

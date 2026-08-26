@@ -104,7 +104,7 @@ export default function UserDetailPage() {
               <h1 className="text-xl font-bold tracking-tight text-warm-300">{user.displayName}</h1>
               <p className="mt-0.5 text-sm text-surface-400">{user.email}</p>
               {user.status !== 'ACTIVE' && (
-                <span className="mt-1.5 inline-flex items-center gap-1 rounded border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-400">
+                <span className="mt-1.5 inline-flex items-center gap-1 rounded border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-400">
                   <Shield size={11} />
                   {user.status}
                 </span>

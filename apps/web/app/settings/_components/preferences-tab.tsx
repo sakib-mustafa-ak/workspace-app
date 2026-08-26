@@ -130,7 +130,7 @@ export function PreferencesTab() {
                     )}
                     {filteredGroups.map((g) => (
                       <div key={g.region} className="mb-1 last:mb-0">
-                        <p className="px-3 pb-1 pt-2 text-[10px] font-medium uppercase tracking-wider text-surface-600">{g.region}</p>
+                        <p className="px-3 pb-1 pt-2 text-caption font-medium uppercase tracking-wider text-surface-600">{g.region}</p>
                         {g.zones.map((tz) => (
                           <button
                             key={tz}

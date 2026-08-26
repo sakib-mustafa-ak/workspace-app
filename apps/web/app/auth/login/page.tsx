@@ -144,7 +144,7 @@ export default function LoginPage() {
                           role="button"
                           aria-label={`Remove ${p.displayName}`}
                           onClick={(e) => { e.stopPropagation(); removeRecentProfile(p.id); setProfiles(getRecentProfiles()); }}
-                          className="absolute -right-1 -top-1 hidden h-4 w-4 items-center justify-center rounded-full bg-surface-600 text-[10px] text-surface-100 group-hover:flex"
+                          className="absolute -right-1 -top-1 hidden h-4 w-4 items-center justify-center rounded-full bg-surface-600 text-caption text-surface-100 group-hover:flex"
                         >
                           ×
                         </span>

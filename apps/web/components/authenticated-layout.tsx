@@ -56,12 +56,7 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
         </div>
 
 <main className="relative flex min-w-0 flex-1 flex-col overflow-auto pb-16 lg:pb-0">
-          <div className="tb-x-3 sticky top-0 z-30 flex flex-col items-center justify-center border-b border-surface-800/70 bg-surface-950/70 px-4 backdrop-blur-xl lg:hidden">
-            <style>{`
-              .tb-x-3 { height: 5rem; }
-              .tb-x-3-name { font-size: 1.25rem; letter-spacing: 0.26em; }
-              .tb-x-3-sub { font-size: 0.6875rem; letter-spacing: 0.26em; margin-top: 0.4375rem; }
-            `}</style>
+          <div className="sticky top-0 z-30 flex h-20 flex-col items-center justify-center border-b border-surface-800/70 bg-surface-950/70 px-4 backdrop-blur-xl lg:hidden">
             <button
               onClick={() => setSidebarOpen(true)}
               title="Open navigation menu"
@@ -70,8 +65,8 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
             >
               <Menu size={22} />
             </button>
-            <span className="tb-x-3-name text-xl font-bold uppercase tracking-[0.26em] text-surface-100">Workspace</span>
-            <span className="tb-x-3-sub mt-1.5 text-[11px] font-medium uppercase tracking-[0.26em] text-surface-500">OS</span>
+            <span className="text-xl font-bold uppercase tracking-[0.26em] text-surface-100">Workspace</span>
+            <span className="mt-1.5 text-xs font-medium uppercase tracking-[0.26em] text-surface-500">OS</span>
           </div>
 
           <ErrorBoundary>{children}</ErrorBoundary>
@@ -84,7 +79,7 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] ${
+              className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-caption ${
                 pathname === item.href ? 'text-primary-400' : 'text-surface-500'
               }`}
             >

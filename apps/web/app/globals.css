@@ -129,6 +129,16 @@
   transform: scaleX(1);
 }
 
+/* Semantic type scale (DESIGN.md hierarchy) */
+@layer utilities {
+  .text-display { @apply text-2xl font-bold leading-tight; }
+  .text-headline { @apply text-xl font-semibold leading-snug; }
+  .text-title { @apply text-base font-semibold; }
+  .text-body { @apply text-sm font-normal leading-normal; }
+  .text-label { @apply text-xs; }
+  .text-caption { @apply text-[10px] font-medium uppercase tracking-widest; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-name-in,
   .animate-slideUp,

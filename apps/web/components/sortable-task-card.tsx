@@ -32,7 +32,7 @@ export function SortableTaskCard({ task, onClick }: Props) {
       <p className="text-sm font-medium">{task.title}</p>
       <div className="mt-2 flex items-center gap-2">
         <span
-          className={`rounded px-1.5 py-0.5 text-[10px] font-medium uppercase ${
+          className={`rounded px-1.5 py-0.5 text-caption font-medium uppercase ${
             task.priority === 'CRITICAL'
               ? 'bg-red-500/10 text-red-400'
               : task.priority === 'HIGH'

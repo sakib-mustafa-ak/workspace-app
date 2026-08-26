@@ -121,7 +121,7 @@ export function CalendarView({ tasks, columns, onEditTask }: Props) {
 
       <div className="grid grid-cols-7 gap-px overflow-hidden rounded-xl border border-surface-800 bg-surface-800">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
-          <div key={d} className="bg-surface-900 px-2 py-2 text-center text-[11px] font-medium uppercase tracking-wider text-surface-500">
+          <div key={d} className="bg-surface-900 px-2 py-2 text-center text-xs font-medium uppercase tracking-wider text-surface-500">
             {d}
           </div>
         ))}
@@ -135,7 +135,7 @@ export function CalendarView({ tasks, columns, onEditTask }: Props) {
               className={`flex min-h-24 flex-col gap-1 p-1.5 ${isToday ? 'bg-surface-900' : 'bg-surface-950'}`}
             >
               <span
-                className={`self-end rounded px-1 text-[11px] ${isToday ? 'bg-primary-500 font-bold text-white' : 'text-surface-500'}`}
+                className={`self-end rounded px-1 text-xs ${isToday ? 'bg-primary-500 font-bold text-white' : 'text-surface-500'}`}
               >
                 {new Date(day).getDate()}
               </span>
@@ -144,13 +144,13 @@ export function CalendarView({ tasks, columns, onEditTask }: Props) {
                   <button
                     key={t.id}
                     onClick={() => onEditTask(t)}
-                    className="rounded-md bg-surface-800 px-1.5 py-1 text-left text-[11px] leading-tight text-surface-200 transition-colors hover:bg-surface-700"
+                    className="rounded-md bg-surface-800 px-1.5 py-1 text-left text-xs leading-tight text-surface-200 transition-colors hover:bg-surface-700"
                   >
                     <span className="line-clamp-2">{t.title}</span>
                   </button>
                 ))}
                 {list.length > 3 && (
-                  <span className="px-1 text-[10px] text-surface-500">+{list.length - 3} more</span>
+                  <span className="px-1 text-caption text-surface-500">+{list.length - 3} more</span>
                 )}
               </div>
             </div>

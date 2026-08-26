@@ -177,7 +177,7 @@ function TodoList() {
               <p className="text-sm text-surface-200">{task.title}</p>
               <div className="mt-1.5 flex items-center gap-2">
                 <span
-                  className={`text-[10px] font-medium ${
+                  className={`text-caption font-medium ${
                     task.dueDate && isOverdue(task.dueDate)
                       ? 'text-red-400'
                       : 'text-surface-400'
@@ -188,7 +188,7 @@ function TodoList() {
                 {(() => {
                   const board = boards[task.boardId];
                   return board ? (
-                    <span className="rounded bg-surface-700 px-1.5 py-0.5 text-[10px] text-surface-300">
+                    <span className="rounded bg-surface-700 px-1.5 py-0.5 text-caption text-surface-300">
                       {board.name}
                     </span>
                   ) : null;
@@ -306,7 +306,7 @@ function DashboardContent() {
           {recentBoards.length > 0 && (
             <div className="mb-8">
               <h2 className="mb-3 text-label text-surface-500">Recent boards</h2>
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+              <div className="flex gap-3 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 {recentBoards.map((rb) => (
                   <Link
                     key={rb.id}
@@ -369,7 +369,7 @@ function DashboardContent() {
                     <div className="min-w-0 flex-1">
                       <h3 className="text-sm font-semibold text-surface-200">{ws.name}</h3>
                       <p className="mt-0.5 line-clamp-1 text-xs text-surface-500">{ws.description || 'No description'}</p>
-                      <div className="mt-1.5 flex items-center gap-3 text-[11px] text-surface-600">
+                      <div className="mt-1.5 flex items-center gap-3 text-xs text-surface-600">
                         <span className="flex items-center gap-1"><Users size={11} />{ws.memberCount ?? 1}</span>
                         <span className="text-surface-700">·</span>
                         <span className="flex items-center gap-1"><LayoutGrid size={11} />{ws.boardCount ?? 0}</span>

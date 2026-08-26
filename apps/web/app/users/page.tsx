@@ -100,7 +100,7 @@ export default function UsersPage() {
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium text-warm-300 transition-colors group-hover:text-warm-200">{u.displayName}</span>
                       {u.status !== 'ACTIVE' && (
-                        <span className="rounded border border-amber-500/20 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-400">
+                        <span className="rounded border border-amber-500/20 bg-amber-500/10 px-1.5 py-0.5 text-caption font-medium text-amber-400">
                           {u.status}
                         </span>
                       )}

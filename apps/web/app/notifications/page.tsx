@@ -91,7 +91,7 @@ export default function NotificationsPage() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium">{n.title}</p>
                   {n.body && <p className="mt-0.5 text-xs text-surface-400">{n.body}</p>}
-                  <div className="mt-1.5 flex items-center gap-2 text-[11px] text-surface-500">
+                  <div className="mt-1.5 flex items-center gap-2 text-xs text-surface-500">
                     <span>{n.type}</span>
                     <span>&middot;</span>
                     <span>{new Date(n.createdAt).toLocaleString()}</span>

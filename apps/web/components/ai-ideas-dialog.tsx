@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Sparkles, X, Loader2, Plus } from 'lucide-react';
 import { aiApi } from '@/lib/ai';
 import { useToast } from '@/contexts/toast-context';
+import { useFocusTrap } from '@/hooks/use-focus-trap';
 
 type Props = {
   onClose: () => void;
@@ -15,6 +16,7 @@ export function AiIdeasDialog({ onClose, onCreateIdea }: Props) {
   const [ideas, setIdeas] = useState<{ text: string; priority?: string }[] | null>(null);
   const [loading, setLoading] = useState(false);
   const toast = useToast();
+  const trapRef = useFocusTrap(true, onClose);
 
   async function handleGenerate() {
     if (!topic.trim()) return;
@@ -30,11 +32,18 @@ export function AiIdeasDialog({ onClose, onCreateIdea }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
-      <div className="w-full max-w-md rounded-xl border border-surface-800 bg-surface-900 shadow-xl shadow-black/20" onClick={e => e.stopPropagation()}>
+      <div
+        ref={trapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="ai-ideas-dialog-title"
+        className="w-full max-w-md rounded-xl border border-surface-800 bg-surface-900 shadow-xl shadow-black/20"
+        onClick={e => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between border-b border-surface-800 px-6 py-4">
           <div className="flex items-center gap-2">
             <Sparkles size={16} className="text-primary-400" />
-            <h2 className="text-sm font-semibold">Generate Ideas</h2>
+            <h2 id="ai-ideas-dialog-title" className="text-sm font-semibold">Generate Ideas</h2>
           </div>
           <button onClick={onClose} className="text-surface-500 hover:text-surface-300"><X size={16} /></button>
         </div>

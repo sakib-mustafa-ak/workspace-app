@@ -7,6 +7,7 @@ import { checklistApi, type ChecklistItem } from '@/lib/checklist';
 import { workspacesApi, type WorkspaceMember } from '@/lib/workspaces';
 import { useToast } from '@/contexts/toast-context';
 import { ConfirmModal } from '@/components/confirm-modal';
+import { useFocusTrap } from '@/hooks/use-focus-trap';
 
 export type TaskModalMode = 'create' | 'edit';
 
@@ -47,6 +48,7 @@ export function TaskModal({
   const [newChecklistText, setNewChecklistText] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const toast = useToast();
+  const trapRef = useFocusTrap(true, onClose);
 
   useEffect(() => {
     Promise.all([
@@ -147,11 +149,15 @@ export function TaskModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
       <div
+        ref={trapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="task-modal-title"
         className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-surface-800 bg-surface-900 shadow-xl shadow-black/20"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-surface-800 px-6 py-4">
-          <h2 className="text-sm font-semibold">
+          <h2 id="task-modal-title" className="text-sm font-semibold">
             {mode === 'create' ? 'Create task' : 'Edit task'}
           </h2>
           <button onClick={onClose} title="Close" aria-label="Close" className="text-surface-500 hover:text-surface-300">

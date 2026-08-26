@@ -158,6 +158,11 @@
   font-variant-numeric: tabular-nums;
 }
 
+:focus-visible {
+  outline: 2px solid var(--color-primary-400);
+  outline-offset: 2px;
+}
+
 @keyframes particleDrift {
   0%, 100% { transform: translate(0, 0); }
   25% { transform: translate(var(--drift-x), calc(var(--drift-y) * -0.5)); }

@@ -25,6 +25,12 @@ export class UploadResponseDto {
   @ApiProperty()
   url!: string;
 
+  @ApiProperty({
+    description:
+      'Fresh access-controlled download URL (presigned for S3-compatible storage).',
+  })
+  downloadUrl!: string;
+
   @ApiProperty()
   provider!: string;
 

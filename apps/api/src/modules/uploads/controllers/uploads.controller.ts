@@ -1,19 +1,24 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
+  Header,
   HttpCode,
   HttpStatus,
   Inject,
   Param,
   ParseFilePipe,
+  ParseUUIDPipe,
   Post,
+  Res,
   UploadedFile,
   UseInterceptors,
   MaxFileSizeValidator,
   FileTypeValidator,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Throttle } from '@nestjs/throttler';
 import {
@@ -25,6 +30,9 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
+import { createReadStream } from 'node:fs';
+import { stat } from 'node:fs/promises';
+import { basename, join } from 'node:path';
 
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import type { CurrentUser as CurrentUserModel } from '../../auth/interfaces/current-user.interface';
@@ -32,6 +40,13 @@ import type { CurrentUser as CurrentUserModel } from '../../auth/interfaces/curr
 import { UploadsService } from '../services/uploads.service';
 import { UploadResponseDto } from '../dto/upload-response.dto';
 import { WorkspaceAccess } from '../../../common/decorators/workspace-access.decorator';
+import { isUuid } from '../../../common/utils/is-uuid.js';
+
+const ATTACHMENT_ONLY = new Set([
+  'image/svg+xml',
+  'text/html',
+  'application/xhtml+xml',
+]);
 
 @ApiTags('Uploads')
 @ApiBearerAuth()
@@ -55,14 +70,14 @@ export class UploadsController {
       type: 'object',
       properties: {
         file: { type: 'string', format: 'binary' },
-        boardId: { type: 'string' },
+        boardId: { type: 'string', format: 'uuid' },
       },
     },
   })
   @ApiCreatedResponse({ type: UploadResponseDto })
   public async upload(
     @CurrentUser() user: CurrentUserModel,
-    @Param('workspaceId') workspaceId: string,
+    @Param('workspaceId', ParseUUIDPipe) workspaceId: string,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -72,7 +87,7 @@ export class UploadsController {
           new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
           new FileTypeValidator({
             fileType:
-              /^(image\/(png|jpeg|gif|webp|svg\+xml)|application\/pdf|text\/(plain|markdown)|application\/json)$/,
+              /^(image\/(png|jpeg|gif|webp)|application\/pdf|text\/(plain|markdown)|application\/json)$/,
           }),
         ],
       }),
@@ -85,6 +100,9 @@ export class UploadsController {
     },
     @Body('boardId') boardId?: string,
   ): Promise<UploadResponseDto> {
+    if (boardId && !isUuid(boardId)) {
+      throw new BadRequestException('boardId must be a UUID');
+    }
     const upload = await this.uploads.upload(
       workspaceId,
       user.id,
@@ -100,7 +118,7 @@ export class UploadsController {
   @ApiOkResponse({ type: [UploadResponseDto] })
   public async listByWorkspace(
     @CurrentUser() user: CurrentUserModel,
-    @Param('workspaceId') workspaceId: string,
+    @Param('workspaceId', ParseUUIDPipe) workspaceId: string,
   ): Promise<UploadResponseDto[]> {
     const list = await this.uploads.listByWorkspace(workspaceId, user.id);
     return list.map(toUploadResponse);
@@ -112,10 +130,72 @@ export class UploadsController {
   @ApiOkResponse({ type: [UploadResponseDto] })
   public async listByBoard(
     @CurrentUser() user: CurrentUserModel,
-    @Param('boardId') boardId: string,
+    @Param('workspaceId', ParseUUIDPipe) workspaceId: string,
+    @Param('boardId', ParseUUIDPipe) boardId: string,
   ): Promise<UploadResponseDto[]> {
+    void workspaceId;
     const list = await this.uploads.listByBoard(boardId, user.id);
     return list.map(toUploadResponse);
+  }
+
+  /**
+   * Authenticated local-file download. This replaces the former public
+   * static mount at /uploads/** which served any user content to anyone
+   * holding the URL. S3-backed deployments never hit this route — they
+   * receive presigned URLs instead.
+   */
+  @Get('file/*splat')
+  @Header('X-Content-Type-Options', 'nosniff')
+  @ApiOperation({ summary: 'Download an upload (local storage only)' })
+  public async download(
+    @CurrentUser() user: CurrentUserModel,
+    @Param('workspaceId', ParseUUIDPipe) workspaceId: string,
+    @Param('splat') storageKey: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const decoded = decodeURIComponent(storageKey);
+    // Defense in depth beyond the membership check below: the key must
+    // live inside this workspace's prefix and contain no traversal.
+    if (
+      !decoded.startsWith(`${workspaceId}/`) ||
+      decoded.includes('..') ||
+      decoded.includes('\0')
+    ) {
+      res.status(HttpStatus.FORBIDDEN).json({
+        error: { code: 'UPLOAD.NOT_FOUND', message: 'Upload not found' },
+      });
+      return;
+    }
+
+    const list = await this.uploads.listByWorkspace(workspaceId, user.id);
+    const match = list.find((u) => u.storageKey === decoded);
+    if (!match) {
+      res.status(HttpStatus.NOT_FOUND).json({
+        error: { code: 'UPLOAD.NOT_FOUND', message: 'Upload not found' },
+      });
+      return;
+    }
+
+    const filePath = join(process.cwd(), 'uploads', decoded);
+    try {
+      const stats = await stat(filePath);
+      const inlineSafe = !ATTACHMENT_ONLY.has(match.mimeType.toLowerCase());
+      res.setHeader(
+        'Content-Type',
+        inlineSafe ? match.mimeType : 'application/octet-stream',
+      );
+      // SVG and friends download instead of rendering — no script execution.
+      res.setHeader(
+        'Content-Disposition',
+        `${inlineSafe ? 'inline' : 'attachment'}; filename="${encodeURIComponent(basename(match.originalName))}"`,
+      );
+      res.setHeader('Content-Length', String(stats.size));
+      createReadStream(filePath).pipe(res.status(HttpStatus.OK));
+    } catch {
+      res.status(HttpStatus.NOT_FOUND).json({
+        error: { code: 'UPLOAD.NOT_FOUND', message: 'Upload not found' },
+      });
+    }
   }
 
   @Delete(':uploadId')
@@ -123,7 +203,7 @@ export class UploadsController {
   @ApiOperation({ summary: 'Delete an upload' })
   public async delete(
     @CurrentUser() user: CurrentUserModel,
-    @Param('uploadId') uploadId: string,
+    @Param('uploadId', ParseUUIDPipe) uploadId: string,
   ): Promise<void> {
     await this.uploads.delete(uploadId, user.id);
   }
@@ -138,6 +218,7 @@ function toUploadResponse(u: {
   mimeType: string;
   size: number;
   url: string;
+  downloadUrl?: string;
   provider: string;
   createdAt: Date;
 }): UploadResponseDto {
@@ -150,6 +231,7 @@ function toUploadResponse(u: {
     mimeType: u.mimeType,
     size: u.size,
     url: u.url,
+    downloadUrl: u.downloadUrl ?? '',
     provider: u.provider,
     createdAt: u.createdAt,
   };

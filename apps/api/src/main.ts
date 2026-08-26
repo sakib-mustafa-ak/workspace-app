@@ -1,7 +1,5 @@
 import 'reflect-metadata';
 
-import { join } from 'node:path';
-
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
@@ -30,10 +28,6 @@ async function bootstrap(): Promise<void> {
   app.enableCors({
     origin: corsOrigins,
     credentials: true,
-  });
-
-  app.useStaticAssets(join(process.cwd(), 'uploads'), {
-    prefix: '/uploads/',
   });
 
   app.setGlobalPrefix(API_PREFIX);

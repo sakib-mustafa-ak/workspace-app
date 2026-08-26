@@ -47,6 +47,20 @@ export function configuration() {
         },
       },
     },
+
+    storage: {
+      driver: env.STORAGE_DRIVER,
+      s3:
+        env.STORAGE_DRIVER === 's3'
+          ? {
+              endpoint: env.S3_ENDPOINT as string,
+              region: env.S3_REGION as string,
+              bucket: env.S3_BUCKET as string,
+              accessKeyId: env.S3_ACCESS_KEY_ID as string,
+              secretAccessKey: env.S3_SECRET_ACCESS_KEY as string,
+            }
+          : null,
+    },
   };
 }
 

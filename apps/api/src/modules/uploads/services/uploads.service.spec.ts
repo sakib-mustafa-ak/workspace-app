@@ -39,8 +39,10 @@ describe('UploadsService', () => {
     const storage = {
       save: jest.fn().mockResolvedValue({
         storageKey: 'workspace-1/image.png',
-        url: '/uploads/workspace-1/image.png',
       }),
+      getDownloadUrl: jest
+        .fn()
+        .mockResolvedValue('https://signed.example.com/workspace-1/image.png'),
     };
 
     return {
@@ -115,6 +117,35 @@ describe('UploadsService', () => {
     expect(membersRepo.findByWorkspaceAndUser).toHaveBeenCalledWith(
       'workspace-1',
       'user-1',
+    );
+  });
+
+  it('rejects SVG uploads (stored-XSS vector)', async () => {
+    const { service, storage } = createService();
+
+    await expect(
+      service.upload('workspace-1', 'user-1', undefined, {
+        buffer: Buffer.from('<svg onload="alert(1)"></svg>'),
+        originalname: 'evil.svg',
+        mimetype: 'image/svg+xml',
+        size: 30,
+      }),
+    ).rejects.toThrow('File type is not allowed');
+    expect(storage.save).not.toHaveBeenCalled();
+  });
+
+  it('returns a fresh download URL instead of the stored url column', async () => {
+    const { service } = createService();
+
+    const result = await service.upload('workspace-1', 'user-1', undefined, {
+      buffer: Buffer.from('png'),
+      originalname: 'image.png',
+      mimetype: 'image/png',
+      size: 3,
+    });
+
+    expect(result.downloadUrl).toBe(
+      'https://signed.example.com/workspace-1/image.png',
     );
   });
 });

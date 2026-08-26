@@ -7,18 +7,31 @@ import { UploadsRepository } from '../repositories/uploads.repository';
 import { UploadsEventBus } from '../events/uploads.events';
 import { UploadPolicy } from '../policies/upload.policy';
 import { UploadException, UploadErrorCode } from '../errors/uploads.errors';
-import { LocalStorageProvider } from '../providers/local-storage.provider';
+import {
+  STORAGE_PROVIDER,
+  type StorageProvider,
+} from '../interfaces/storage-provider.interface';
+import type { UploadedFileRow } from '@repo/database';
+
+export interface EnrichedUpload extends UploadedFileRow {
+  downloadUrl: string;
+}
 
 @Injectable()
 export class UploadsService {
   private static readonly MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
+  /**
+   * SVG is deliberately NOT on the allowlist: it can carry executable
+   * script, and every sanitization approach leaks. Legacy SVG objects
+   * uploaded before this rule are still downloadable but are forced
+   * into an attachment disposition by the storage layer.
+   */
   private static readonly ALLOWED_MIME_TYPES = new Set([
     'image/png',
     'image/jpeg',
     'image/gif',
     'image/webp',
-    'image/svg+xml',
     'application/pdf',
     'text/plain',
     'text/markdown',
@@ -32,8 +45,7 @@ export class UploadsService {
     private readonly membersRepo: WorkspaceMembersRepository,
     @Inject(UploadsEventBus) private readonly eventBus: UploadsEventBus,
     @Inject(UploadPolicy) private readonly policy: UploadPolicy,
-    @Inject(LocalStorageProvider)
-    private readonly storage: LocalStorageProvider,
+    @Inject(STORAGE_PROVIDER) private readonly storage: StorageProvider,
   ) {}
 
   async upload(
@@ -95,11 +107,11 @@ export class UploadsService {
       }
     }
 
-    const { storageKey, url } = await this.storage.save(
+    const { storageKey } = await this.storage.save(
       workspaceId,
       file.originalname,
       file.buffer,
-      file.mimetype,
+      mimeType,
     );
 
     const upload = await this.uploadsRepo.create({
@@ -110,8 +122,8 @@ export class UploadsService {
       mimeType: file.mimetype,
       size: file.size,
       storageKey,
-      url,
-      provider: 'local',
+      url: '',
+      provider: 'storage',
     });
 
     this.eventBus.publishFileUploaded({
@@ -124,7 +136,7 @@ export class UploadsService {
       size: file.size,
     });
 
-    return upload;
+    return this.enrich(upload);
   }
 
   async listByBoard(boardId: string, userId: string) {
@@ -151,7 +163,7 @@ export class UploadsService {
         'Insufficient role',
       );
     }
-    return this.uploadsRepo.findByBoard(boardId);
+    return this.enrichAll(await this.uploadsRepo.findByBoard(boardId));
   }
 
   async listByWorkspace(workspaceId: string, userId: string) {
@@ -171,7 +183,7 @@ export class UploadsService {
         'Insufficient role',
       );
     }
-    return this.uploadsRepo.findByWorkspace(workspaceId);
+    return this.enrichAll(await this.uploadsRepo.findByWorkspace(workspaceId));
   }
 
   async delete(id: string, userId: string) {
@@ -207,5 +219,24 @@ export class UploadsService {
       workspaceId: upload.workspaceId,
       deletedBy: userId,
     });
+  }
+
+  /**
+   * Download URLs are short-lived (or at least access-checked) and must
+   * never be trusted from the stored row — always mint them fresh.
+   */
+  private async enrich(upload: UploadedFileRow): Promise<EnrichedUpload> {
+    return {
+      ...upload,
+      downloadUrl: await this.storage.getDownloadUrl(
+        upload.storageKey,
+        upload.originalName,
+        upload.mimeType,
+      ),
+    };
+  }
+
+  private enrichAll(rows: UploadedFileRow[]): Promise<EnrichedUpload[]> {
+    return Promise.all(rows.map((row) => this.enrich(row)));
   }
 }

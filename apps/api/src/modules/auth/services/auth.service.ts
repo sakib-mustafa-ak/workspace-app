@@ -11,6 +11,7 @@ import {
 
 import { AuthEventBus } from '../events/auth.events';
 import { AuthException, AuthErrorCode } from '../errors/auth.errors';
+import { SESSION_DEFAULT_TTL_SECONDS } from '../auth.constants';
 import { IdentityRepository } from '../repositories/identity.repository';
 import { SessionRepository } from '../repositories/session.repository';
 import { UserRepository } from '../repositories/user.repository';
@@ -298,7 +299,7 @@ export class AuthService {
     identity: IdentityRow,
     meta: LoginMetadata,
   ): Promise<AuthenticatedSession> {
-    const expiresAt = new Date(Date.now() + 60 * 60 * 8);
+    const expiresAt = new Date(Date.now() + SESSION_DEFAULT_TTL_SECONDS * 1000);
 
     return this.db.transaction(async (tx) => {
       const [persisted] = await tx
@@ -364,6 +365,6 @@ export class AuthService {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private sessionExpiresAtIn(session: SessionRow): Date {
-    return new Date(Date.now() + 60 * 60 * 8);
+    return new Date(Date.now() + SESSION_DEFAULT_TTL_SECONDS * 1000);
   }
 }

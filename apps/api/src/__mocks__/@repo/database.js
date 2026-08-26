@@ -33,6 +33,7 @@ module.exports = {
   WORKSPACE_NAME_MAX_LENGTH: 100,
   MAX_PENDING_INVITATIONS_PER_WORKSPACE: 50,
   users: { id: 'users.id' },
+  sessions: { id: 'sessions.id' },
   workspaces: { id: 'workspaces.id' },
   workspaceMembers: { id: 'workspaceMembers.id' },
   invitations: { id: 'invitations.id' },

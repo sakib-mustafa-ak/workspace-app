@@ -31,9 +31,11 @@ import type { CurrentUser as CurrentUserModel } from '../../auth/interfaces/curr
 
 import { UploadsService } from '../services/uploads.service';
 import { UploadResponseDto } from '../dto/upload-response.dto';
+import { WorkspaceAccess } from '../../../common/decorators/workspace-access.decorator';
 
 @ApiTags('Uploads')
 @ApiBearerAuth()
+@WorkspaceAccess('VIEWER')
 @Controller({ path: 'workspaces/:workspaceId/uploads', version: '1' })
 export class UploadsController {
   constructor(

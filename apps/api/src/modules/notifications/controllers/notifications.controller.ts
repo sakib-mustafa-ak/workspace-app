@@ -47,7 +47,10 @@ export class NotificationsController {
   ): Promise<{ data: NotificationResponseDto[]; total: number }> {
     const limitNum = limit ? parseInt(limit, 10) : undefined;
     const offsetNum = offset ? parseInt(offset, 10) : undefined;
-    const list = await this.notifications.list(user.id, { limit: limitNum, offset: offsetNum });
+    const list = await this.notifications.list(user.id, {
+      limit: limitNum,
+      offset: offsetNum,
+    });
     const total = await this.notifications.totalCount(user.id);
     return {
       data: list.map(toNotificationResponse),

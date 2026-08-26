@@ -33,9 +33,11 @@ import { CreateColumnDto } from '../dto/create-column.dto';
 import { UpdateColumnDto } from '../dto/update-column.dto';
 import { BoardExportData } from '../dto/board-export.dto';
 import { CreateBoardFromTemplateDto } from '../dto/create-board-template.dto';
+import { WorkspaceAccess } from '../../../common/decorators/workspace-access.decorator';
 
 @ApiTags('Boards')
 @ApiBearerAuth()
+@WorkspaceAccess('VIEWER')
 @Controller({ path: 'workspaces/:workspaceId/boards', version: '1' })
 export class BoardsController {
   constructor(@Inject(BoardsService) private readonly boards: BoardsService) {}

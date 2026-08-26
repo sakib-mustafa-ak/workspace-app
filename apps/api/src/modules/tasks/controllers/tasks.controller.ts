@@ -28,9 +28,11 @@ import { CreateTaskDto } from '../dto/create-task.dto';
 import { UpdateTaskDto } from '../dto/update-task.dto';
 import { MoveTaskDto } from '../dto/move-task.dto';
 import { TaskResponseDto } from '../dto/task-response.dto';
+import { WorkspaceAccess } from '../../../common/decorators/workspace-access.decorator';
 
 @ApiTags('Tasks')
 @ApiBearerAuth()
+@WorkspaceAccess('VIEWER')
 @Controller({
   path: 'workspaces/:workspaceId/boards/:boardId/tasks',
   version: '1',

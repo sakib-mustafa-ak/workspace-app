@@ -21,6 +21,7 @@ import {
 import { Throttle } from '@nestjs/throttler';
 
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import { WorkspaceAccess } from '../../../common/decorators/workspace-access.decorator';
 import type { CurrentUser as CurrentUserModel } from '../../auth/interfaces/current-user.interface';
 
 import { WorkspacesService } from '../services/workspaces.service';
@@ -81,16 +82,21 @@ export class WorkspacesController {
   }
 
   @Get(':id')
+  @WorkspaceAccess('VIEWER', { param: 'id' })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get workspace by ID' })
   @ApiOkResponse({ type: WorkspaceResponseDto })
   @ApiNotFoundResponse()
-  public async getById(@Param('id') id: string): Promise<WorkspaceResponseDto> {
-    const ws = await this.workspaces.getById(id);
+  public async getById(
+    @CurrentUser() user: CurrentUserModel,
+    @Param('id') id: string,
+  ): Promise<WorkspaceResponseDto> {
+    const ws = await this.workspaces.getById(id, user.id);
     return toWorkspaceResponse(ws);
   }
 
   @Patch(':id')
+  @WorkspaceAccess('VIEWER', { param: 'id' })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Update workspace' })
   @ApiOkResponse({ type: WorkspaceResponseDto })
@@ -104,6 +110,7 @@ export class WorkspacesController {
   }
 
   @Post(':id/archive')
+  @WorkspaceAccess('VIEWER', { param: 'id' })
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Archive workspace' })
   public async archive(
@@ -114,6 +121,7 @@ export class WorkspacesController {
   }
 
   @Post(':id/unarchive')
+  @WorkspaceAccess('VIEWER', { param: 'id' })
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Unarchive workspace' })
   public async unarchive(
@@ -124,6 +132,7 @@ export class WorkspacesController {
   }
 
   @Delete(':id')
+  @WorkspaceAccess('VIEWER', { param: 'id' })
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Soft-delete workspace (owner only)' })
   public async delete(
@@ -134,6 +143,7 @@ export class WorkspacesController {
   }
 
   @Get(':id/members')
+  @WorkspaceAccess('VIEWER', { param: 'id' })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'List workspace members' })
   @ApiOkResponse({ type: [WorkspaceMemberResponseDto] })
@@ -146,6 +156,7 @@ export class WorkspacesController {
   }
 
   @Patch(':id/members/:userId/role')
+  @WorkspaceAccess('VIEWER', { param: 'id' })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Change member role' })
   @ApiOkResponse({ type: WorkspaceMemberResponseDto })
@@ -165,6 +176,7 @@ export class WorkspacesController {
   }
 
   @Delete(':id/members/:userId')
+  @WorkspaceAccess('VIEWER', { param: 'id' })
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Remove member from workspace' })
   public async removeMember(
@@ -176,6 +188,7 @@ export class WorkspacesController {
   }
 
   @Post(':id/transfer')
+  @WorkspaceAccess('VIEWER', { param: 'id' })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Transfer workspace ownership' })
   @ApiOkResponse({ type: WorkspaceResponseDto })
@@ -194,6 +207,7 @@ export class WorkspacesController {
 
   @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @Post(':id/invitations')
+  @WorkspaceAccess('VIEWER', { param: 'id' })
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create invitation' })
   @ApiCreatedResponse({ type: InvitationCreatedResponseDto })
@@ -210,6 +224,7 @@ export class WorkspacesController {
   }
 
   @Get(':id/invitations')
+  @WorkspaceAccess('VIEWER', { param: 'id' })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'List workspace invitations' })
   @ApiOkResponse({ type: [InvitationResponseDto] })
@@ -222,6 +237,7 @@ export class WorkspacesController {
   }
 
   @Delete(':id/invitations/:invitationId')
+  @WorkspaceAccess('VIEWER', { param: 'id' })
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Revoke invitation' })
   public async revokeInvitation(

@@ -25,9 +25,11 @@ import { ChecklistService } from '../services/checklist.service';
 import { CreateChecklistDto } from '../dto/create-checklist.dto';
 import { UpdateChecklistDto } from '../dto/update-checklist.dto';
 import { ChecklistItemResponseDto } from '../dto/checklist-response.dto';
+import { WorkspaceAccess } from '../../../common/decorators/workspace-access.decorator';
 
 @ApiTags('Checklist')
 @ApiBearerAuth()
+@WorkspaceAccess('VIEWER')
 @Controller({
   path: 'workspaces/:workspaceId/boards/:boardId/tasks/:taskId/checklist',
   version: '1',

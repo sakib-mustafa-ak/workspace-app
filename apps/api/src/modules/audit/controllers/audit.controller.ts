@@ -24,9 +24,11 @@ import { WorkspaceMembersRepository } from '../../workspaces/repositories/worksp
 import { AuditService } from '../services/audit.service';
 import { ActivityQueryDto } from '../dto/activity-query.dto';
 import { ActivityResponseDto, AuditEventDto } from '../dto/audit-response.dto';
+import { WorkspaceAccess } from '../../../common/decorators/workspace-access.decorator';
 
 @ApiTags('Audit')
 @ApiBearerAuth()
+@WorkspaceAccess('VIEWER', { param: 'id' })
 @Controller({ path: 'workspaces/:id/activity', version: '1' })
 export class AuditController {
   constructor(

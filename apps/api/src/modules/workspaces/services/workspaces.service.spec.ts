@@ -197,15 +197,17 @@ describe('WorkspacesService', () => {
   describe('getById', () => {
     it('returns workspace when found', async () => {
       workspacesRepo.findById.mockResolvedValue(mockWorkspace);
+      members.findByWorkspaceAndUser.mockResolvedValue(mockOwnership);
+      policy.isAtLeast.mockReturnValue(true);
 
-      const result = await service.getById('w1');
+      const result = await service.getById('w1', 'u1');
       expect(result.id).toBe('w1');
     });
 
     it('throws when missing', async () => {
       workspacesRepo.findById.mockResolvedValue(undefined);
 
-      await expect(service.getById('missing')).rejects.toThrow(
+      await expect(service.getById('missing', 'u1')).rejects.toThrow(
         'Workspace not found.',
       );
     });

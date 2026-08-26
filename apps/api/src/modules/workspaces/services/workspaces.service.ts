@@ -109,7 +109,7 @@ export class WorkspacesService {
       transferredBy: currentOwnerId,
     });
 
-    return this.getById(workspaceId);
+    return this.getById(workspaceId, currentOwnerId);
   }
 
   public async create(
@@ -157,7 +157,10 @@ export class WorkspacesService {
     return workspace;
   }
 
-  public async getById(workspaceId: string): Promise<WorkspaceRow> {
+  public async getById(
+    workspaceId: string,
+    userId: string,
+  ): Promise<WorkspaceRow> {
     const ws = await this.workspacesRepo.findById(workspaceId);
     if (!ws) {
       throw new WorkspacesException(
@@ -165,6 +168,11 @@ export class WorkspacesService {
         'Workspace not found.',
       );
     }
+
+    // Boundary guard also enforces this; kept here so the service stays
+    // safe when called outside an HTTP request context.
+    await this.requireRole(workspaceId, userId, 'VIEWER');
+
     return ws;
   }
 

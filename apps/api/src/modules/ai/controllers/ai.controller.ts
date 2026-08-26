@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AiService } from '../services/ai.service';
+import { WorkspaceAccess } from '../../../common/decorators/workspace-access.decorator';
 
 @ApiTags('AI')
 @ApiBearerAuth()
@@ -17,6 +18,7 @@ export class AiController {
   constructor(@Inject(AiService) private readonly aiService: AiService) {}
 
   @Post('boards/:boardId/summarize')
+  @WorkspaceAccess('VIEWER')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Generate AI summary of board tasks' })
   public async summarizeBoard(@Param('boardId') boardId: string) {

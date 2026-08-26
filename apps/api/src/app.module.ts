@@ -7,6 +7,7 @@ import { configuration } from './config/index.js';
 import { DatabaseModule } from './infrastructure/database/database.module.js';
 import { RedisModule } from './infrastructure/redis/redis.module.js';
 import { AppLoggerModule } from './infrastructure/logger/logger.module.js';
+import { WorkspaceMembershipGuard } from './common/guards/workspace-membership.guard.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { UsersModule } from './modules/users/users.module.js';
@@ -87,6 +88,12 @@ import { ChecklistModule } from './modules/checklists/checklist.module.js';
     ChecklistModule,
   ],
   providers: [
+    // Order matters: JwtAuthGuard (registered in AuthModule) authenticates
+    // first, then the workspace boundary check, then rate limiting.
+    {
+      provide: APP_GUARD,
+      useClass: WorkspaceMembershipGuard,
+    },
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,

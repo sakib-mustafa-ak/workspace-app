@@ -26,9 +26,11 @@ import { CommentsService } from '../services/comments.service';
 import { CreateCommentDto } from '../dto/create-comment.dto';
 import { UpdateCommentDto } from '../dto/update-comment.dto';
 import { CommentResponseDto } from '../dto/comment-response.dto';
+import { WorkspaceAccess } from '../../../common/decorators/workspace-access.decorator';
 
 @ApiTags('Comments')
 @ApiBearerAuth()
+@WorkspaceAccess('VIEWER')
 @Controller({ path: 'boards/:boardId/comments', version: '1' })
 export class CommentsController {
   constructor(

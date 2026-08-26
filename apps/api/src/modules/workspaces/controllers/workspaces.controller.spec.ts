@@ -111,7 +111,7 @@ describe('WorkspacesController', () => {
   it('getById returns workspace', async () => {
     service.getById.mockResolvedValue(mockWorkspace);
 
-    const result = await controller.getById('w1');
+    const result = await controller.getById({ id: 'u1' } as never, 'w1');
     expect(result.id).toBe('w1');
   });
 

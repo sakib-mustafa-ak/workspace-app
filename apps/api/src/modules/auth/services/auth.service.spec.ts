@@ -19,6 +19,7 @@ const mockUser: UserRow = {
   passwordHash: 'argon2$hash',
   status: 'ACTIVE',
   avatarUrl: null,
+  bio: null,
   timezone: null,
   locale: null,
   emailVerifiedAt: new Date(),
@@ -32,10 +33,13 @@ const mockIdentity: IdentityRow = {
   id: 'i1',
   userId: 'u1',
   provider: 'EMAIL',
-  providerKey: 'test@test.com',
+  providerUserId: null,
+  emailForOAuth: null,
+  isPrimary: true,
   passwordHash: 'argon2$hash',
   lastUsedAt: null,
   createdAt: new Date(),
+  deletedAt: null,
 };
 
 describe('AuthService session lifecycle', () => {

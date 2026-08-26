@@ -29,9 +29,11 @@ import {
   CanvasResponseDto,
 } from '../dto/canvas-response.dto';
 import type { CanvasObjectRow } from '@repo/database';
+import { WorkspaceAccess } from '../../../common/decorators/workspace-access.decorator';
 
 @ApiTags('Canvas')
 @ApiBearerAuth()
+@WorkspaceAccess('VIEWER')
 @Controller({ path: 'boards/:boardId/canvas', version: '1' })
 export class CanvasController {
   constructor(@Inject(CanvasService) private readonly canvas: CanvasService) {}

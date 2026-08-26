@@ -52,8 +52,19 @@ export class TasksService {
       await this.requireAssigneeIsMember(workspaceId, input.assigneeId);
     }
 
+    // Verify the ownership chain column -> board -> workspace before
+    // pinning the task: trusting path params independently allowed a
+    // task to be created on a foreign board's column.
+    const board = await this.tasksRepo.findBoardById(boardId);
+    if (!board || board.workspaceId !== workspaceId) {
+      throw new TasksException(
+        TasksErrorCode.BOARD_NOT_FOUND,
+        'Board not found.',
+      );
+    }
+
     const column = await this.tasksRepo.findColumnById(columnId);
-    if (!column) {
+    if (!column || column.boardId !== boardId) {
       throw new TasksException(
         TasksErrorCode.COLUMN_NOT_FOUND,
         'Column not found.',
@@ -106,6 +117,7 @@ export class TasksService {
     userId: string,
   ): Promise<TaskRow[]> {
     await this.requireRole(workspaceId, userId, 'VIEWER');
+    await this.assertBoardInWorkspace(boardId, workspaceId);
     return this.tasksRepo.listByBoard(boardId);
   }
 
@@ -116,6 +128,16 @@ export class TasksService {
     userId: string,
   ): Promise<TaskRow[]> {
     await this.requireRole(workspaceId, userId, 'VIEWER');
+    await this.assertBoardInWorkspace(boardId, workspaceId);
+
+    const column = await this.tasksRepo.findColumnById(columnId);
+    if (!column || column.boardId !== boardId) {
+      throw new TasksException(
+        TasksErrorCode.COLUMN_NOT_FOUND,
+        'Column not found.',
+      );
+    }
+
     return this.tasksRepo.listByColumn(columnId);
   }
 
@@ -303,6 +325,21 @@ export class TasksService {
       throw new TasksException(
         TasksErrorCode.NOT_A_MEMBER,
         'Cannot assign to a user who is not an active member of this workspace.',
+      );
+    }
+  }
+
+  private async assertBoardInWorkspace(
+    boardId: string,
+    workspaceId: string,
+  ): Promise<void> {
+    const board = await this.tasksRepo.findBoardById(boardId);
+    if (!board || board.workspaceId !== workspaceId) {
+      // Same error whether missing or foreign: never leak existence
+      // across tenant boundaries.
+      throw new TasksException(
+        TasksErrorCode.BOARD_NOT_FOUND,
+        'Board not found.',
       );
     }
   }

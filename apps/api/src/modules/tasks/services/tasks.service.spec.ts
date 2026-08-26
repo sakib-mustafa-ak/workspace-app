@@ -105,6 +105,7 @@ describe('TasksService', () => {
             update: jest.fn(),
             softDelete: jest.fn(),
             findColumnById: jest.fn(),
+            findBoardById: jest.fn(),
           },
         },
         {
@@ -140,6 +141,10 @@ describe('TasksService', () => {
       mockDbSelect([mockMembership]);
       policy.isAtLeast.mockReturnValue(true);
       tasksRepo.findColumnById.mockResolvedValue(mockColumn);
+      tasksRepo.findBoardById.mockResolvedValue({
+        id: 'b1',
+        workspaceId: 'w1',
+      } as never);
       tasksRepo.create.mockResolvedValue(mockTask);
 
       const result = await service.create('c1', 'b1', 'w1', 'u1', {
@@ -177,11 +182,51 @@ describe('TasksService', () => {
     it('throws when column not found', async () => {
       mockDbSelect([mockMembership]);
       policy.isAtLeast.mockReturnValue(true);
+      tasksRepo.findBoardById.mockResolvedValue({
+        id: 'b1',
+        workspaceId: 'w1',
+      } as never);
       tasksRepo.findColumnById.mockResolvedValue(undefined);
 
       await expect(
         service.create('c1', 'b1', 'w1', 'u1', { title: 'Task' }),
       ).rejects.toThrow('Column not found');
+    });
+
+    it('throws when the column belongs to a different board than the path (cross-workspace create)', async () => {
+      // Regression: create used to trust the path workspaceId/boardId and
+      // the column id independently, letting a task be pinned onto a
+      // foreign board's column.
+      mockDbSelect([mockMembership]);
+      policy.isAtLeast.mockReturnValue(true);
+      tasksRepo.findColumnById.mockResolvedValue({
+        ...mockColumn,
+        boardId: 'b-foreign',
+      });
+      tasksRepo.findBoardById.mockResolvedValue({
+        id: 'b1',
+        workspaceId: 'w1',
+      } as never);
+
+      await expect(
+        service.create('c-foreign', 'b1', 'w1', 'u1', { title: 'Task' }),
+      ).rejects.toThrow('Column not found');
+      expect(tasksRepo.create).not.toHaveBeenCalled();
+    });
+
+    it('throws when the path board does not belong to the path workspace (cross-workspace create)', async () => {
+      mockDbSelect([mockMembership]);
+      policy.isAtLeast.mockReturnValue(true);
+      tasksRepo.findColumnById.mockResolvedValue(mockColumn);
+      tasksRepo.findBoardById.mockResolvedValue({
+        id: 'b1',
+        workspaceId: 'w-other',
+      } as never);
+
+      await expect(
+        service.create('c1', 'b1', 'w1', 'u1', { title: 'Task' }),
+      ).rejects.toThrow('Board not found');
+      expect(tasksRepo.create).not.toHaveBeenCalled();
     });
 
     it('throws when assignee is not an active member', async () => {
@@ -200,6 +245,10 @@ describe('TasksService', () => {
       mockDbSelectSequential([[mockMembership], [mockMembership]]);
       policy.isAtLeast.mockReturnValue(true);
       tasksRepo.findColumnById.mockResolvedValue(mockColumn);
+      tasksRepo.findBoardById.mockResolvedValue({
+        id: 'b1',
+        workspaceId: 'w1',
+      } as never);
       tasksRepo.create.mockResolvedValue({ ...mockTask, assigneeId: 'u2' });
 
       const result = await service.create('c1', 'b1', 'w1', 'u1', {
@@ -246,10 +295,31 @@ describe('TasksService', () => {
     it('returns tasks for board', async () => {
       mockDbSelect([mockMembership]);
       policy.isAtLeast.mockReturnValue(true);
+      tasksRepo.findBoardById.mockResolvedValue({
+        id: 'b1',
+        workspaceId: 'w1',
+      } as never);
       tasksRepo.listByBoard.mockResolvedValue([mockTask]);
 
       const result = await service.listByBoard('b1', 'w1', 'u1');
       expect(result).toHaveLength(1);
+    });
+
+    it('throws when the board belongs to a different workspace (cross-workspace read)', async () => {
+      // Regression: listByBoard used to check role against the path
+      // workspace but fetch rows by raw boardId, leaking another
+      // workspace's tasks.
+      mockDbSelect([mockMembership]);
+      policy.isAtLeast.mockReturnValue(true);
+      tasksRepo.findBoardById.mockResolvedValue({
+        id: 'b-foreign',
+        workspaceId: 'w-other',
+      } as never);
+
+      await expect(
+        service.listByBoard('b-foreign', 'w1', 'u1'),
+      ).rejects.toThrow('Board not found');
+      expect(tasksRepo.listByBoard).not.toHaveBeenCalled();
     });
   });
 
@@ -257,10 +327,33 @@ describe('TasksService', () => {
     it('returns tasks for column', async () => {
       mockDbSelect([mockMembership]);
       policy.isAtLeast.mockReturnValue(true);
+      tasksRepo.findColumnById.mockResolvedValue(mockColumn);
+      tasksRepo.findBoardById.mockResolvedValue({
+        id: 'b1',
+        workspaceId: 'w1',
+      } as never);
       tasksRepo.listByColumn.mockResolvedValue([mockTask]);
 
       const result = await service.listByColumn('c1', 'b1', 'w1', 'u1');
       expect(result).toHaveLength(1);
+    });
+
+    it('throws when the column belongs to a different board (cross-workspace read)', async () => {
+      mockDbSelect([mockMembership]);
+      policy.isAtLeast.mockReturnValue(true);
+      tasksRepo.findColumnById.mockResolvedValue({
+        ...mockColumn,
+        boardId: 'b-foreign',
+      });
+      tasksRepo.findBoardById.mockResolvedValue({
+        id: 'b1',
+        workspaceId: 'w1',
+      } as never);
+
+      await expect(
+        service.listByColumn('c-foreign', 'b1', 'w1', 'u1'),
+      ).rejects.toThrow('Column not found');
+      expect(tasksRepo.listByColumn).not.toHaveBeenCalled();
     });
   });
 

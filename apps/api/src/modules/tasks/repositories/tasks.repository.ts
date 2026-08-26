@@ -7,10 +7,12 @@ import {
   eq,
   sql,
   type BoardColumnRow,
+  type BoardRow,
   type Db,
   type NewTaskRow,
   type TaskRow,
   boardColumns,
+  boards,
   tasks,
 } from '@repo/database';
 
@@ -92,6 +94,15 @@ export class TasksRepository {
       .where(
         sql`${boardColumns.id} = ${id} AND ${boardColumns.deletedAt} IS NULL`,
       )
+      .limit(1);
+    return row;
+  }
+
+  public async findBoardById(id: string): Promise<BoardRow | undefined> {
+    const [row] = await this.db
+      .select()
+      .from(boards)
+      .where(sql`${boards.id} = ${id} AND ${boards.deletedAt} IS NULL`)
       .limit(1);
     return row;
   }

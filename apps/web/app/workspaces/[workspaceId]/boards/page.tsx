@@ -7,6 +7,8 @@ import { Plus, ArrowLeft, Columns, Search, Archive, Trash2 } from 'lucide-react'
 import { workspacesApi, type Workspace } from '@/lib/workspaces';
 import { boardsApi, type Board } from '@/lib/boards';
 import { SkeletonCard } from '@/components/skeleton';
+import { useToast } from '@/contexts/toast-context';
+import { ConfirmModal } from '@/components/confirm-modal';
 
 export default function BoardsPage() {
   const params = useParams();
@@ -19,6 +21,9 @@ export default function BoardsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [name, setName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const toast = useToast();
 
   function loadBoards() {
     setLoading(true);
@@ -37,6 +42,18 @@ export default function BoardsPage() {
 
   useEffect(() => { loadBoards(); }, [workspaceId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  async function confirmDeleteBoard() {
+    if (!deleteTargetId) return;
+    setConfirmDelete(false);
+    try {
+      await boardsApi.delete(workspaceId, deleteTargetId);
+      loadBoards();
+    } catch {
+      toast.error('Failed to delete board. Please try again.');
+    }
+    setDeleteTargetId(null);
+  }
+
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     try {
@@ -45,7 +62,7 @@ export default function BoardsPage() {
       setShowCreate(false);
       setName('');
     } catch {
-      // handled
+      toast.error('Failed to create board. Please try again.');
     }
   }
 
@@ -198,7 +215,7 @@ export default function BoardsPage() {
                   </button>
                 )}
                 <button
-                  onClick={() => { if (confirm('Delete this board?')) boardsApi.delete(workspaceId, board.id).then(() => loadBoards()); }}
+                  onClick={() => { setDeleteTargetId(board.id); setConfirmDelete(true); }}
                   className="flex items-center gap-1 rounded px-2 py-1 text-xs text-red-400 hover:bg-red-500/10"
                 >
                   <Trash2 size={12} /> Delete
@@ -208,6 +225,15 @@ export default function BoardsPage() {
           ))}
         </div>
       )}
+      <ConfirmModal
+        open={confirmDelete}
+        title="Delete this board?"
+        description="This action cannot be undone. All tasks and data in this board will be permanently removed."
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={confirmDeleteBoard}
+        onCancel={() => { setConfirmDelete(false); setDeleteTargetId(null); }}
+      />
     </div>
   );
 }

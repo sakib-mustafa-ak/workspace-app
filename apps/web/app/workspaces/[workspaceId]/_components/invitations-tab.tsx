@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Send, Ban } from 'lucide-react';
 import { workspacesApi, type Invitation } from '@/lib/workspaces';
+import { useToast } from '@/contexts/toast-context';
 
 type Props = {
   workspaceId: string;
@@ -25,6 +26,7 @@ export function InvitationsTab({
   } | null>(null);
   const [inviteToken, setInviteToken] = useState('');
   const [copied, setCopied] = useState(false);
+  const toast = useToast();
 
   async function handleCreateInvitation(e: React.FormEvent) {
     e.preventDefault();
@@ -40,7 +42,7 @@ export function InvitationsTab({
       setTimeout(() => setInviteResult(null), 3000);
       onInviteCreated();
     } catch {
-      setInviteResult({ text: 'Failed to send invitation', kind: 'error' });
+      toast.error('Failed to send invitation. Please try again.');
     }
   }
 

@@ -19,6 +19,7 @@ import { EmailVerificationBanner } from '@/components/email-verification-banner'
 import { getRecentBoards, type RecentBoard } from '@/lib/recent-activity';
 import { CalendarDropdown } from '@/components/calendar-dropdown';
 import { SkeletonCard } from '@/components/skeleton';
+import { useToast } from '@/contexts/toast-context';
 
 function CreateWorkspaceForm({
   onCreated,
@@ -31,6 +32,7 @@ function CreateWorkspaceForm({
   const [slug, setSlug] = useState('');
   const [creating, setCreating] = useState(false);
   const slugModified = useRef(false);
+  const toast = useToast();
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -39,7 +41,7 @@ function CreateWorkspaceForm({
       const ws = await workspacesApi.create({ name, slug });
       onCreated(ws);
     } catch {
-      // handled
+      toast.error('Failed to create workspace. Please try again.');
     } finally {
       setCreating(false);
     }

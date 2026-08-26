@@ -5,6 +5,8 @@ import { X, Trash2, Plus, Check, Square } from 'lucide-react';
 import { tasksApi, type Task, type CreateTaskData } from '@/lib/tasks';
 import { checklistApi, type ChecklistItem } from '@/lib/checklist';
 import { workspacesApi, type WorkspaceMember } from '@/lib/workspaces';
+import { useToast } from '@/contexts/toast-context';
+import { ConfirmModal } from '@/components/confirm-modal';
 
 export type TaskModalMode = 'create' | 'edit';
 
@@ -43,6 +45,8 @@ export function TaskModal({
 
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [newChecklistText, setNewChecklistText] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     Promise.all([
@@ -88,12 +92,14 @@ export function TaskModal({
 
   async function handleDelete() {
     if (!task || !onDeleted) return;
-    if (!confirm('Delete this task?')) return;
+    setConfirmDelete(false);
     try {
       await tasksApi.delete(workspaceId, boardId, task.id);
       onDeleted(task.id);
       onClose();
-    } catch { /* handled */ }
+    } catch {
+      toast.error('Failed to delete task. Please try again.');
+    }
   }
 
   async function handleMoveColumn(newColumnId: string) {
@@ -102,7 +108,9 @@ export function TaskModal({
       const updated = await tasksApi.move(workspaceId, boardId, task.id, { columnId: newColumnId });
       onSaved(updated);
       setColumnId(newColumnId);
-    } catch { /* handled */ }
+    } catch {
+      toast.error('Failed to move task. Please try again.');
+    }
   }
 
   async function handleAddChecklist() {
@@ -111,7 +119,9 @@ export function TaskModal({
       const item = await checklistApi.create(workspaceId, boardId, task.id, { text: newChecklistText.trim() });
       setChecklist(prev => [...prev, item]);
       setNewChecklistText('');
-    } catch { /* handled */ }
+    } catch {
+      toast.error('Failed to add checklist item. Please try again.');
+    }
   }
 
   async function handleToggleChecklist(item: ChecklistItem) {
@@ -119,7 +129,9 @@ export function TaskModal({
     try {
       const updated = await checklistApi.update(workspaceId, boardId, task.id, item.id, { completed: !item.completed });
       setChecklist(prev => prev.map(i => i.id === item.id ? updated : i));
-    } catch { /* handled */ }
+    } catch {
+      toast.error('Failed to update checklist item. Please try again.');
+    }
   }
 
   async function handleDeleteChecklist(itemId: string) {
@@ -127,7 +139,9 @@ export function TaskModal({
     try {
       await checklistApi.delete(workspaceId, boardId, task.id, itemId);
       setChecklist(prev => prev.filter(i => i.id !== itemId));
-    } catch { /* handled */ }
+    } catch {
+      toast.error('Failed to delete checklist item. Please try again.');
+    }
   }
 
   return (
@@ -275,7 +289,7 @@ export function TaskModal({
             {mode === 'edit' && onDeleted && (
               <button
                 type="button"
-                onClick={handleDelete}
+                onClick={() => setConfirmDelete(true)}
                 className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs text-red-400 hover:bg-red-500/10"
               >
                 <Trash2 size={12} />
@@ -301,6 +315,15 @@ export function TaskModal({
           </div>
         </form>
       </div>
+      <ConfirmModal
+        open={confirmDelete}
+        title="Delete this task?"
+        description="This action cannot be undone."
+        confirmLabel="Delete"
+        variant="danger"
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </div>
   );
 }

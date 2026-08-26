@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { FileText, Trash2, X } from 'lucide-react';
 import { uploadsApi, type UploadedFile } from '@/lib/uploads';
+import { useToast } from '@/contexts/toast-context';
 
 type Props = {
   workspaceId: string;
@@ -19,6 +20,7 @@ function formatFileSize(bytes: number): string {
 export function BoardFileSidebar({ workspaceId, boardId, onClose }: Props) {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [loading, setLoading] = useState(true);
+  const toast = useToast();
 
   async function load() {
     setLoading(true);
@@ -35,7 +37,9 @@ export function BoardFileSidebar({ workspaceId, boardId, onClose }: Props) {
     try {
       await uploadsApi.delete(workspaceId, fileId);
       setFiles(prev => prev.filter(f => f.id !== fileId));
-    } catch { /* handled */ }
+    } catch {
+      toast.error('Failed to delete file. Please try again.');
+    }
   }
 
   return (

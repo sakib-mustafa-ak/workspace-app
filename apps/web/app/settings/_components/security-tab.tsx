@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { Loader2, Laptop, Shield } from 'lucide-react';
+import { useToast } from '@/contexts/toast-context';
 
 type Session = {
   id: string;
@@ -24,6 +25,7 @@ export function SecurityTab() {
 
   const [sessions, setSessions] = useState<Session[]>([]);
   const [revoking, setRevoking] = useState<string | null>(null);
+  const toast = useToast();
 
   useEffect(() => {
     api.get<Session[]>('/auth/sessions').then(setSessions).catch(() => {});
@@ -54,7 +56,9 @@ export function SecurityTab() {
     try {
       await api.delete(`/auth/sessions/${id}`);
       setSessions(prev => prev.filter(s => s.id !== id));
-    } catch { /* handled */ }
+    } catch {
+      toast.error('Failed to revoke session. Please try again.');
+    }
     finally { setRevoking(null); }
   }
 

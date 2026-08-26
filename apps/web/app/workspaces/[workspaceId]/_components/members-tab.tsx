@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { UserMinus } from 'lucide-react';
 import type { WorkspaceMember } from '@/lib/workspaces';
+import { ConfirmModal } from '@/components/confirm-modal';
 
 type Props = {
   members: WorkspaceMember[];
@@ -36,6 +37,7 @@ export function MembersTab({
   onRemoveMember,
 }: Props) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmRemove, setConfirmRemove] = useState(false);
 
   function toggleSelect(userId: string) {
     setSelectedIds((prev) => {
@@ -63,7 +65,11 @@ export function MembersTab({
   }
 
   async function handleBatchRemove() {
-    if (!confirm(`Remove ${selectedIds.size} members?`)) return;
+    setConfirmRemove(true);
+  }
+
+  async function confirmBatchRemove() {
+    setConfirmRemove(false);
     for (const uid of selectedIds) {
       await onRemoveMember(uid);
     }
@@ -162,6 +168,15 @@ export function MembersTab({
           </div>
         ))}
       </div>
+      <ConfirmModal
+        open={confirmRemove}
+        title={`Remove ${selectedIds.size} members?`}
+        description="They will lose access to this workspace."
+        confirmLabel="Remove"
+        variant="danger"
+        onConfirm={confirmBatchRemove}
+        onCancel={() => setConfirmRemove(false)}
+      />
     </div>
   );
 }

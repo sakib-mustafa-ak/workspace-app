@@ -5,6 +5,7 @@ import { Bell, CheckCheck, Archive, ArrowLeft, ChevronLeft, ChevronRight } from 
 import Link from 'next/link';
 import { notificationsApi, type Notification } from '@/lib/notifications';
 import { SkeletonBlock, SkeletonCircle } from '@/components/skeleton';
+import { useToast } from '@/contexts/toast-context';
 
 const PAGE_SIZE = 20;
 
@@ -14,6 +15,7 @@ export default function NotificationsPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
+  const toast = useToast();
 
   const fetchNotifications = useCallback(async () => {
     setLoading(true);
@@ -21,9 +23,11 @@ export default function NotificationsPage() {
       const res = await notificationsApi.list({ limit: PAGE_SIZE, offset: page * PAGE_SIZE, filter: filter === 'unread' ? 'unread' : undefined });
       setNotifications(res.data || []);
       setTotal(res.total || 0);
-    } catch { /* handled */ }
+    } catch {
+      toast.error('Failed to load notifications. Please try again.');
+    }
     setLoading(false);
-  }, [page, filter]);
+  }, [page, filter, toast]);
 
   useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
 
@@ -33,21 +37,27 @@ export default function NotificationsPage() {
     try {
       await notificationsApi.markAsRead(id);
       setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, readAt: n.readAt || new Date().toISOString() } : n)));
-    } catch { /* handled */ }
+    } catch {
+      toast.error('Failed to mark notification as read. Please try again.');
+    }
   }
 
   async function handleMarkAllRead() {
     try {
       await notificationsApi.markAllAsRead();
       setNotifications((prev) => prev.map((n) => ({ ...n, readAt: n.readAt || new Date().toISOString() })));
-    } catch { /* handled */ }
+    } catch {
+      toast.error('Failed to mark all as read. Please try again.');
+    }
   }
 
   async function handleArchive(id: string) {
     try {
       await notificationsApi.archive(id);
       setNotifications((prev) => prev.filter((n) => n.id !== id));
-    } catch { /* handled */ }
+    } catch {
+      toast.error('Failed to archive notification. Please try again.');
+    }
   }
 
   return (

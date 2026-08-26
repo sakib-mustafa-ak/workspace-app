@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Pencil, Check, Archive, Trash2 } from 'lucide-react';
 import { workspacesApi, type Workspace, type WorkspaceMember } from '@/lib/workspaces';
 import { ConfirmModal } from '@/components/confirm-modal';
+import { useToast } from '@/contexts/toast-context';
 
 type Props = {
   workspace: Workspace;
@@ -28,6 +29,9 @@ export function SettingsTab({
   const [actionError, setActionError] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [confirmTransfer, setConfirmTransfer] = useState(false);
+  const [transferTarget, setTransferTarget] = useState('');
+  const toast = useToast();
 
   async function handleUpdateWs() {
     setActionError('');
@@ -40,6 +44,7 @@ export function SettingsTab({
       setEditingWs(false);
     } catch {
       setActionError('Failed to update workspace.');
+      toast.error('Failed to update workspace. Please try again.');
     }
   }
 
@@ -50,6 +55,7 @@ export function SettingsTab({
       onUpdate();
     } catch {
       setActionError('Failed to archive workspace.');
+      toast.error('Failed to archive workspace. Please try again.');
     }
   }
 
@@ -60,6 +66,7 @@ export function SettingsTab({
       onUpdate();
     } catch {
       setActionError('Failed to unarchive workspace.');
+      toast.error('Failed to unarchive workspace. Please try again.');
     }
   }
 
@@ -71,9 +78,23 @@ export function SettingsTab({
       window.location.href = '/dashboard';
     } catch {
       setActionError('Failed to delete workspace.');
+      toast.error('Failed to delete workspace. Please try again.');
       setDeleting(false);
       setConfirmDelete(false);
     }
+  }
+
+  async function confirmTransferOwnership() {
+    setConfirmTransfer(false);
+    setActionError('');
+    try {
+      await workspacesApi.transferOwnership(workspaceId, transferTarget);
+      onUpdate();
+    } catch {
+      setActionError('Failed to transfer ownership.');
+      toast.error('Failed to transfer ownership. Please try again.');
+    }
+    setTransferTarget('');
   }
 
   return (
@@ -140,15 +161,10 @@ export function SettingsTab({
               <div className="space-y-1.5">
                 <label className="block text-xs font-medium text-surface-400">Transfer ownership</label>
                 <select
-                  onChange={async (e) => {
-                    if (e.target.value && confirm('Transfer ownership? This cannot be undone.')) {
-                      setActionError('');
-                      try {
-                        await workspacesApi.transferOwnership(workspaceId, e.target.value);
-                        onUpdate();
-                      } catch {
-                        setActionError('Failed to transfer ownership.');
-                      }
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setTransferTarget(e.target.value);
+                      setConfirmTransfer(true);
                     }
                   }}
                   className="w-full rounded border border-surface-700 bg-surface-800 px-3 py-2 text-xs outline-none"
@@ -176,6 +192,15 @@ export function SettingsTab({
         loading={deleting}
         onConfirm={handleDeleteWs}
         onCancel={() => setConfirmDelete(false)}
+      />
+      <ConfirmModal
+        open={confirmTransfer}
+        title="Transfer ownership?"
+        description="This cannot be undone. You will lose owner privileges for this workspace."
+        confirmLabel="Transfer"
+        variant="danger"
+        onConfirm={confirmTransferOwnership}
+        onCancel={() => { setConfirmTransfer(false); setTransferTarget(''); }}
       />
     </div>
   );

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Sparkles, X, Loader2, Plus } from 'lucide-react';
 import { aiApi } from '@/lib/ai';
+import { useToast } from '@/contexts/toast-context';
 
 type Props = {
   onClose: () => void;
@@ -13,6 +14,7 @@ export function AiIdeasDialog({ onClose, onCreateIdea }: Props) {
   const [topic, setTopic] = useState('');
   const [ideas, setIdeas] = useState<{ text: string; priority?: string }[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const toast = useToast();
 
   async function handleGenerate() {
     if (!topic.trim()) return;
@@ -20,7 +22,9 @@ export function AiIdeasDialog({ onClose, onCreateIdea }: Props) {
     try {
       const result = await aiApi.generateIdeas(topic.trim());
       setIdeas(result.ideas);
-    } catch { /* handled */ }
+    } catch {
+      toast.error('Failed to generate ideas. Please try again.');
+    }
     finally { setLoading(false); }
   }
 

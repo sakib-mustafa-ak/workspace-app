@@ -4,19 +4,24 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { AlertTriangle, Loader2 } from 'lucide-react';
+import { useToast } from '@/contexts/toast-context';
 
 export function DangerTab() {
   const router = useRouter();
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmText, setConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const toast = useToast();
 
   async function handleDelete() {
     setDeleting(true);
     try {
       await api.delete('/auth/account');
       router.push('/auth/login');
-    } catch { setDeleting(false); }
+    } catch {
+      toast.error('Failed to delete account. Please try again.');
+      setDeleting(false);
+    }
   }
 
   return (

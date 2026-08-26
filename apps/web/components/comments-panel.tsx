@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { MessageSquare, Send, Trash2, Pencil, X, Check } from 'lucide-react';
 import { commentsApi, type Comment } from '@/lib/comments';
 import { useAuth } from '@/contexts/auth-context';
+import { useToast } from '@/contexts/toast-context';
 
 type Props = {
   boardId: string;
@@ -17,6 +18,7 @@ export function CommentsPanel({ boardId }: Props) {
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
+  const toast = useToast();
 
   useEffect(() => {
     commentsApi.list(boardId)
@@ -36,7 +38,9 @@ export function CommentsPanel({ boardId }: Props) {
       setComments((prev) => [...prev, created]);
       setContent('');
       setReplyTo(null);
-    } catch { /* handled */ }
+    } catch {
+      toast.error('Failed to post comment. Please try again.');
+    }
   }
 
   async function handleEdit(commentId: string) {
@@ -47,14 +51,18 @@ export function CommentsPanel({ boardId }: Props) {
       });
       setComments((prev) => prev.map((c) => (c.id === commentId ? updated : c)));
       setEditingId(null);
-    } catch { /* handled */ }
+    } catch {
+      toast.error('Failed to edit comment. Please try again.');
+    }
   }
 
   async function handleDelete(commentId: string) {
     try {
       await commentsApi.delete(boardId, commentId);
       setComments((prev) => prev.filter((c) => c.id !== commentId));
-    } catch { /* handled */ }
+    } catch {
+      toast.error('Failed to delete comment. Please try again.');
+    }
   }
 
   const rootComments = comments.filter((c) => !c.parentId);

@@ -21,6 +21,8 @@ import { MembersTab } from './_components/members-tab';
 import { InvitationsTab } from './_components/invitations-tab';
 import { SettingsTab } from './_components/settings-tab';
 import { ActivityTabContent } from './_components/activity-tab';
+import { useToast } from '@/contexts/toast-context';
+import { ConfirmModal } from '@/components/confirm-modal';
 
 type Tab = 'overview' | 'boards' | 'members' | 'invitations' | 'settings' | 'activity';
 
@@ -36,6 +38,9 @@ export default function WorkspaceDetailPage() {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState<string | null>(null);
+  const toast = useToast();
 
   function loadWorkspace() {
     setLoading(true);
@@ -70,15 +75,27 @@ export default function WorkspaceDetailPage() {
     try {
       const updated = await workspacesApi.changeMemberRole(workspaceId, userId, role);
       setMembers((prev) => prev.map((m) => (m.id === memberId ? updated : m)));
-    } catch { /* handled */ }
+    } catch {
+      toast.error('Failed to change member role. Please try again.');
+    }
   }
 
   async function handleRemoveMember(userId: string) {
-    if (!confirm('Remove this member?')) return;
+    setRemoveTarget(userId);
+    setConfirmRemove(true);
+  }
+
+  async function confirmRemoveMember() {
+    if (!removeTarget) return;
+    setConfirmRemove(false);
     try {
-      await workspacesApi.removeMember(workspaceId, userId);
-      setMembers((prev) => prev.filter((m) => m.userId !== userId));
-    } catch { /* handled */ }
+      await workspacesApi.removeMember(workspaceId, removeTarget);
+      setMembers((prev) => prev.filter((m) => m.userId !== removeTarget));
+      setRemoveTarget(null);
+    } catch {
+      toast.error('Failed to remove member. Please try again.');
+      setRemoveTarget(null);
+    }
   }
 
   if (error) {
@@ -199,7 +216,9 @@ export default function WorkspaceDetailPage() {
               try {
                 await workspacesApi.revokeInvitation(workspaceId, invitationId);
                 setInvitations((prev) => prev.filter((i) => i.id !== invitationId));
-              } catch { /* handled */ }
+              } catch {
+                toast.error('Failed to revoke invitation. Please try again.');
+              }
             }}
           />
         )}
@@ -215,6 +234,15 @@ export default function WorkspaceDetailPage() {
           />
         )}
       </div>
+      <ConfirmModal
+        open={confirmRemove}
+        title="Remove this member?"
+        description="They will lose access to this workspace."
+        confirmLabel="Remove"
+        variant="danger"
+        onConfirm={confirmRemoveMember}
+        onCancel={() => { setConfirmRemove(false); setRemoveTarget(null); }}
+      />
     </div>
   );
 }

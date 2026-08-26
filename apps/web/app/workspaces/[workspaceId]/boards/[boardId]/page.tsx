@@ -27,6 +27,8 @@ import { AiSummarizePanel } from '@/components/ai-summarize-panel';
 import { AiIdeasDialog } from '@/components/ai-ideas-dialog';
 import { CalendarView } from '@/components/calendar-view';
 import { addRecentBoard } from '@/lib/recent-activity';
+import { useToast } from '@/contexts/toast-context';
+import { ConfirmModal } from '@/components/confirm-modal';
 
 type ModalState =
   | { type: 'create'; columnId: string }
@@ -51,6 +53,8 @@ export default function BoardDetailPage() {
   const [showSettings, setShowSettings] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [modal, setModal] = useState<ModalState>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const toast = useToast();
 
   const [editingBoard, setEditingBoard] = useState(false);
   const [boardName, setBoardName] = useState('');
@@ -104,29 +108,37 @@ export default function BoardDetailPage() {
       });
       setBoard(updated);
       setEditingBoard(false);
-    } catch { /* handled */ }
+    } catch {
+      toast.error('Failed to update board. Please try again.');
+    }
   }
 
   async function handleArchiveBoard() {
     try {
       await boardsApi.archive(workspaceId, boardId);
       router.push(`/workspaces/${workspaceId}/boards`);
-    } catch { /* handled */ }
+    } catch {
+      toast.error('Failed to archive board. Please try again.');
+    }
   }
 
   async function handleUnarchiveBoard() {
     try {
       await boardsApi.unarchive(workspaceId, boardId);
       if (board) setBoard({ ...board, status: 'ACTIVE', archivedAt: null });
-    } catch { /* handled */ }
+    } catch {
+      toast.error('Failed to unarchive board. Please try again.');
+    }
   }
 
   async function handleDeleteBoard() {
-    if (!confirm('Delete this board? This cannot be undone.')) return;
+    setConfirmDelete(false);
     try {
       await boardsApi.delete(workspaceId, boardId);
       router.push(`/workspaces/${workspaceId}/boards`);
-    } catch { /* handled */ }
+    } catch {
+      toast.error('Failed to delete board. Please try again.');
+    }
   }
 
   async function handleCreateColumn() {
@@ -135,7 +147,9 @@ export default function BoardDetailPage() {
       const col = await boardsApi.createColumn(workspaceId, boardId, { name: newColName.trim() });
       setColumns((prev) => [...prev, col]);
       setNewColName('');
-    } catch { /* handled */ }
+    } catch {
+      toast.error('Failed to create column. Please try again.');
+    }
   }
 
   async function handleUpdateColumn(colId: string) {
@@ -144,7 +158,9 @@ export default function BoardDetailPage() {
       const updated = await boardsApi.updateColumn(workspaceId, boardId, colId, { name: editingColName.trim() });
       setColumns((prev) => prev.map((c) => (c.id === colId ? updated : c)));
       setEditingColId(null);
-    } catch { /* handled */ }
+    } catch {
+      toast.error('Failed to update column. Please try again.');
+    }
   }
 
   async function handleArchiveColumn(colId: string) {
@@ -152,7 +168,9 @@ export default function BoardDetailPage() {
       await boardsApi.archiveColumn(workspaceId, boardId, colId);
       setColumns((prev) => prev.filter((c) => c.id !== colId));
       setTasks((prev) => prev.filter((t) => t.columnId !== colId));
-    } catch { /* handled */ }
+    } catch {
+      toast.error('Failed to archive column. Please try again.');
+    }
   }
 
   function handleTaskSaved(task: Task) {
@@ -398,7 +416,7 @@ export default function BoardDetailPage() {
                     <Archive size={12} /> Archive
                   </button>
                 )}
-                <button onClick={handleDeleteBoard} className="flex w-full items-center gap-2 px-4 py-2 text-xs text-red-400 hover:bg-red-500/10">
+                <button onClick={() => setConfirmDelete(true)} className="flex w-full items-center gap-2 px-4 py-2 text-xs text-red-400 hover:bg-red-500/10">
                   <Trash2 size={12} /> Delete
                 </button>
               </div>
@@ -563,10 +581,21 @@ export default function BoardDetailPage() {
             try {
               const task = await tasksApi.create(workspaceId, boardId, columns[0]?.id || '', { title });
               setTasks(prev => [...prev, task]);
-            } catch { /* handled */ }
+            } catch {
+              toast.error('Failed to create task from idea. Please try again.');
+            }
           }}
         />
       )}
+      <ConfirmModal
+        open={confirmDelete}
+        title="Delete this board?"
+        description="This cannot be undone. All tasks, columns, and files in this board will be permanently removed."
+        confirmLabel="Delete board"
+        variant="danger"
+        onConfirm={handleDeleteBoard}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </div>
   );
 }

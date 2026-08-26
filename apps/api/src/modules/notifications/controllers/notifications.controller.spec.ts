@@ -35,6 +35,7 @@ describe('NotificationsController', () => {
             list: jest.fn(),
             getById: jest.fn(),
             countUnread: jest.fn(),
+            totalCount: jest.fn(),
             markAsRead: jest.fn(),
             markAllAsRead: jest.fn(),
             archive: jest.fn(),
@@ -52,6 +53,7 @@ describe('NotificationsController', () => {
   describe('list', () => {
     it('lists notifications', async () => {
       service.list.mockResolvedValue([mockNotification]);
+      service.totalCount.mockResolvedValue(1);
 
       const result = await controller.list(
         currentUser as never,
@@ -59,7 +61,8 @@ describe('NotificationsController', () => {
         undefined,
       );
 
-      expect(result).toHaveLength(1);
+      expect(result.data).toHaveLength(1);
+      expect(result.total).toBe(1);
     });
   });
 

@@ -159,6 +159,7 @@ describe('BoardsService', () => {
     it('creates a board with default columns', async () => {
       mockDbSelect([mockMembership]);
       policy.isAtLeast.mockReturnValue(true);
+      boardsRepo.listByWorkspace.mockResolvedValue([]);
       boardsRepo.create.mockResolvedValue(mockBoard);
       columnsRepo.create.mockResolvedValue(mockColumn);
 

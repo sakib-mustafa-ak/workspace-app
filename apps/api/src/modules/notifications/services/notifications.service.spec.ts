@@ -3,6 +3,7 @@ import type { NotificationRow } from '@repo/database';
 
 import { NotificationsRepository } from '../repositories/notifications.repository';
 import { NotificationsEventBus } from '../events/notifications.events';
+import { PushSubscriptionsService } from './push-subscriptions.service';
 import { NotificationsService } from './notifications.service';
 
 const mockNotification: NotificationRow = {
@@ -54,6 +55,12 @@ describe('NotificationsService', () => {
           provide: NotificationsEventBus,
           useValue: {
             publishNotificationCreated: jest.fn(),
+          },
+        },
+        {
+          provide: PushSubscriptionsService,
+          useValue: {
+            sendToUser: jest.fn().mockResolvedValue([]),
           },
         },
       ],

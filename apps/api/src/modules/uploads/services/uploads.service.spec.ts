@@ -18,6 +18,8 @@ describe('UploadsService', () => {
   function createService() {
     const uploadsRepo = {
       create: jest.fn().mockResolvedValue(upload),
+      findByBoard: jest.fn().mockResolvedValue([upload]),
+      findByWorkspace: jest.fn().mockResolvedValue([upload]),
     };
     const boardsRepo = {
       findById: jest.fn().mockResolvedValue({
@@ -29,7 +31,11 @@ describe('UploadsService', () => {
       findByWorkspaceAndUser: jest.fn().mockResolvedValue(membership),
     };
     const eventBus = { publishFileUploaded: jest.fn() };
-    const policy = { canUpload: jest.fn().mockReturnValue(true) };
+    const policy = {
+      canUpload: jest.fn().mockReturnValue(true),
+      canView: jest.fn().mockReturnValue(true),
+      canManage: jest.fn().mockReturnValue(true),
+    };
     const storage = {
       save: jest.fn().mockResolvedValue({
         storageKey: 'workspace-1/image.png',
@@ -85,5 +91,30 @@ describe('UploadsService', () => {
       }),
     ).rejects.toThrow('does not belong to workspace');
     expect(storage.save).not.toHaveBeenCalled();
+  });
+
+  it('checks membership correctly when listing by board (arg order regression)', async () => {
+    const { service, membersRepo } = createService();
+
+    // Regression: listByBoard used to call findByWorkspaceAndUser(userId,
+    // workspaceId) — swapped — so the lookup always missed and every
+    // request, even from a real member, threw NOT_A_MEMBER.
+    await service.listByBoard('board-1', 'user-1');
+
+    expect(membersRepo.findByWorkspaceAndUser).toHaveBeenCalledWith(
+      'workspace-1',
+      'user-1',
+    );
+  });
+
+  it('lists by workspace only for members (arg order regression)', async () => {
+    const { service, membersRepo } = createService();
+
+    await service.listByWorkspace('workspace-1', 'user-1');
+
+    expect(membersRepo.findByWorkspaceAndUser).toHaveBeenCalledWith(
+      'workspace-1',
+      'user-1',
+    );
   });
 });

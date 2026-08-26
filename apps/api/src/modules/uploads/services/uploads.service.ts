@@ -136,8 +136,8 @@ export class UploadsService {
       );
     }
     const membership = await this.membersRepo.findByWorkspaceAndUser(
-      userId,
       board.workspaceId,
+      userId,
     );
     if (!membership) {
       throw new UploadException(
@@ -156,8 +156,8 @@ export class UploadsService {
 
   async listByWorkspace(workspaceId: string, userId: string) {
     const membership = await this.membersRepo.findByWorkspaceAndUser(
-      userId,
       workspaceId,
+      userId,
     );
     if (!membership) {
       throw new UploadException(
@@ -183,8 +183,8 @@ export class UploadsService {
       );
     }
     const membership = await this.membersRepo.findByWorkspaceAndUser(
-      userId,
       upload.workspaceId,
+      userId,
     );
     if (!membership) {
       throw new UploadException(

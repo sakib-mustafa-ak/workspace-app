@@ -3,8 +3,8 @@ export function WorkspaceLogo({ className = 'h-7 w-7' }: { className?: string })
     <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
       <defs>
         <linearGradient id="ws-grad" x1="0" y1="0" x2="40" y2="40">
-          <stop offset="0%" stopColor="#a78bfa" />
-          <stop offset="100%" stopColor="#6d28d9" />
+          <stop offset="0%" stopColor="#b9b0c8" />
+          <stop offset="100%" stopColor="#2e2e2e" />
         </linearGradient>
       </defs>
       <rect width="40" height="40" rx="10" fill="url(#ws-grad)" />

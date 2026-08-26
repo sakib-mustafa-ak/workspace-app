@@ -200,17 +200,41 @@ describe('BoardsService', () => {
   });
 
   describe('getById', () => {
-    it('returns board when found', async () => {
+    it('returns board when user is a member of the owning workspace', async () => {
       boardsRepo.findById.mockResolvedValue(mockBoard);
+      mockDbSelect([mockMembership]);
+      policy.isAtLeast.mockReturnValue(true);
 
-      const result = await service.getById('b1');
+      const result = await service.getById('w1', 'u1', 'b1');
       expect(result.id).toBe('b1');
+    });
+
+    it('throws NOT_FOUND when the board belongs to a different workspace', async () => {
+      // Regression: getById used to fetch by id with no workspace check,
+      // letting any authenticated user read any board by GUID.
+      const foreignBoard = { ...mockBoard, workspaceId: 'w2' };
+      boardsRepo.findById.mockResolvedValue(foreignBoard);
+      mockDbSelect([mockMembership]);
+      policy.isAtLeast.mockReturnValue(true);
+
+      await expect(service.getById('w1', 'u1', 'b1')).rejects.toThrow(
+        'Board not found.',
+      );
+    });
+
+    it('throws when the requesting user is not a member of the workspace', async () => {
+      boardsRepo.findById.mockResolvedValue(mockBoard);
+      mockDbSelect([]);
+
+      await expect(service.getById('w1', 'u3', 'b1')).rejects.toThrow(
+        'not a member',
+      );
     });
 
     it('throws when missing', async () => {
       boardsRepo.findById.mockResolvedValue(undefined);
 
-      await expect(service.getById('missing')).rejects.toThrow(
+      await expect(service.getById('w1', 'u1', 'missing')).rejects.toThrow(
         'Board not found.',
       );
     });

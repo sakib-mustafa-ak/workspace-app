@@ -101,9 +101,11 @@ export class BoardsController {
   @ApiOkResponse({ type: BoardResponseDto })
   @ApiNotFoundResponse()
   public async getById(
+    @CurrentUser() user: CurrentUserModel,
+    @Param('workspaceId') workspaceId: string,
     @Param('boardId') boardId: string,
   ): Promise<BoardResponseDto> {
-    const board = await this.boards.getById(boardId);
+    const board = await this.boards.getById(workspaceId, user.id, boardId);
     return toBoardResponse(board);
   }
 

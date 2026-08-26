@@ -90,12 +90,13 @@ describe('BoardsController', () => {
   });
 
   describe('getById', () => {
-    it('returns a board', async () => {
+    it('passes workspace and user through to the service', async () => {
       boardsService.getById.mockResolvedValue(mockBoard);
 
-      const result = await controller.getById('b1');
+      const result = await controller.getById(currentUser as never, 'w1', 'b1');
 
       expect(result.id).toBe('b1');
+      expect(boardsService.getById).toHaveBeenCalledWith('w1', 'u1', 'b1');
     });
   });
 

@@ -109,14 +109,23 @@ export class BoardsService {
     return board;
   }
 
-  public async getById(boardId: string): Promise<BoardRow> {
+  public async getById(
+    workspaceId: string,
+    userId: string,
+    boardId: string,
+  ): Promise<BoardRow> {
     const board = await this.boardsRepo.findById(boardId);
-    if (!board) {
+    if (!board || board.workspaceId !== workspaceId) {
+      // Same error whether missing or foreign: never leak existence
+      // across tenant boundaries.
       throw new BoardsException(
         BoardsErrorCode.BOARD_NOT_FOUND,
         'Board not found.',
       );
     }
+
+    await this.requireRole(board.workspaceId, userId, 'VIEWER');
+
     return board;
   }
 

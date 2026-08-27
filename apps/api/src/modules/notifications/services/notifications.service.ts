@@ -8,7 +8,6 @@ import {
 } from '../errors/notifications.errors';
 import { NotificationsRepository } from '../repositories/notifications.repository';
 import { NotificationsEventBus } from '../events/notifications.events';
-import { PushSubscriptionsService } from './push-subscriptions.service';
 
 @Injectable()
 export class NotificationsService {
@@ -19,8 +18,6 @@ export class NotificationsService {
     private readonly notificationsRepo: NotificationsRepository,
     @Inject(NotificationsEventBus)
     private readonly events: NotificationsEventBus,
-    @Inject(PushSubscriptionsService)
-    private readonly pushSubscriptions: PushSubscriptionsService,
   ) {}
 
   public async create(
@@ -68,18 +65,6 @@ export class NotificationsService {
     const notification = await this.create(userId, input);
 
     await this.notificationsRepo.deliver(notification.id);
-
-    // Send push notification if user has subscriptions
-    await this.pushSubscriptions.sendToUser(userId, {
-      title: notification.title,
-      body: notification.body ?? undefined,
-      data: {
-        notificationId: notification.id,
-        type: notification.type,
-        resourceType: notification.resourceType,
-        resourceId: notification.resourceId,
-      },
-    });
 
     return notification;
   }

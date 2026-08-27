@@ -37,7 +37,7 @@ export function ConfirmModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="confirm-modal-title"
-        className="w-full max-w-sm rounded-xl border border-surface-800 bg-surface-900 p-6 shadow-xl shadow-black/20"
+        className="w-full max-w-sm rounded-xl border border-surface-800 bg-surface-900 p-6 shadow-xl shadow-black/20 mobile-fullscreen"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start gap-4">

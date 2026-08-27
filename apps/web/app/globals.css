@@ -154,6 +154,69 @@
   }
 }
 
+/* Mobile-first responsive patterns */
+@media (max-width: 767px) {
+  /* Modals: full-screen on mobile */
+  .mobile-fullscreen {
+    position: fixed;
+    inset: 0;
+    margin: 0;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* Modal content scrolling on mobile */
+  .mobile-fullscreen > div[role="dialog"] {
+    height: 100%;
+    max-height: 100%;
+    overflow-y: auto;
+    border-radius: 0;
+  }
+
+  /* Typography scaling on mobile */
+  .text-display { @apply text-xl; }
+  .text-headline { @apply text-lg; }
+  .text-title { @apply text-sm; }
+  .text-body { @apply text-xs; }
+  .text-label { @apply text-[10px]; }
+  .text-caption { @apply text-[9px]; }
+
+  /* Sidebar overlay adjustments */
+  .sidebar-overlay {
+    backdrop-filter: blur(8px);
+  }
+
+  /* Header adjustments on mobile */
+  .mobile-header-compact {
+    @apply h-16;
+  }
+}
+
+@media (min-width: 768px) {
+  /* Desktop modal sizing - centered with max-width */
+  .modal-centered {
+    @apply max-w-lg max-h-[90vh];
+  }
+
+  .modal-centered-sm {
+    @apply max-w-sm;
+  }
+
+  .modal-centered-md {
+    @apply max-w-md;
+  }
+}
+
+/* Responsive utility for hiding/showing elements */
+@media (max-width: 1023px) {
+  .max-lg\:hidden { display: none; }
+  .max-lg\:flex { display: flex; }
+  .max-lg\:block { display: block; }
+}
+
 .tnum {
   font-variant-numeric: tabular-nums;
 }

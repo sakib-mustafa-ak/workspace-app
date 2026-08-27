@@ -37,7 +37,7 @@ export function AiIdeasDialog({ onClose, onCreateIdea }: Props) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="ai-ideas-dialog-title"
-        className="w-full max-w-md rounded-xl border border-surface-800 bg-surface-900 shadow-xl shadow-black/20"
+        className="w-full max-w-md rounded-xl border border-surface-800 bg-surface-900 shadow-xl shadow-black/20 mobile-fullscreen"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-surface-800 px-6 py-4">

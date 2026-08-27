@@ -153,7 +153,7 @@ export function TaskModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="task-modal-title"
-        className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-surface-800 bg-surface-900 shadow-xl shadow-black/20"
+        className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-surface-800 bg-surface-900 shadow-xl shadow-black/20 mobile-fullscreen"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-surface-800 px-6 py-4">

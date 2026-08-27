@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { AuthProvider } from '@/contexts/auth-context';
@@ -19,7 +19,6 @@ const navItems = [
 
 export function AuthenticatedLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -31,13 +30,6 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
   ];
   const { showCheatSheet, setShowCheatSheet } = useKeyboardShortcuts(shortcuts);
   const shortcutsTrapRef = useFocusTrap(showCheatSheet, () => setShowCheatSheet(false));
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
 
   return (
     <AuthProvider>
@@ -57,7 +49,7 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
           <Sidebar />
         </div>
 
-<main className="relative flex min-w-0 flex-1 flex-col overflow-auto pb-16 lg:pb-0">
+        <main className="relative flex min-w-0 flex-1 flex-col overflow-auto pb-16 lg:pb-0">
           <div className="sticky top-0 z-30 flex h-20 flex-col items-center justify-center border-b border-surface-800/70 bg-surface-950/70 px-4 backdrop-blur-xl lg:hidden">
             <button
               onClick={() => setSidebarOpen(true)}
@@ -73,10 +65,8 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
 
           <ErrorBoundary>{children}</ErrorBoundary>
         </main>
-      </div>
 
-      {isMobile && (
-        <nav className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-surface-800 bg-surface-950/95 backdrop-blur-md">
+        <nav className="fixed bottom-0 left-0 right-0 z-40 flex max-lg:flex lg:hidden border-t border-surface-800 bg-surface-950/95 backdrop-blur-md">
           {navItems.slice(0, 4).map((item) => (
             <Link
               key={item.href}
@@ -90,32 +80,32 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
             </Link>
           ))}
         </nav>
-      )}
 
-      {showCheatSheet && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60" onClick={() => setShowCheatSheet(false)}>
-          <div
-            ref={shortcutsTrapRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="shortcuts-dialog-title"
-            className="w-full max-w-sm rounded-xl border border-surface-800 bg-surface-900 p-6 shadow-xl shadow-black/20"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 id="shortcuts-dialog-title" className="text-sm font-semibold mb-4">Keyboard Shortcuts</h3>
-            <div className="space-y-2">
-              {shortcuts.map((s) => (
-                <div key={s.keys.join('')} className="flex items-center justify-between text-sm">
-                  <span className="text-surface-400">{s.description}</span>
-                  <kbd className="rounded bg-surface-800 px-2 py-0.5 text-xs text-surface-300 font-mono">
-                    {s.keys.join(' ')}
-                  </kbd>
-                </div>
-              ))}
+        {showCheatSheet && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60" onClick={() => setShowCheatSheet(false)}>
+            <div
+              ref={shortcutsTrapRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="shortcuts-dialog-title"
+              className="w-full max-w-sm rounded-xl border border-surface-800 bg-surface-900 p-6 shadow-xl shadow-black/20"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 id="shortcuts-dialog-title" className="text-sm font-semibold mb-4">Keyboard Shortcuts</h3>
+              <div className="space-y-2">
+                {shortcuts.map((s) => (
+                  <div key={s.keys.join('')} className="flex items-center justify-between text-sm">
+                    <span className="text-surface-400">{s.description}</span>
+                    <kbd className="rounded bg-surface-800 px-2 py-0.5 text-xs text-surface-300 font-mono">
+                      {s.keys.join(' ')}
+                    </kbd>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </AuthProvider>
   );
 }

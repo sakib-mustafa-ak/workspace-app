@@ -1,4 +1,3 @@
-ALTER TYPE "public"."notification_type" ADD VALUE 'TASK_DELETED' BEFORE 'FILE_UPLOADED';--> statement-breakpoint
 CREATE TABLE "push_subscriptions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" uuid NOT NULL,

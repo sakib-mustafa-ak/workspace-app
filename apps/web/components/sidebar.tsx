@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/hooks/use-theme';
 import { api } from '@/lib/api';
@@ -42,6 +42,7 @@ export function Sidebar() {
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
   const [workspaceBoards, setWorkspaceBoards] = useState<Record<string, Board[]>>({});
   const [switcherOpen, setSwitcherOpen] = useState(false);
+  const [switcherFocusIndex, setSwitcherFocusIndex] = useState(-1);
   const [searchQuery, setSearchQuery] = useState('');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [searchResults, setSearchResults] = useState<any>(null);
@@ -49,6 +50,8 @@ export function Sidebar() {
   const [unreadCount, setUnreadCount] = useState(0);
   const searchRef = useRef<HTMLDivElement>(null);
   const switcherRef = useRef<HTMLDivElement>(null);
+  const switcherTriggerRef = useRef<HTMLButtonElement>(null);
+  const switcherItemsRef = useRef<(HTMLAnchorElement | null)[]>([]);
 
   // Sync activeWorkspaceId from URL
   useEffect(() => {
@@ -105,11 +108,86 @@ export function Sidebar() {
     function handleClick(e: MouseEvent) {
       if (switcherRef.current && !switcherRef.current.contains(e.target as Node)) {
         setSwitcherOpen(false);
+        setSwitcherFocusIndex(-1);
       }
     }
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
+
+  // Keyboard navigation for workspace switcher
+  const handleSwitcherKeyDown = useCallback((e: React.KeyboardEvent) => {
+    const items = switcherItemsRef.current.filter((item) => item !== null);
+    const itemCount = items.length;
+
+    if (itemCount === 0) return;
+
+    switch (e.key) {
+      case 'ArrowDown': {
+        e.preventDefault();
+        setSwitcherFocusIndex((prev) => {
+          const next = prev < itemCount - 1 ? prev + 1 : 0;
+          items[next]?.focus();
+          return next;
+        });
+        break;
+      }
+      case 'ArrowUp': {
+        e.preventDefault();
+        setSwitcherFocusIndex((prev) => {
+          const next = prev > 0 ? prev - 1 : itemCount - 1;
+          items[next]?.focus();
+          return next;
+        });
+        break;
+      }
+      case 'Home': {
+        e.preventDefault();
+        items[0]?.focus();
+        setSwitcherFocusIndex(0);
+        break;
+      }
+      case 'End': {
+        e.preventDefault();
+        items[itemCount - 1]?.focus();
+        setSwitcherFocusIndex(itemCount - 1);
+        break;
+      }
+      case 'Escape': {
+        e.preventDefault();
+        setSwitcherOpen(false);
+        setSwitcherFocusIndex(-1);
+        switcherTriggerRef.current?.focus();
+        break;
+      }
+      case 'Tab': {
+        e.preventDefault();
+        setSwitcherFocusIndex((prev) => {
+          const nextIndex = e.shiftKey
+            ? (prev > 0 ? prev - 1 : itemCount - 1)
+            : (prev < itemCount - 1 ? prev + 1 : 0);
+          items[nextIndex]?.focus();
+          return nextIndex;
+        });
+        break;
+      }
+      default:
+        break;
+    }
+  }, []);
+
+  // Focus first item when switcher opens
+  useEffect(() => {
+    if (switcherOpen) {
+      const items = switcherItemsRef.current.filter((item) => item !== null);
+      if (items.length > 0) {
+        items[0]?.focus();
+        setSwitcherFocusIndex(0);
+      }
+    } else {
+      setSwitcherFocusIndex(-1);
+    }
+  }, [switcherOpen]);
 
   // Poll unread notification count
   useEffect(() => {
@@ -200,7 +278,11 @@ export function Sidebar() {
             <p className="mb-2 px-3 text-label text-surface-500">Workspaces</p>
             <div ref={switcherRef} className="relative">
               <button
+                ref={switcherTriggerRef}
                 onClick={() => setSwitcherOpen(!switcherOpen)}
+                onKeyDown={handleSwitcherKeyDown}
+                aria-expanded={switcherOpen}
+                aria-haspopup="menu"
                 className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-surface-200 hover:bg-surface-800/50"
               >
                 <WorkspaceLogo className="h-5 w-5" name={activeWorkspace?.name ?? 'Select'} />
@@ -209,12 +291,19 @@ export function Sidebar() {
               </button>
 
               {switcherOpen && (
-                <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border border-surface-800/50 bg-surface-900 p-1 shadow-xl">
-                  {userWorkspaces.map((ws) => (
+                <div
+                  role="menu"
+                  onKeyDown={handleSwitcherKeyDown}
+                  className="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border border-surface-800/50 bg-surface-900 p-1 shadow-xl"
+                >
+                  {userWorkspaces.map((ws, index) => (
                     <Link
+                      ref={(el) => { switcherItemsRef.current[index] = el; }}
                       key={ws.id}
                       href={`/workspaces/${ws.id}`}
                       onClick={() => setSwitcherOpen(false)}
+                      role="menuitem"
+                      tabIndex={switcherFocusIndex === index ? 0 : -1}
                       className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
                         ws.id === activeWorkspaceId
                           ? 'bg-surface-800 text-white'
@@ -227,7 +316,10 @@ export function Sidebar() {
                     </Link>
                   ))}
                   <Link
+                    ref={(el) => { switcherItemsRef.current[userWorkspaces.length] = el; }}
                     href="/workspaces"
+                    role="menuitem"
+                    tabIndex={switcherFocusIndex === userWorkspaces.length ? 0 : -1}
                     className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-surface-400 hover:bg-surface-800/50 hover:text-surface-200"
                   >
                     <Plus size={14} />

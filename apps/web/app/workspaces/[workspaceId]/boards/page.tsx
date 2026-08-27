@@ -74,10 +74,12 @@ export default function BoardsPage() {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
-      <Breadcrumbs items={[
-        { label: workspace?.name || 'Workspace', href: `/workspaces/${workspaceId}` },
-        { label: 'Boards' },
-      ]} />
+      <Breadcrumbs
+        items={[
+          { label: workspace?.name || 'Workspace', href: `/workspaces/${workspaceId}` },
+        ]}
+        currentLabel="Boards"
+      />
 
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

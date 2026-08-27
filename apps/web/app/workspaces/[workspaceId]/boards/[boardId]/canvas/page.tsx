@@ -45,12 +45,14 @@ function CanvasHeader() {
   }, [workspaceId, boardId]);
 
   return (
-    <Breadcrumbs items={[
-      { label: workspace?.name || 'Workspace', href: `/workspaces/${workspaceId}` },
-      { label: 'Boards', href: `/workspaces/${workspaceId}/boards` },
-      { label: board?.name || 'Board', href: `/workspaces/${workspaceId}/boards/${boardId}` },
-      { label: 'Canvas' },
-    ]} />
+    <Breadcrumbs
+      items={[
+        { label: workspace?.name || 'Workspace', href: `/workspaces/${workspaceId}` },
+        { label: 'Boards', href: `/workspaces/${workspaceId}/boards` },
+        { label: board?.name || 'Board', href: `/workspaces/${workspaceId}/boards/${boardId}` },
+      ]}
+      currentLabel="Canvas"
+    />
   );
 }
 

@@ -156,13 +156,25 @@ export default function WorkspaceDetailPage() {
     { key: 'activity', label: 'Activity', icon: History },
   ];
 
+  const tabLabels: Record<Tab, string> = {
+    overview: 'Overview',
+    boards: 'Boards',
+    members: 'Members',
+    invitations: 'Invitations',
+    settings: 'Settings',
+    activity: 'Activity',
+  };
+
   return (
     <div className="flex h-full flex-col">
       <header className="border-b border-surface-800">
         <div className="flex items-center gap-3 px-8 py-4">
-          <Breadcrumbs items={[
-            { label: workspace.name },
-          ]} />
+          <Breadcrumbs
+            items={[
+              { label: workspace.name, href: `/workspaces/${workspaceId}` },
+            ]}
+            currentLabel={tabLabels[tab]}
+          />
           <div>
             <h1 className="text-lg font-bold">{workspace.name}</h1>
             <p className="text-xs text-surface-500">

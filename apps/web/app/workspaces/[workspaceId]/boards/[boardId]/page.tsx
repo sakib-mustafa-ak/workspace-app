@@ -303,15 +303,19 @@ export default function BoardDetailPage() {
     'bg-rose-500', 'bg-cyan-500', 'bg-pink-500', 'bg-lime-500',
   ];
 
+  const taskLabel = modal?.type === 'edit' ? modal.task.title : modal?.type === 'create' ? 'New task' : null;
+
   return (
     <div className="flex h-full flex-col">
       <header className="flex items-center justify-between border-b border-surface-800 px-8 py-4">
         <div className="flex items-center gap-3">
-          <Breadcrumbs items={[
-            { label: workspace?.name || 'Workspace', href: `/workspaces/${workspaceId}` },
-            { label: 'Boards', href: `/workspaces/${workspaceId}/boards` },
-            { label: board?.name || 'Board' },
-          ]} />
+          <Breadcrumbs
+            items={[
+              { label: workspace?.name || 'Workspace', href: `/workspaces/${workspaceId}` },
+              { label: 'Boards', href: `/workspaces/${workspaceId}/boards` },
+            ]}
+            currentLabel={taskLabel ?? (board?.name || 'Board')}
+          />
           {editingBoard ? (
             <div className="flex items-center gap-2">
               <input

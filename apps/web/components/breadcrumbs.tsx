@@ -1,28 +1,43 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
 
 interface BreadcrumbItem {
   label: string;
   href?: string;
 }
 
-export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
+interface BreadcrumbsProps {
+  items: BreadcrumbItem[];
+  currentLabel?: string;
+}
+
+export function Breadcrumbs({ items, currentLabel }: BreadcrumbsProps) {
   return (
-    <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs">
+    <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-label">
       {items.map((item, i) => (
-        <span key={i} className="flex items-center gap-1.5">
-          {i > 0 && <ChevronRight size={12} className="text-surface-600" />}
+        <span key={i} className="flex items-center gap-1">
+          {i > 0 && (
+            <span className="text-caption text-surface-400" aria-hidden="true">/</span>
+          )}
           {item.href ? (
-            <Link href={item.href} className="text-surface-400 hover:text-surface-200 transition-colors">
+            <Link
+              href={item.href}
+              className="text-surface-500 hover:text-primary-400 transition-colors text-label underline-grow"
+            >
               {item.label}
             </Link>
           ) : (
-            <span className="text-surface-100 font-medium">{item.label}</span>
+            <span className="text-primary-400 text-label font-medium">{item.label}</span>
           )}
         </span>
       ))}
+      {currentLabel && (
+        <span className="flex items-center gap-1">
+          <span className="text-caption text-surface-400" aria-hidden="true">/</span>
+          <span className="text-primary-400 text-label font-medium">{currentLabel}</span>
+        </span>
+      )}
     </nav>
   );
 }

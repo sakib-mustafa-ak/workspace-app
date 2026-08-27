@@ -22,6 +22,7 @@ import {
   Moon,
   Monitor,
   Search,
+  Plus,
 } from 'lucide-react';
 
 
@@ -38,15 +39,40 @@ export function Sidebar() {
   const { theme, setTheme } = useTheme();
 
   const [userWorkspaces, setUserWorkspaces] = useState<Workspace[]>([]);
-  const [expandedWorkspaces, setExpandedWorkspaces] = useState<Set<string>>(new Set());
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
   const [workspaceBoards, setWorkspaceBoards] = useState<Record<string, Board[]>>({});
+  const [switcherOpen, setSwitcherOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [searchResults, setSearchResults] = useState<any>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const searchRef = useRef<HTMLDivElement>(null);
+  const switcherRef = useRef<HTMLDivElement>(null);
 
+  // Sync activeWorkspaceId from URL
+  useEffect(() => {
+    const match = pathname.match(/^\/workspaces\/([^/]+)/);
+    if (match && match[1]) {
+      setActiveWorkspaceId(match[1]);
+    }
+  }, [pathname]);
+
+  // Load workspaces on mount
+  useEffect(() => {
+    workspacesApi.list().then(setUserWorkspaces).catch(() => {});
+  }, []);
+
+  // Load boards for active workspace
+  useEffect(() => {
+    if (activeWorkspaceId && !workspaceBoards[activeWorkspaceId]) {
+      boardsApi.list(activeWorkspaceId)
+        .then((boards) => setWorkspaceBoards((prev) => ({ ...prev, [activeWorkspaceId]: boards })))
+        .catch(() => {});
+    }
+  }, [activeWorkspaceId, workspaceBoards]);
+
+  // Search debounce
   useEffect(() => {
     if (!searchQuery.trim()) {
       setSearchResults(null);
@@ -63,6 +89,7 @@ export function Sidebar() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  // Click outside to close search
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
@@ -73,29 +100,18 @@ export function Sidebar() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
+  // Click outside to close switcher
   useEffect(() => {
-    workspacesApi.list().then(setUserWorkspaces).catch(() => {});
-  }, []);
-
-  const toggleWorkspace = async (wsId: string) => {
-    const newExpanded = new Set(expandedWorkspaces);
-    if (newExpanded.has(wsId)) {
-      newExpanded.delete(wsId);
-    } else {
-      newExpanded.add(wsId);
-      if (!workspaceBoards[wsId]) {
-        try {
-          const boards = await boardsApi.list(wsId);
-          setWorkspaceBoards((prev) => ({ ...prev, [wsId]: boards }));
-        } catch {
-          // Silently handle errors
-        }
+    function handleClick(e: MouseEvent) {
+      if (switcherRef.current && !switcherRef.current.contains(e.target as Node)) {
+        setSwitcherOpen(false);
       }
     }
-    setExpandedWorkspaces(newExpanded);
-  };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
 
-  // Poll unread notification count every 30s so the badge stays fresh.
+  // Poll unread notification count
   useEffect(() => {
     let cancelled = false;
     const load = () => {
@@ -107,6 +123,9 @@ export function Sidebar() {
     const interval = setInterval(load, 30_000);
     return () => { cancelled = true; clearInterval(interval); };
   }, []);
+
+  const activeWorkspace = userWorkspaces.find((w) => w.id === activeWorkspaceId);
+  const activeBoards = activeWorkspaceId ? workspaceBoards[activeWorkspaceId] || [] : [];
 
   return (
     <aside className="flex h-full w-60 flex-shrink-0 flex-col border-r border-surface-800 bg-gradient-to-b from-surface-900 to-surface-900/95">
@@ -179,64 +198,74 @@ export function Sidebar() {
         {userWorkspaces.length > 0 && (
           <div className="px-3 pt-2">
             <p className="mb-2 px-3 text-label text-surface-500">Workspaces</p>
-            <div className="space-y-1">
-              {userWorkspaces.map((ws) => {
-                const wsActive = pathname.startsWith(`/workspaces/${ws.id}`);
-                const isExpanded = expandedWorkspaces.has(ws.id);
-                const boards = workspaceBoards[ws.id] || [];
-                return (
-                  <div key={ws.id}>
-                    <button
-                      onClick={() => toggleWorkspace(ws.id)}
-                      className={`group flex w-full items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm transition-colors ${
-                        wsActive
+            <div ref={switcherRef} className="relative">
+              <button
+                onClick={() => setSwitcherOpen(!switcherOpen)}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-surface-200 hover:bg-surface-800/50"
+              >
+                <WorkspaceLogo className="h-5 w-5" name={activeWorkspace?.name ?? 'Select'} />
+                <span className="flex-1 truncate text-left">{activeWorkspace?.name ?? 'Select workspace'}</span>
+                <ChevronDown size={14} className={`text-surface-500 transition-transform ${switcherOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {switcherOpen && (
+                <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border border-surface-800/50 bg-surface-900 p-1 shadow-xl">
+                  {userWorkspaces.map((ws) => (
+                    <Link
+                      key={ws.id}
+                      href={`/workspaces/${ws.id}`}
+                      onClick={() => setSwitcherOpen(false)}
+                      className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
+                        ws.id === activeWorkspaceId
                           ? 'bg-surface-800 text-white'
                           : 'text-surface-400 hover:bg-surface-800/50 hover:text-surface-200'
                       }`}
                     >
-                      <div className="flex h-5 w-5 items-center justify-center rounded bg-surface-700 text-[9px] font-bold text-surface-300">
-                        {ws.name.charAt(0).toUpperCase()}
-                      </div>
-                      <span className={`flex-1 truncate text-left transition-colors ${wsActive ? 'text-white' : 'text-primary-400 hover:text-white'}`}>
-                        {ws.name}
-                      </span>
-                      <ChevronDown
-                        size={14}
-                        className={`transition-transform duration-200 ${isExpanded ? 'rotate-0' : '-rotate-90'}`}
-                      />
-                    </button>
-                    {isExpanded && (
-                      <div className="ml-6 mt-1 space-y-0.5">
-                        <Link
-                          href={`/workspaces/${ws.id}`}
-                          className="flex items-center gap-2 rounded-md px-2 py-1 text-xs text-surface-400 hover:bg-surface-800/50 hover:text-surface-200"
-                        >
-                          <div className="h-1 w-1 rounded-full bg-surface-500" />
-                          All boards
-                        </Link>
-                        {boards.map((board) => {
-                          const boardActive = pathname === `/workspaces/${ws.id}/boards/${board.id}`;
-                          return (
-                            <Link
-                              key={board.id}
-                              href={`/workspaces/${ws.id}/boards/${board.id}`}
-                              className={`flex items-center gap-2 rounded-md px-2 py-1 text-xs transition-colors ${
-                                boardActive
-                                  ? 'bg-surface-800 text-white'
-                                  : 'text-surface-400 hover:bg-surface-800/50 hover:text-surface-200'
-                              }`}
-                            >
-                              <div className="h-1 w-1 rounded-full bg-surface-500" />
-                              <span className="truncate">{board.name}</span>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                      <WorkspaceLogo className="h-5 w-5" name={ws.name} />
+                      <span className="flex-1 truncate">{ws.name}</span>
+                      <span className="text-[10px] uppercase tracking-wider text-surface-600">{ws.memberCount} members</span>
+                    </Link>
+                  ))}
+                  <Link
+                    href="/workspaces"
+                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-surface-400 hover:bg-surface-800/50 hover:text-surface-200"
+                  >
+                    <Plus size={14} />
+                    <span>All workspaces</span>
+                  </Link>
+                </div>
+              )}
             </div>
+
+            {activeWorkspaceId && activeBoards.length > 0 && (
+              <div className="mt-3 space-y-1">
+                <p className="mb-2 px-3 text-label text-surface-500">Boards</p>
+                <Link
+                  href={`/workspaces/${activeWorkspaceId}`}
+                  className="flex items-center gap-2 rounded-md px-2 py-1 text-xs text-surface-400 hover:bg-surface-800/50 hover:text-surface-200"
+                >
+                  <div className="h-1 w-1 rounded-full bg-surface-500" />
+                  All boards
+                </Link>
+                {activeBoards.map((board) => {
+                  const boardActive = pathname === `/workspaces/${activeWorkspaceId}/boards/${board.id}`;
+                  return (
+                    <Link
+                      key={board.id}
+                      href={`/workspaces/${activeWorkspaceId}/boards/${board.id}`}
+                      className={`flex items-center gap-2 rounded-md px-2 py-1 text-xs transition-colors ${
+                        boardActive
+                          ? 'bg-surface-800 text-white'
+                          : 'text-surface-400 hover:bg-surface-800/50 hover:text-surface-200'
+                      }`}
+                    >
+                      <div className="h-1 w-1 rounded-full bg-surface-500" />
+                      <span className="truncate">{board.name}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </div>

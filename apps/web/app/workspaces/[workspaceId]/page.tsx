@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import Link from 'next/link';
 import {
-  ArrowLeft, LayoutDashboard, Columns, Users, Mail, Settings, History,
+  LayoutDashboard, Columns, Users, Mail, Settings, History,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import {
@@ -23,6 +22,7 @@ import { SettingsTab } from './_components/settings-tab';
 import { ActivityTabContent } from './_components/activity-tab';
 import { useToast } from '@/contexts/toast-context';
 import { ConfirmModal } from '@/components/confirm-modal';
+import { Breadcrumbs } from '@/components/breadcrumbs';
 
 type Tab = 'overview' | 'boards' | 'members' | 'invitations' | 'settings' | 'activity';
 
@@ -160,12 +160,9 @@ export default function WorkspaceDetailPage() {
     <div className="flex h-full flex-col">
       <header className="border-b border-surface-800">
         <div className="flex items-center gap-3 px-8 py-4">
-          <Link
-            href="/dashboard"
-            className="text-surface-400 hover:text-white"
-          >
-            <ArrowLeft size={18} />
-          </Link>
+          <Breadcrumbs items={[
+            { label: workspace.name },
+          ]} />
           <div>
             <h1 className="text-lg font-bold">{workspace.name}</h1>
             <p className="text-xs text-surface-500">

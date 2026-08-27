@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, ArrowLeft, Columns, Search, Archive, Trash2 } from 'lucide-react';
+import { Plus, Columns, Search, Archive, Trash2 } from 'lucide-react';
 import { workspacesApi, type Workspace } from '@/lib/workspaces';
 import { boardsApi, type Board } from '@/lib/boards';
 import { SkeletonCard } from '@/components/skeleton';
 import { useToast } from '@/contexts/toast-context';
 import { ConfirmModal } from '@/components/confirm-modal';
+import { Breadcrumbs } from '@/components/breadcrumbs';
 
 export default function BoardsPage() {
   const params = useParams();
@@ -73,13 +74,10 @@ export default function BoardsPage() {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
-      <Link
-        href={`/workspaces/${workspaceId}`}
-        className="mb-6 inline-flex items-center gap-1.5 text-sm text-surface-400 transition-colors hover:text-white"
-      >
-        <ArrowLeft size={14} />
-        {workspace?.name || 'Workspace'}
-      </Link>
+      <Breadcrumbs items={[
+        { label: workspace?.name || 'Workspace', href: `/workspaces/${workspaceId}` },
+        { label: 'Boards' },
+      ]} />
 
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

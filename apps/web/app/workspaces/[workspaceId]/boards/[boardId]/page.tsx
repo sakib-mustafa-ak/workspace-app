@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  ArrowLeft, Plus, MessageSquare, Layout, Settings, Pencil, Archive,
+  Plus, MessageSquare, Layout, Settings, Pencil, Archive,
   Trash2, X, Check, FileText, Sparkles, Calendar,
 } from 'lucide-react';
 import {
@@ -29,6 +29,7 @@ import { CalendarView } from '@/components/calendar-view';
 import { addRecentBoard } from '@/lib/recent-activity';
 import { useToast } from '@/contexts/toast-context';
 import { ConfirmModal } from '@/components/confirm-modal';
+import { Breadcrumbs } from '@/components/breadcrumbs';
 
 type ModalState =
   | { type: 'create'; columnId: string }
@@ -42,6 +43,7 @@ export default function BoardDetailPage() {
   const boardId = params.boardId as string;
 
   const [board, setBoard] = useState<Board | null>(null);
+  const [workspace, setWorkspace] = useState<{ name: string } | null>(null);
   const [columns, setColumns] = useState<BoardColumn[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,7 +80,8 @@ export default function BoardDetailPage() {
       boardsApi.getColumns(workspaceId, boardId),
       tasksApi.listByBoard(workspaceId, boardId),
     ])
-      .then(([, brd, cols, tsks]) => {
+      .then(([ws, brd, cols, tsks]) => {
+        setWorkspace({ name: ws.name });
         setBoard(brd);
         setColumns(cols.filter((c) => c.status !== 'ARCHIVED'));
         setTasks(tsks.filter((t) => t.status !== 'DELETED'));
@@ -304,12 +307,11 @@ export default function BoardDetailPage() {
     <div className="flex h-full flex-col">
       <header className="flex items-center justify-between border-b border-surface-800 px-8 py-4">
         <div className="flex items-center gap-3">
-          <Link
-            href={`/workspaces/${workspaceId}/boards`}
-            className="text-surface-400 hover:text-white"
-          >
-            <ArrowLeft size={18} />
-          </Link>
+          <Breadcrumbs items={[
+            { label: workspace?.name || 'Workspace', href: `/workspaces/${workspaceId}` },
+            { label: 'Boards', href: `/workspaces/${workspaceId}/boards` },
+            { label: board?.name || 'Board' },
+          ]} />
           {editingBoard ? (
             <div className="flex items-center gap-2">
               <input

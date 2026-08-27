@@ -158,6 +158,20 @@ A single soft lavender-gray accent over a charcoal neutral ramp. Lavender is use
 - **Label** (400, 12px, 1.4): Inputs, meta lines, file metadata.
 - **Section Label** (500, 10px, +0.05em tracking, uppercase): "Workspaces", "Recent" — sidebar group headers and eyebrow labels.
 
+### Semantic Type Scale (Implemented)
+The following utility classes map directly to the hierarchy above and are defined in `apps/web/app/globals.css`:
+
+| Semantic Token | CSS Utility | Font Size | Weight | Line Height | Letter Spacing | Text Transform |
+|----------------|-------------|-----------|--------|-------------|----------------|----------------|
+| Display | `.text-display` | 24px (text-2xl) | 700 (bold) | tight (~1.25) | normal | none |
+| Headline | `.text-headline` | 20px (text-xl) | 600 (semibold) | snug (~1.375) | normal | none |
+| Title | `.text-title` | 16px (text-base) | 600 (semibold) | normal (1.5) | normal | none |
+| Body | `.text-body` | 14px (text-sm) | 400 (normal) | normal (1.5) | normal | none |
+| Label | `.text-label` | 12px (text-xs) | 400 (normal) | normal (1.5) | normal | none |
+| Section Label | `.text-caption` | 10px (text-[10px]) | 500 (medium) | normal | widest (0.1em) | uppercase |
+
+**Mobile Scaling** (≤767px): Display→xl (20px), Headline→lg (18px), Title→sm (14px), Body→xs (12px), Label→10px, Caption→9px.
+
 ### Named Rules
 **The Compact Rule.** Work text is 12–14px. 16px+ is reserved for titles and headings — the desk stays dense so the canvas gets the space.
 
@@ -165,16 +179,34 @@ A single soft lavender-gray accent over a charcoal neutral ramp. Lavender is use
 
 Shell is a fixed 240px sidebar (w-60) with a hairline right border, plus a 56px header strip. Content flows in a responsive 4px-unit rhythm: 12–16px paddings inside cards, 16–24px gaps between cards, 24px+ page padding. Density is compact by design: nav rows are 8px vertical padding at 14px text, lists use 12px rows, meta at 12px. Sidebar stacks — search, primary nav, workspace list, then the user footer — with 12px padding and 4px item gaps. Cards group in responsive grids (gap 16–24px) that collapse to a single column under ~768px. The sidebar collapses to icons-only or a drawer below the mobile breakpoint.
 
+### Spacing Conventions (Implemented)
+The following padding patterns are used consistently across the codebase:
+
+| Pattern | Padding | Tailwind | Where Used |
+|---------|---------|----------|------------|
+| **Card** | 16px | `p-4` | Standard cards (dashboard widgets, board cards, workspace cards, settings panels) |
+| **Modal** | 24px | `p-6` | Confirm modal, task modal, user profile dialog, authenticated layout dialog |
+| **Compact** | 12–14px | `p-3` / `px-4 py-3.5` | Notification items, dense list rows, sidebar sub-items |
+| **Auth** | 24px/32px | `p-6 sm:p-8` | All auth pages (login, register, reset-password, request-verification, invitations/accept) |
+| **Page/Section** | 24px | `p-6` | Workspace overview, boards tab, members tab, settings tabs, user profile page |
+| **Hero/Glass Panel** | 24px/32px | `p-6 sm:p-8` | Auth glass panels (with backdrop-blur-xl) |
+
+**Responsive Note:** Auth and hero panels use `p-6` on mobile (≤767px) and `p-8` on desktop (≥768px). Standard cards use `p-4` at all breakpoints. Page-level content areas typically use `p-6`.
+
 ## Elevation & Depth
 
 Hybrid, tonal-first: depth at rest comes from stacking charcoal tones (page 950 → panel 900 → raised 800), not shadows. Shadows appear only as response — hover glow, float, or focus. Frosted blur (backdrop-blur-xl) appears only on hero/auth glass panels, never on working cards.
 
-### Shadow Vocabulary
-- **Resting seam** (`border-surface-800`, 1px): Default card and panel separation. No shadow at rest.
-- **Nav active** (`0 1px 2px 0 rgb(0 0 0 / 0.05)`, shadow-sm): The single selected nav row; light tonal lift, not a float.
-- **Hover glow** (`0 10px 15px -3px rgb(46 46 46 / 0.25)`, shadow-lg + shadow-primary-600/25): Primary buttons and interactive accents on hover — charcoal-tinted glow marks reachability.
-- **Float** (`0 20px 25px -5px rgb(0 0 0 / 0.1)`, shadow-xl): Dropdowns, search results, command surfaces — anything that lifts above the desk.
-- **Glass depth** (`0 25px 50px -12px rgb(0 0 0 / 0.25)`, shadow-2xl): Auth/hero glass panels.
+### Shadow Vocabulary (Implemented)
+The following 5-tier system uses actual Tailwind shadow utilities as implemented across the codebase:
+
+| Tier | Name | Tailwind Classes | Use Case | Example Locations |
+|------|------|------------------|----------|-------------------|
+| 0 | **Resting seam** | `border-surface-800` (1px border) | Default card/panel separation. No shadow at rest. | All cards, panels, sidebar items |
+| 1 | **Nav active** | `shadow-sm` | Single selected nav row; light tonal lift, not a float. | Sidebar active item, tab indicators, avatar icons |
+| 2 | **Hover glow** | `shadow-lg shadow-primary-600/25` | Primary buttons and interactive accents on hover — charcoal-tinted glow marks reachability. | Primary buttons, board cards on hover |
+| 3 | **Float** | `shadow-xl` (often with `shadow-black/20`) | Dropdowns, search results, command surfaces, modals, context menus, tooltips — anything that lifts above the desk. | Modals, dropdowns, side panels, context menus, AI panel |
+| 4 | **Glass depth** | `shadow-2xl` (with `shadow-black/20`) | Auth/hero glass panels only. | Auth pages (login, register, reset), invitation accept |
 
 ### Named Rules
 **The Quiet-Reactive Rule.** Surfaces are flat at rest. Shadows and glows are state responses — they appear on hover, focus, and lift, and they disappear when the moment passes. If a resting card needs depth, layer a tone, not a shadow.

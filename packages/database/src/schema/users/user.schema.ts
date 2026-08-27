@@ -1,4 +1,5 @@
 import {
+  boolean,
   index,
   pgTable,
   text,
@@ -37,6 +38,7 @@ export const users = pgTable(
     displayName: text('display_name').notNull(),
     email: text('email').notNull(),
     passwordHash: text('password_hash').notNull(),
+    isAdmin: boolean('is_admin').notNull().default(false),
 
     status: userStatusEnum('status').notNull().default('ACTIVE'),
 

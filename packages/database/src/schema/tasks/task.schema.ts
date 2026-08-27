@@ -13,6 +13,7 @@ import {
   CREATED_AT,
   DELETED_AT,
   PRIMARY_ID,
+  tsvector,
   UPDATED_AT,
 } from '../common.js';
 import {
@@ -47,6 +48,9 @@ export const tasks = pgTable(
 
     title: text('title').notNull(),
     description: text('description'),
+    searchVector: tsvector('search_vector').generatedAlwaysAs(
+      sql`to_tsvector('english', title)`,
+    ),
 
     position: integer('position').notNull().default(0),
 
@@ -83,6 +87,10 @@ export const tasks = pgTable(
     tasksCompletedAtConsistency: check(
       'tasks_completed_at_consistency',
       sql`(${table.completedAt} IS NULL) OR (${table.status} = 'DONE')`,
+    ),
+    tasksSearchVectorIdx: index('tasks_search_vector_idx').using(
+      'gin',
+      table.searchVector,
     ),
   }),
 );

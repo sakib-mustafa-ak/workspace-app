@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { timestamp, uuid } from 'drizzle-orm/pg-core';
+import { customType, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 import { uuidv7 } from '../client/uuid.js';
 
@@ -61,3 +61,14 @@ export const REFERENCE_ID = (name: string) =>
   uuid(name)
     .$defaultFn(() => uuidv7())
     .notNull();
+
+/**
+ * PostgreSQL `tsvector` column, used for generated full-text search
+ * columns. `data`/`driverData` are both strings; Postgres casts the
+ * output of a stored generated expression to the column type.
+ */
+export const tsvector = customType<{ data: string; driverData: string }>({
+  dataType() {
+    return 'tsvector';
+  },
+});

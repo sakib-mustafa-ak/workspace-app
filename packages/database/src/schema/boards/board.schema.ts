@@ -13,6 +13,7 @@ import {
   CREATED_AT,
   DELETED_AT,
   PRIMARY_ID,
+  tsvector,
   UPDATED_AT,
 } from '../common.js';
 import { timestamp } from 'drizzle-orm/pg-core';
@@ -38,6 +39,9 @@ export const boards = pgTable(
     name: text('name').notNull(),
     description: text('description'),
     position: integer('position').notNull().default(0),
+    searchVector: tsvector('search_vector').generatedAlwaysAs(
+      sql`to_tsvector('english', name || ' ' || COALESCE(description, ''))`,
+    ),
 
     status: boardStatusEnum('status').notNull().default('ACTIVE'),
 
@@ -62,6 +66,10 @@ export const boards = pgTable(
     boardsArchivedAtConsistency: check(
       'boards_archived_at_consistency',
       sql`(${table.archivedAt} IS NULL) OR (${table.status} = 'ARCHIVED')`,
+    ),
+    boardsSearchVectorIdx: index('boards_search_vector_idx').using(
+      'gin',
+      table.searchVector,
     ),
   }),
 );

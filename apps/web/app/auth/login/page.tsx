@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/hooks/use-theme';
 import { LogIn, Loader2, Moon, Sun } from 'lucide-react';
@@ -63,16 +64,28 @@ export default function LoginPage() {
   return (
     <div className="relative flex min-h-screen overflow-hidden">
       {/* Desktop background */}
-      <div
-        className="pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: 'url(/bg-desktop.jpeg)' }}
-      />
+      <div className="relative inset-0">
+        <Image
+          src="/bg-desktop.jpeg"
+          alt=""
+          fill
+          className="object-cover"
+          priority
+          sizes="100vw"
+        />
+      </div>
       <div className="pointer-events-none absolute inset-0 bg-surface-950/88" />
       {/* Mobile background */}
-      <div
-        className="pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat sm:hidden"
-        style={{ backgroundImage: 'url(/bg-mobile.jpeg)' }}
-      />
+      <div className="relative inset-0 sm:hidden">
+        <Image
+          src="/bg-mobile.jpeg"
+          alt=""
+          fill
+          className="object-cover"
+          priority
+          sizes="100vw"
+        />
+      </div>
       <div className="pointer-events-none absolute inset-0 bg-surface-950/88 sm:hidden" />
 
       <div className="relative hidden flex-1 items-center justify-center overflow-hidden lg:flex">

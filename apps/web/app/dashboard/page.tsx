@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Plus,
   ExternalLink,
@@ -247,16 +248,28 @@ function DashboardContent() {
   return (
     <div className="relative min-h-screen">
       {/* Desktop background */}
-      <div
-        className="pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: 'url(/bg-desktop.jpeg)' }}
-      />
+      <div className="relative inset-0">
+        <Image
+          src="/bg-desktop.jpeg"
+          alt=""
+          fill
+          className="object-cover"
+          priority
+          sizes="100vw"
+        />
+      </div>
       <div className="pointer-events-none absolute inset-0 bg-surface-950/87" />
       {/* Mobile background */}
-      <div
-        className="pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat sm:hidden"
-        style={{ backgroundImage: 'url(/bg-mobile.jpeg)' }}
-      />
+      <div className="relative inset-0 sm:hidden">
+        <Image
+          src="/bg-mobile.jpeg"
+          alt=""
+          fill
+          className="object-cover"
+          priority
+          sizes="100vw"
+        />
+      </div>
       <div className="pointer-events-none absolute inset-0 bg-surface-950/87 sm:hidden" />
 
       <div className="relative mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">

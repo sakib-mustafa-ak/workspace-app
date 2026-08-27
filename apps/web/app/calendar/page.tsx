@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { tasksApi, type Task } from '@/lib/tasks';
 import { Calendar } from 'lucide-react';
 
@@ -112,16 +113,28 @@ export default function CalendarPage() {
   return (
     <div className="relative flex h-full flex-col">
       {/* Desktop background */}
-      <div
-        className="pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: 'url(/bg-desktop.jpeg)' }}
-      />
+      <div className="relative inset-0">
+        <Image
+          src="/bg-desktop.jpeg"
+          alt=""
+          fill
+          className="object-cover"
+          priority
+          sizes="100vw"
+        />
+      </div>
       <div className="pointer-events-none absolute inset-0 bg-surface-950/87" />
       {/* Mobile background */}
-      <div
-        className="pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat sm:hidden"
-        style={{ backgroundImage: 'url(/bg-mobile.jpeg)' }}
-      />
+      <div className="relative inset-0 sm:hidden">
+        <Image
+          src="/bg-mobile.jpeg"
+          alt=""
+          fill
+          className="object-cover"
+          priority
+          sizes="100vw"
+        />
+      </div>
       <div className="pointer-events-none absolute inset-0 bg-surface-950/87 sm:hidden" />
       <header className="border-b border-surface-800 bg-surface-900/50 px-6 py-4">
         <div className="flex items-center gap-3">

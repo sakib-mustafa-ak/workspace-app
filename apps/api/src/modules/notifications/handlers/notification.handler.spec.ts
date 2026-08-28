@@ -8,6 +8,12 @@ import { WorkspacesEventBus } from '../../workspaces/events/workspaces.events';
 import { UploadsEventBus } from '../../uploads/events/uploads.events';
 import { WorkspaceMembersRepository } from '../../workspaces/repositories/workspace-members.repository';
 import { BoardsRepository } from '../../boards/repositories/boards.repository';
+import {
+  MAIL_PROVIDER,
+  RecordingMailProvider,
+} from '../../auth/mail/mail.provider';
+import { UserRepository } from '../../auth/repositories/user.repository';
+import { NotificationPreferencesService } from '../services/notification-preferences.service';
 
 describe('NotificationHandler', () => {
   let handler: NotificationHandler;
@@ -19,6 +25,9 @@ describe('NotificationHandler', () => {
   let uploadsEventBus: UploadsEventBus;
   let workspaceMembersRepo: jest.Mocked<WorkspaceMembersRepository>;
   let boardsRepo: jest.Mocked<BoardsRepository>;
+  let mailProvider: RecordingMailProvider;
+  let usersRepo: jest.Mocked<UserRepository>;
+  let preferences: jest.Mocked<NotificationPreferencesService>;
 
   beforeEach(async () => {
     notificationsService = {
@@ -32,6 +41,21 @@ describe('NotificationHandler', () => {
     boardsRepo = {
       findById: jest.fn().mockResolvedValue(null),
     } as unknown as jest.Mocked<BoardsRepository>;
+
+    mailProvider = {
+      send: jest.fn().mockResolvedValue({}),
+      flush: jest.fn().mockReturnValue([]),
+      snapshot: jest.fn().mockReturnValue([]),
+    } as unknown as RecordingMailProvider;
+
+    usersRepo = {
+      findById: jest.fn().mockResolvedValue(undefined),
+      findByEmail: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<UserRepository>;
+
+    preferences = {
+      isEmailEnabled: jest.fn().mockResolvedValue(true),
+    } as unknown as jest.Mocked<NotificationPreferencesService>;
 
     boardsEventBus = new BoardsEventBus();
     commentsEventBus = new CommentsEventBus();
@@ -50,6 +74,9 @@ describe('NotificationHandler', () => {
         { provide: UploadsEventBus, useValue: uploadsEventBus },
         { provide: WorkspaceMembersRepository, useValue: workspaceMembersRepo },
         { provide: BoardsRepository, useValue: boardsRepo },
+        { provide: MAIL_PROVIDER, useValue: mailProvider },
+        { provide: UserRepository, useValue: usersRepo },
+        { provide: NotificationPreferencesService, useValue: preferences },
       ],
     }).compile();
 

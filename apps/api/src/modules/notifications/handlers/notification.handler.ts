@@ -13,14 +13,21 @@ import { TasksEventBus } from '../../tasks/events/tasks.events';
 import type {
   MemberAddedPayload,
   InvitationAcceptedPayload,
+  InvitationCreatedPayload,
 } from '../../workspaces/events/workspaces.events';
 import { WorkspacesEventBus } from '../../workspaces/events/workspaces.events';
 import type { FileUploadedPayload } from '../../uploads/events/uploads.events';
 import { UploadsEventBus } from '../../uploads/events/uploads.events';
 import { WorkspaceMembersRepository } from '../../workspaces/repositories/workspace-members.repository';
 import { BoardsRepository } from '../../boards/repositories/boards.repository';
+import {
+  MAIL_PROVIDER,
+  RecordingMailProvider,
+} from '../../auth/mail/mail.provider';
+import { UserRepository } from '../../auth/repositories/user.repository';
 
 import { NotificationsService } from '../services/notifications.service';
+import { NotificationPreferencesService } from '../services/notification-preferences.service';
 
 @Injectable()
 export class NotificationHandler implements OnModuleInit {
@@ -39,6 +46,10 @@ export class NotificationHandler implements OnModuleInit {
     @Inject(WorkspaceMembersRepository)
     private readonly workspaceMembersRepo: WorkspaceMembersRepository,
     @Inject(BoardsRepository) private readonly boardsRepo: BoardsRepository,
+    @Inject(MAIL_PROVIDER) private readonly mailProvider: RecordingMailProvider,
+    @Inject(UserRepository) private readonly usersRepo: UserRepository,
+    @Inject(NotificationPreferencesService)
+    private readonly preferences: NotificationPreferencesService,
   ) {}
 
   public onModuleInit(): void {
@@ -65,6 +76,9 @@ export class NotificationHandler implements OnModuleInit {
     });
     this.workspacesEventBus.onInvitationAccepted((p) => {
       void this.handleInvitationAccepted(p);
+    });
+    this.workspacesEventBus.onInvitationCreated((p) => {
+      void this.handleInvitationCreated(p);
     });
     this.uploadsEventBus.onFileUploaded((p) => {
       void this.handleFileUploaded(p);
@@ -153,6 +167,21 @@ export class NotificationHandler implements OnModuleInit {
         resourceType: 'task',
         resourceId: payload.taskId,
       });
+
+      const emailEnabled = await this.preferences.isEmailEnabled(
+        payload.assigneeId,
+        'TASK_ASSIGNED',
+      );
+      if (emailEnabled) {
+        const assignee = await this.usersRepo.findById(payload.assigneeId);
+        if (assignee) {
+          await this.mailProvider.send({
+            to: assignee.email,
+            subject: 'You were assigned a task',
+            text: payload.title,
+          });
+        }
+      }
     } catch (err) {
       this.logger.error('Failed to handle TaskCreated', err);
     }
@@ -215,6 +244,27 @@ export class NotificationHandler implements OnModuleInit {
       });
     } catch (err) {
       this.logger.error('Failed to handle MemberAdded', err);
+    }
+  }
+
+  private async handleInvitationCreated(
+    payload: InvitationCreatedPayload,
+  ): Promise<void> {
+    try {
+      const target = await this.usersRepo.findByEmail(payload.email);
+      if (!target) return;
+      const emailEnabled = await this.preferences.isEmailEnabled(
+        target.id,
+        'MEMBER_ADDED',
+      );
+      if (!emailEnabled) return;
+      await this.mailProvider.send({
+        to: target.email,
+        subject: 'You were invited to a workspace',
+        text: 'Open your dashboard to accept the invitation.',
+      });
+    } catch (err) {
+      this.logger.error('Failed to send invitation email', err);
     }
   }
 

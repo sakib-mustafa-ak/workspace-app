@@ -93,6 +93,13 @@ import { AuthEventBus } from './events/auth.events';
       useClass: JwtAuthGuard,
     },
   ],
-  exports: [AuthService, JwtAuthGuard, AuthEventBus],
+  exports: [
+    AuthService,
+    JwtAuthGuard,
+    AuthEventBus,
+    UserRepository,
+    MAIL_PROVIDER,
+    TokenService,
+  ],
 })
 export class AuthModule {}

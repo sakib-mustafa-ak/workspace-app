@@ -68,6 +68,17 @@ export class UserRepository {
     return row;
   }
 
+  public async findById(
+    id: string,
+    opts: { includeDeleted?: boolean } = {},
+  ): Promise<UserRow | undefined> {
+    return this.findByIdWithPassword(id, opts);
+  }
+
+  public async findByEmail(email: string): Promise<UserRow | undefined> {
+    return this.findByEmailWithPassword(email);
+  }
+
   public async setLastLoginAt(userId: string): Promise<void> {
     await this.db
       .update(users)

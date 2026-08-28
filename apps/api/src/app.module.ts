@@ -22,6 +22,7 @@ import { SearchModule } from './modules/search/search.module.js';
 import { AiModule } from './modules/ai/ai.module.js';
 import { AuditModule } from './modules/audit/audit.module.js';
 import { ChecklistModule } from './modules/checklists/checklist.module.js';
+import { AdminModule } from './modules/admin/admin.module.js';
 
 /**
  * Root Nest module.
@@ -86,6 +87,7 @@ import { ChecklistModule } from './modules/checklists/checklist.module.js';
     AiModule,
     AuditModule,
     ChecklistModule,
+    AdminModule,
   ],
   providers: [
     // Order matters: JwtAuthGuard (registered in AuthModule) authenticates

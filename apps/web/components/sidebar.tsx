@@ -9,6 +9,7 @@ import { api } from '@/lib/api';
 import { workspacesApi, type Workspace } from '@/lib/workspaces';
 import { boardsApi, type Board } from '@/lib/boards';
 import { notificationsApi } from '@/lib/notifications';
+import { setLastActiveWorkspace } from '@/lib/active-workspace';
 import { WorkspaceLogo } from '@/components/workspace-logo';
 import {
   LayoutDashboard,
@@ -58,8 +59,11 @@ export function Sidebar() {
     const match = pathname.match(/^\/workspaces\/([^/]+)/);
     if (match && match[1]) {
       setActiveWorkspaceId(match[1]);
+      if (user) {
+        setLastActiveWorkspace(user.id, match[1]);
+      }
     }
-  }, [pathname]);
+  }, [pathname, user]);
 
   // Load workspaces on mount
   useEffect(() => {
@@ -317,7 +321,7 @@ export function Sidebar() {
                   ))}
                   <Link
                     ref={(el) => { switcherItemsRef.current[userWorkspaces.length] = el; }}
-                    href="/workspaces"
+                    href="/dashboard"
                     role="menuitem"
                     tabIndex={switcherFocusIndex === userWorkspaces.length ? 0 : -1}
                     className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-surface-400 hover:bg-surface-800/50 hover:text-surface-200"

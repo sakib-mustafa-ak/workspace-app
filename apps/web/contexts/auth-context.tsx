@@ -20,6 +20,8 @@ import {
   clearSession,
   type User,
 } from '@/lib/auth';
+import { workspacesApi } from '@/lib/workspaces';
+import { getLastActiveWorkspace } from '@/lib/active-workspace';
 
 type AuthContextType = {
   user: User | null;
@@ -31,6 +33,22 @@ type AuthContextType = {
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
+
+async function resolveLandingRoute(): Promise<string> {
+  try {
+    const workspaces = await workspacesApi.list();
+    if (workspaces.length === 0) return '/onboarding';
+    const userId = getStoredUser()?.id ?? '';
+    const lastActive = userId ? getLastActiveWorkspace(userId) : null;
+    const target =
+      lastActive && workspaces.some((w) => w.id === lastActive)
+        ? lastActive
+        : workspaces[0]!.id;
+    return `/workspaces/${target}`;
+  } catch {
+    return '/dashboard';
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -67,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await apiLogin(email, password);
       setUser(res.user);
       storeUser(res.user);
-      router.push('/dashboard');
+      router.push(await resolveLandingRoute());
     },
     [router],
   );
@@ -87,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await apiRegister(email, password, name);
       setUser(res.user);
       storeUser(res.user);
-      router.push('/dashboard');
+      router.push('/onboarding');
     },
     [router],
   );

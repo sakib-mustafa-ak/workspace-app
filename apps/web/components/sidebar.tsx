@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { useTheme } from '@/hooks/use-theme';
@@ -24,6 +24,7 @@ import {
   Monitor,
   Search,
   Plus,
+  ShieldCheck,
 } from 'lucide-react';
 
 
@@ -36,10 +37,12 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
 
   const [userWorkspaces, setUserWorkspaces] = useState<Workspace[]>([]);
+  const [isImpersonating, setIsImpersonating] = useState(false);
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
   const [workspaceBoards, setWorkspaceBoards] = useState<Record<string, Board[]>>({});
   const [switcherOpen, setSwitcherOpen] = useState(false);
@@ -206,6 +209,24 @@ export function Sidebar() {
     return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
+  // Track impersonation state from localStorage
+  useEffect(() => {
+    const check = () => {
+      setIsImpersonating(!!localStorage.getItem('impersonatingUserId'));
+    };
+    check();
+    window.addEventListener('storage', check);
+    return () => window.removeEventListener('storage', check);
+  }, []);
+
+  const handleExitImpersonation = useCallback(() => {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    localStorage.removeItem('impersonatingUserId');
+    router.push('/auth/login');
+  }, [router]);
+
   const activeWorkspace = userWorkspaces.find((w) => w.id === activeWorkspaceId);
   const activeBoards = activeWorkspaceId ? workspaceBoards[activeWorkspaceId] || [] : [];
 
@@ -275,6 +296,19 @@ export function Sidebar() {
               </Link>
             );
           })}
+          {user?.isAdmin && (
+            <Link
+              href="/admin"
+              className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all ${
+                pathname?.startsWith('/admin')
+                  ? 'bg-surface-800 text-white shadow-sm'
+                  : 'text-surface-400 hover:bg-surface-800/50 hover:text-surface-200'
+              }`}
+            >
+              <ShieldCheck size={16} className="text-primary-400" />
+              <span>Admin</span>
+            </Link>
+          )}
         </nav>
 
         {userWorkspaces.length > 0 && (
@@ -367,6 +401,18 @@ export function Sidebar() {
       </div>
 
       <div className="border-t border-surface-800 p-3">
+        {isImpersonating && (
+          <div className="mb-3 rounded-lg border border-amber-800/60 bg-amber-900/30 px-3 py-2">
+            <p className="mb-2 text-[11px] text-amber-400">Impersonating user</p>
+            <button
+              onClick={handleExitImpersonation}
+              className="flex w-full items-center gap-2 rounded-lg border border-amber-700/50 px-3 py-1.5 text-xs font-medium text-amber-300 transition-colors hover:bg-amber-900/50"
+            >
+              <LogOut size={14} />
+              Exit impersonation
+            </button>
+          </div>
+        )}
         <Link
           href="/settings"
           className="group mb-2 flex items-center gap-2.5 rounded-lg px-3 py-2 transition-colors hover:bg-surface-800/50"

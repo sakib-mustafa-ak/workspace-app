@@ -47,7 +47,7 @@ function ImpersonationBanner({
 
 export default function AdminPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('users');
   const [query, setQuery] = useState('');
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -110,12 +110,13 @@ export default function AdminPage() {
           createdAt: result.user.createdAt ?? new Date().toISOString(),
           isAdmin: result.user.isAdmin,
         });
+        await refreshUser();
         router.push('/dashboard');
       } catch {
         setImpersonating(false);
       }
     },
-    [router],
+    [refreshUser, router],
   );
 
   const handleExitImpersonation = useCallback(() => {

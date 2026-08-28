@@ -3,6 +3,7 @@ import { EventEmitter } from 'node:events';
 
 export type ObjectCreatedPayload = {
   objectId: string;
+  workspaceId: string;
   canvasId: string;
   boardId: string;
   userId: string;
@@ -11,6 +12,7 @@ export type ObjectCreatedPayload = {
 
 export type ObjectUpdatedPayload = {
   objectId: string;
+  workspaceId: string;
   canvasId: string;
   boardId: string;
   userId: string;
@@ -18,6 +20,7 @@ export type ObjectUpdatedPayload = {
 
 export type ObjectDeletedPayload = {
   objectId: string;
+  workspaceId: string;
   canvasId: string;
   boardId: string;
   deletedBy: string;

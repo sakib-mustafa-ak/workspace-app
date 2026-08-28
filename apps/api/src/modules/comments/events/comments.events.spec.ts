@@ -10,7 +10,12 @@ describe('CommentsEventBus', () => {
   it('emits CommentCreated', () => {
     const fn = jest.fn();
     bus.onCommentCreated(fn);
-    const payload = { commentId: 'c1', boardId: 'b1', userId: 'u1' };
+    const payload = {
+      commentId: 'c1',
+      workspaceId: 'ws1',
+      boardId: 'b1',
+      userId: 'u1',
+    };
     bus.publishCommentCreated(payload);
     expect(fn).toHaveBeenCalledWith(payload);
   });
@@ -18,7 +23,12 @@ describe('CommentsEventBus', () => {
   it('emits CommentUpdated', () => {
     const fn = jest.fn();
     bus.onCommentCreated(fn);
-    bus.publishCommentCreated({ commentId: 'c1', boardId: 'b1', userId: 'u1' });
+    bus.publishCommentCreated({
+      commentId: 'c1',
+      workspaceId: 'ws1',
+      boardId: 'b1',
+      userId: 'u1',
+    });
     expect(fn).toHaveBeenCalled();
   });
 
@@ -28,7 +38,12 @@ describe('CommentsEventBus', () => {
     bus.onCommentCreated(a);
     bus.onCommentCreated(b);
 
-    bus.publishCommentCreated({ commentId: 'c1', boardId: 'b1', userId: 'u1' });
+    bus.publishCommentCreated({
+      commentId: 'c1',
+      workspaceId: 'ws1',
+      boardId: 'b1',
+      userId: 'u1',
+    });
     expect(a).toHaveBeenCalledTimes(1);
     expect(b).toHaveBeenCalledTimes(1);
   });

@@ -126,6 +126,7 @@ export class CanvasService {
 
     this.eventBus.publishObjectCreated({
       objectId: object.id,
+      workspaceId: board.workspaceId,
       canvasId: canvasRow.id,
       boardId,
       userId,
@@ -157,6 +158,7 @@ export class CanvasService {
 
     this.eventBus.publishObjectUpdated({
       objectId,
+      workspaceId,
       canvasId: object.canvasId,
       boardId,
       userId,
@@ -176,6 +178,7 @@ export class CanvasService {
 
     this.eventBus.publishObjectDeleted({
       objectId,
+      workspaceId,
       canvasId: object.canvasId,
       boardId,
       deletedBy: userId,

@@ -12,6 +12,7 @@ describe('TasksEventBus', () => {
     bus.onTaskCreated(fn);
     const payload = {
       taskId: 't1',
+      workspaceId: 'ws1',
       boardId: 'b1',
       columnId: 'c1',
       createdBy: 'u1',
@@ -26,6 +27,7 @@ describe('TasksEventBus', () => {
     bus.onTaskCreated(fn);
     bus.publishTaskCreated({
       taskId: 't1',
+      workspaceId: 'ws1',
       boardId: 'b1',
       columnId: 'c1',
       createdBy: 'u1',
@@ -39,6 +41,8 @@ describe('TasksEventBus', () => {
     bus.onTaskUpdated(fn);
     const payload = {
       taskId: 't1',
+      workspaceId: 'ws1',
+      boardId: 'b1',
       updatedBy: 'u1',
       title: 'Set up CI/CD',
       previousAssigneeId: 'u2',
@@ -56,6 +60,7 @@ describe('TasksEventBus', () => {
 
     bus.publishTaskCreated({
       taskId: 't1',
+      workspaceId: 'ws1',
       boardId: 'b1',
       columnId: 'c1',
       createdBy: 'u1',

@@ -65,6 +65,7 @@ export class CommentsService {
 
     this.events.publishCommentCreated({
       commentId: comment.id,
+      workspaceId: board.workspaceId,
       boardId,
       userId,
       parentId: input.parentId,
@@ -147,6 +148,7 @@ export class CommentsService {
     const updated = await this.commentsRepo.update(commentId, input);
     this.events.publishCommentUpdated({
       commentId,
+      workspaceId: board.workspaceId,
       boardId: comment.boardId,
       userId,
     });
@@ -186,6 +188,7 @@ export class CommentsService {
     await this.commentsRepo.softDelete(commentId);
     this.events.publishCommentDeleted({
       commentId,
+      workspaceId: board.workspaceId,
       boardId: comment.boardId,
       deletedBy: userId,
     });

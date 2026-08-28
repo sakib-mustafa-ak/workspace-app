@@ -133,6 +133,7 @@ describe('CanvasService', () => {
     expect(obj.id).toBe('obj-100');
     expect(eventBus.publishObjectCreated).toHaveBeenCalledWith({
       objectId: 'obj-100',
+      workspaceId: 'ws-1',
       canvasId: 'c-1',
       boardId: 'b-1',
       userId: 'user-1',
@@ -172,6 +173,7 @@ describe('CanvasService', () => {
 
     expect(eventBus.publishObjectUpdated).toHaveBeenCalledWith({
       objectId: 'obj-1',
+      workspaceId: 'ws-1',
       canvasId: 'c-1',
       boardId: 'b-1',
       userId: 'user-1',
@@ -263,6 +265,7 @@ describe('CanvasService', () => {
 
     expect(eventBus.publishObjectDeleted).toHaveBeenCalledWith({
       objectId: 'obj-1',
+      workspaceId: 'ws-1',
       canvasId: 'c-1',
       boardId: 'b-1',
       deletedBy: 'user-1',

@@ -147,6 +147,7 @@ describe('CommentsService', () => {
       );
       expect(events.publishCommentCreated).toHaveBeenCalledWith({
         commentId: 'c1',
+        workspaceId: 'w1',
         boardId: 'b1',
         userId: 'u1',
         parentId: undefined,

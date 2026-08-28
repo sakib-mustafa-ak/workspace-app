@@ -3,6 +3,7 @@ import { EventEmitter } from 'node:events';
 
 export type TaskCreatedPayload = {
   taskId: string;
+  workspaceId: string;
   boardId: string;
   columnId: string;
   createdBy: string;
@@ -12,6 +13,8 @@ export type TaskCreatedPayload = {
 
 export type TaskUpdatedPayload = {
   taskId: string;
+  workspaceId: string;
+  boardId: string;
   updatedBy: string;
   title: string;
   previousAssigneeId: string | null;
@@ -20,6 +23,8 @@ export type TaskUpdatedPayload = {
 
 export type TaskMovedPayload = {
   taskId: string;
+  workspaceId: string;
+  boardId: string;
   fromColumnId: string;
   toColumnId: string;
   movedBy: string;
@@ -27,6 +32,8 @@ export type TaskMovedPayload = {
 
 export type TaskDeletedPayload = {
   taskId: string;
+  workspaceId: string;
+  boardId: string;
   deletedBy: string;
   title: string;
   assigneeId: string | null;
@@ -67,6 +74,10 @@ export class TasksEventBus {
 
   publishTaskMoved(payload: TaskMovedPayload): void {
     this.emit(TASKS_EVENTS.taskMoved, payload);
+  }
+
+  onTaskMoved(listener: (payload: TaskMovedPayload) => void): void {
+    this.emitter.on(TASKS_EVENTS.taskMoved, listener);
   }
 
   publishTaskDeleted(payload: TaskDeletedPayload): void {

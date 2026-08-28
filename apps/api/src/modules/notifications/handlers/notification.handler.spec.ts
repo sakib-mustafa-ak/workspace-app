@@ -109,6 +109,7 @@ describe('NotificationHandler', () => {
   it('should deliver TASK_ASSIGNED notification on TaskCreated when assigneeId is present', async () => {
     tasksEventBus.publishTaskCreated({
       taskId: 't-1',
+      workspaceId: 'ws-1',
       boardId: 'b-1',
       columnId: 'c-1',
       createdBy: 'user-1',
@@ -133,6 +134,7 @@ describe('NotificationHandler', () => {
   it('should skip TASK_ASSIGNED when assignee is the creator', async () => {
     tasksEventBus.publishTaskCreated({
       taskId: 't-1',
+      workspaceId: 'ws-1',
       boardId: 'b-1',
       columnId: 'c-1',
       createdBy: 'user-1',
@@ -148,6 +150,8 @@ describe('NotificationHandler', () => {
   it('should deliver TASK_ASSIGNED and TASK_UNASSIGNED on reassign', async () => {
     tasksEventBus.publishTaskUpdated({
       taskId: 't-1',
+      workspaceId: 'ws-1',
+      boardId: 'b-1',
       updatedBy: 'user-1',
       title: 'Fix login bug',
       previousAssigneeId: 'user-2',
@@ -181,6 +185,8 @@ describe('NotificationHandler', () => {
   it('should deliver TASK_UNASSIGNED only when assignee is removed', async () => {
     tasksEventBus.publishTaskUpdated({
       taskId: 't-1',
+      workspaceId: 'ws-1',
+      boardId: 'b-1',
       updatedBy: 'user-1',
       title: 'Fix login bug',
       previousAssigneeId: 'user-2',
@@ -205,6 +211,8 @@ describe('NotificationHandler', () => {
   it('should deliver nothing when assignee is unchanged', async () => {
     tasksEventBus.publishTaskUpdated({
       taskId: 't-1',
+      workspaceId: 'ws-1',
+      boardId: 'b-1',
       updatedBy: 'user-1',
       title: 'Fix login bug',
       previousAssigneeId: 'user-2',
@@ -219,6 +227,8 @@ describe('NotificationHandler', () => {
   it('should not notify the updater when they reassign to themselves', async () => {
     tasksEventBus.publishTaskUpdated({
       taskId: 't-1',
+      workspaceId: 'ws-1',
+      boardId: 'b-1',
       updatedBy: 'user-3',
       title: 'Fix login bug',
       previousAssigneeId: 'user-2',
@@ -243,6 +253,8 @@ describe('NotificationHandler', () => {
   it('should deliver TASK_ASSIGNED when a task becomes assigned', async () => {
     tasksEventBus.publishTaskUpdated({
       taskId: 't-1',
+      workspaceId: 'ws-1',
+      boardId: 'b-1',
       updatedBy: 'user-1',
       title: 'Fix login bug',
       previousAssigneeId: null,
@@ -267,6 +279,8 @@ describe('NotificationHandler', () => {
   it('should deliver TASK_DELETED notification when a task is deleted', async () => {
     tasksEventBus.publishTaskDeleted({
       taskId: 't-1',
+      workspaceId: 'ws-1',
+      boardId: 'b-1',
       deletedBy: 'user-1',
       title: 'Fix login bug',
       assigneeId: 'user-2',
@@ -289,6 +303,8 @@ describe('NotificationHandler', () => {
   it('should skip TASK_DELETED when the assignee deleted the task themselves', async () => {
     tasksEventBus.publishTaskDeleted({
       taskId: 't-1',
+      workspaceId: 'ws-1',
+      boardId: 'b-1',
       deletedBy: 'user-2',
       title: 'Fix login bug',
       assigneeId: 'user-2',

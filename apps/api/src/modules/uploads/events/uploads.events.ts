@@ -45,6 +45,10 @@ export class UploadsEventBus {
     this.emit(UPLOADS_EVENTS.fileDeleted, payload);
   }
 
+  onFileDeleted(listener: (payload: FileDeletedPayload) => void): void {
+    this.emitter.on(UPLOADS_EVENTS.fileDeleted, listener);
+  }
+
   private emit(name: UploadsEventName, payload: unknown): void {
     this.emitter.emit(name, payload);
   }

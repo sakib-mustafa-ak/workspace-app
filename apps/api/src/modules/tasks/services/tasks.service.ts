@@ -87,6 +87,7 @@ export class TasksService {
 
     this.events.publishTaskCreated({
       taskId: task.id,
+      workspaceId: board.workspaceId,
       boardId,
       columnId,
       createdBy: userId,
@@ -186,6 +187,8 @@ export class TasksService {
     const updated = await this.tasksRepo.update(taskId, updateData);
     this.events.publishTaskUpdated({
       taskId,
+      workspaceId: task.workspaceId,
+      boardId: task.boardId,
       updatedBy: userId,
       title: updated.title,
       previousAssigneeId: task.assigneeId,
@@ -236,6 +239,8 @@ export class TasksService {
 
     this.events.publishTaskMoved({
       taskId,
+      workspaceId: task.workspaceId,
+      boardId: task.boardId,
       fromColumnId,
       toColumnId: targetColumnId,
       movedBy: userId,
@@ -257,6 +262,8 @@ export class TasksService {
     await this.tasksRepo.softDelete(taskId);
     this.events.publishTaskDeleted({
       taskId,
+      workspaceId: task.workspaceId,
+      boardId: task.boardId,
       deletedBy: userId,
       title: task.title,
       assigneeId: task.assigneeId,

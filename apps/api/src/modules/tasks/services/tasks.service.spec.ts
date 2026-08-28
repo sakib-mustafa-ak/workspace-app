@@ -164,6 +164,7 @@ describe('TasksService', () => {
       );
       expect(events.publishTaskCreated).toHaveBeenCalledWith({
         taskId: 't1',
+        workspaceId: 'w1',
         boardId: 'b1',
         columnId: 'c1',
         createdBy: 'u1',
@@ -382,6 +383,8 @@ describe('TasksService', () => {
 
       expect(events.publishTaskUpdated).toHaveBeenCalledWith({
         taskId: 't1',
+        workspaceId: 'w1',
+        boardId: 'b1',
         updatedBy: 'u1',
         title: 'Set up CI/CD',
         previousAssigneeId: 'u2',
@@ -462,6 +465,8 @@ describe('TasksService', () => {
       expect(result.columnId).toBe('c2');
       expect(events.publishTaskMoved).toHaveBeenCalledWith({
         taskId: 't1',
+        workspaceId: 'w1',
+        boardId: 'b1',
         fromColumnId: 'c1',
         toColumnId: 'c2',
         movedBy: 'u1',

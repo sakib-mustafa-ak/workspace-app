@@ -3,6 +3,7 @@ import { EventEmitter } from 'node:events';
 
 export type CommentCreatedPayload = {
   commentId: string;
+  workspaceId: string;
   boardId: string;
   userId: string;
   parentId?: string;
@@ -10,12 +11,14 @@ export type CommentCreatedPayload = {
 
 export type CommentUpdatedPayload = {
   commentId: string;
+  workspaceId: string;
   boardId: string;
   userId: string;
 };
 
 export type CommentDeletedPayload = {
   commentId: string;
+  workspaceId: string;
   boardId: string;
   deletedBy: string;
 };
@@ -49,8 +52,16 @@ export class CommentsEventBus {
     this.emit(COMMENTS_EVENTS.commentUpdated, payload);
   }
 
+  onCommentUpdated(listener: (payload: CommentUpdatedPayload) => void): void {
+    this.emitter.on(COMMENTS_EVENTS.commentUpdated, listener);
+  }
+
   publishCommentDeleted(payload: CommentDeletedPayload): void {
     this.emit(COMMENTS_EVENTS.commentDeleted, payload);
+  }
+
+  onCommentDeleted(listener: (payload: CommentDeletedPayload) => void): void {
+    this.emitter.on(COMMENTS_EVENTS.commentDeleted, listener);
   }
 
   private emit(name: CommentsEventName, payload: unknown): void {

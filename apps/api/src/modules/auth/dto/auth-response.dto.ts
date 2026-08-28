@@ -56,6 +56,9 @@ export class UserProfileDto {
     description: 'ISO 8601 timestamp; null until verified.',
   })
   emailVerifiedAt!: string | null;
+
+  @ApiProperty({ example: false })
+  isAdmin!: boolean;
 }
 
 /**

@@ -34,6 +34,9 @@ export class UserProfileDto {
 
   @ApiProperty({ example: '2026-07-01T00:00:00.000Z' })
   updatedAt!: Date;
+
+  @ApiProperty({ example: false })
+  isAdmin!: boolean;
 }
 
 export class UserListResponseDto {

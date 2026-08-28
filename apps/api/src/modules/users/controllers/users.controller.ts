@@ -176,6 +176,7 @@ function toUserProfile(row: {
   emailVerifiedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
+  isAdmin: boolean;
 }): UserProfileDto {
   return {
     id: row.id,
@@ -189,5 +190,6 @@ function toUserProfile(row: {
     emailVerifiedAt: row.emailVerifiedAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+    isAdmin: row.isAdmin,
   };
 }

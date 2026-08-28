@@ -323,6 +323,7 @@ export class AuthService {
       displayName: user.displayName,
       status: user.status,
       emailVerifiedAt: user.emailVerifiedAt,
+      isAdmin: user.isAdmin,
     };
   }
 
@@ -397,7 +398,7 @@ export class AuthService {
   }> {
     const access = await this.tokens.signAccessToken({
       sub: user.id,
-      role: 'USER',
+      role: user.isAdmin ? 'ADMIN' : 'USER',
     });
     const refresh = await this.tokens.signRefreshToken({
       sub: user.id,

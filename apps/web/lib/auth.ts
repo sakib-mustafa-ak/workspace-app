@@ -9,6 +9,7 @@ export type User = {
   status: string;
   emailVerifiedAt: string | null;
   createdAt: string;
+  isAdmin: boolean;
 };
 
 export type AuthTokens = {

@@ -17,6 +17,7 @@ export const AuthErrorCode = {
   REFRESH_TOKEN_EXPIRED: 'AUTH.REFRESH_TOKEN_EXPIRED',
   REFRESH_TOKEN_REVOKED: 'AUTH.REFRESH_TOKEN_REVOKED',
   UNAUTHENTICATED: 'AUTH.UNAUTHENTICATED',
+  FORBIDDEN: 'AUTH.FORBIDDEN',
   // ── Email verification (Part V-A) ────────────────────────────────
   INVALID_VERIFICATION_TOKEN: 'AUTH.INVALID_VERIFICATION_TOKEN',
   VERIFICATION_TOKEN_EXPIRED: 'AUTH.VERIFICATION_TOKEN_EXPIRED',
@@ -39,6 +40,7 @@ const STATUS_BY_CODE: Readonly<Record<AuthErrorCode, number>> = {
   [AuthErrorCode.REFRESH_TOKEN_EXPIRED]: 401,
   [AuthErrorCode.REFRESH_TOKEN_REVOKED]: 401,
   [AuthErrorCode.UNAUTHENTICATED]: 401,
+  [AuthErrorCode.FORBIDDEN]: 403,
   // Verification errors are 400-class — the token simply doesn't match.
   // 401 would imply "must be authenticated", which is wrong for a public
   // endpoint. 410 for already-consumed, following conventional thinking:

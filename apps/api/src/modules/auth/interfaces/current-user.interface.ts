@@ -14,4 +14,5 @@ export interface CurrentUser {
   displayName: string;
   status: UserStatus;
   emailVerifiedAt: Date | null;
+  isAdmin: boolean;
 }

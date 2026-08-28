@@ -23,6 +23,8 @@ export interface AccessTokenPayload {
   sub: string;
   /** Optional display hint, never required for auth. */
   role?: 'USER' | 'ADMIN';
+  /** Set only when an admin is acting on behalf of another user. */
+  impersonatorId?: string;
 }
 
 /**

@@ -57,13 +57,19 @@ export class TokenService {
   public async signAccessToken(payload: {
     sub: string;
     role?: 'USER' | 'ADMIN';
+    impersonatorId?: string;
   }): Promise<{ token: string; expiresInSeconds: number }> {
     const body: AccessTokenPayload = {
       v: JWT_ACCESS_PAYLOAD_VERSION,
       sub: payload.sub,
       role: payload.role ?? 'USER',
+      impersonatorId: payload.impersonatorId,
     };
-    const token = await new SignJWT({ v: body.v, role: body.role })
+    const token = await new SignJWT({
+      v: body.v,
+      role: body.role,
+      impersonatorId: body.impersonatorId,
+    })
       .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
       .setSubject(body.sub)
       .setIssuedAt()

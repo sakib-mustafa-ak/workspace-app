@@ -3,6 +3,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 
 import { AuthController } from './controllers/auth.controller';
+import { AdminGuard } from './guards/admin.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { MAIL_PROVIDER, RecordingMailProvider } from './mail/mail.provider';
 import { ResendMailProvider } from './mail/resend-mail.provider';
@@ -83,6 +84,7 @@ import { AuthEventBus } from './events/auth.events';
     // Cross-cutting
     AuthEventBus,
     JwtAuthGuard,
+    AdminGuard,
     // Global guard registration. NestJS resolves APP_GUARD in the
     // scope where it is declared, so the guard's constructor can
     // find TokenService + UserRepository + JwtAuthGuard (all in this
@@ -96,6 +98,7 @@ import { AuthEventBus } from './events/auth.events';
   exports: [
     AuthService,
     JwtAuthGuard,
+    AdminGuard,
     AuthEventBus,
     UserRepository,
     MAIL_PROVIDER,

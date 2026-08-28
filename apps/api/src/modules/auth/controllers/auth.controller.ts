@@ -336,6 +336,7 @@ export class AuthController {
       emailVerifiedAt: fresh.emailVerifiedAt
         ? fresh.emailVerifiedAt.toISOString()
         : null,
+      isAdmin: fresh.isAdmin,
     };
   }
 }
@@ -388,6 +389,7 @@ function toAuthResponse(
       emailVerifiedAt: result.user.emailVerifiedAt
         ? result.user.emailVerifiedAt.toISOString()
         : null,
+      isAdmin: result.user.isAdmin,
     },
     tokens: {
       accessToken: result.tokens.accessToken,

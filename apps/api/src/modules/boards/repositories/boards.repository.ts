@@ -5,6 +5,7 @@ import {
   DATABASE,
   desc,
   eq,
+  inArray,
   sql,
   type Db,
   type DbExecutor,
@@ -57,6 +58,32 @@ export class BoardsRepository {
       .returning();
     if (!updated) throw new Error('Failed to update board.');
     return updated;
+  }
+
+  public async searchByQuery(
+    workspaceIds: string[],
+    query: string,
+    limit = 20,
+  ): Promise<Array<{ id: string; name: string; workspaceId: string }>> {
+    if (workspaceIds.length === 0) return [];
+    const rank = sql`ts_rank(${boards.searchVector}, websearch_to_tsquery(${query}))`;
+    const rows = await this.db
+      .select({
+        id: boards.id,
+        name: boards.name,
+        workspaceId: boards.workspaceId,
+      })
+      .from(boards)
+      .where(
+        and(
+          inArray(boards.workspaceId, workspaceIds),
+          sql`${boards.deletedAt} IS NULL`,
+          sql`${boards.searchVector} @@ websearch_to_tsquery(${query})`,
+        ),
+      )
+      .orderBy(sql`${rank} desc`)
+      .limit(limit);
+    return rows;
   }
 
   public async archive(id: string): Promise<void> {

@@ -3,8 +3,13 @@
 import { useMemo, useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { type UserProfile } from '@/lib/users';
-import { Save, Loader2, Globe, Clock, Check, ChevronDown, Search } from 'lucide-react';
+import { Save, Loader2, Globe, Clock, Check, ChevronDown, Search, Bell } from 'lucide-react';
 import { SkeletonBlock } from '@/components/skeleton';
+import {
+  notificationPreferencesApi,
+  NOTIFICATION_TYPE_LABELS,
+  type NotificationPreference,
+} from '@/lib/notification-preferences';
 
 const LOCALES = [
   { value: '', label: 'System default' },
@@ -25,6 +30,8 @@ export function PreferencesTab() {
   const [loading, setLoading] = useState(true);
   const [tzOpen, setTzOpen] = useState(false);
   const [tzSearch, setTzSearch] = useState('');
+  const [notificationPrefs, setNotificationPrefs] = useState<NotificationPreference[]>([]);
+  const [prefsLoaded, setPrefsLoaded] = useState(false);
 
   const allTimezones = useMemo(
     () => (typeof Intl !== 'undefined' ? Intl.supportedValuesOf('timeZone') : []),
@@ -66,12 +73,33 @@ export function PreferencesTab() {
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    notificationPreferencesApi
+      .get()
+      .then((res) => {
+        setNotificationPrefs(res.preferences);
+        setPrefsLoaded(true);
+      })
+      .catch(() => {
+        setPrefsLoaded(true);
+      });
+  }, []);
+
+  function togglePref(type: string, key: 'emailEnabled' | 'inAppEnabled') {
+    setNotificationPrefs((prev) =>
+      prev.map((p) => (p.type === type ? { ...p, [key]: !p[key] } : p)),
+    );
+  }
+
   async function handleSave() {
     setSaving(true);
     setSaved(false);
     setSaveError('');
     try {
       await api.patch('/users/me', { timezone: timezone || null, locale: locale || null });
+      if (notificationPrefs.length > 0) {
+        await notificationPreferencesApi.update(notificationPrefs);
+      }
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch {
@@ -166,6 +194,50 @@ export function PreferencesTab() {
                 <option key={l.value} value={l.value}>{l.label}</option>
               ))}
             </select>
+          </Section>
+
+          <Section icon={Bell} title="Notifications">
+            <p className="mb-2 text-xs text-surface-500">
+              Choose which notifications you receive and how.
+            </p>
+            {!prefsLoaded ? (
+              <div className="py-6 text-center text-xs text-surface-500">Loading…</div>
+            ) : (
+              <div className="space-y-4">
+                {notificationPrefs.map((p) => (
+                  <div
+                    key={p.type}
+                    className="flex items-center justify-between gap-3"
+                  >
+                    <span className="text-sm text-surface-300">
+                      {NOTIFICATION_TYPE_LABELS[p.type] ?? p.type}
+                    </span>
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-1.5 text-xs text-surface-500">
+                        <input
+                          type="checkbox"
+                          checked={p.emailEnabled}
+                          onChange={() => togglePref(p.type, 'emailEnabled')}
+                          disabled={p.type === 'MENTION_CREATED'}
+                          className="accent-primary-500"
+                        />
+                        Email
+                      </label>
+                      <label className="flex items-center gap-1.5 text-xs text-surface-500">
+                        <input
+                          type="checkbox"
+                          checked={p.inAppEnabled}
+                          onChange={() => togglePref(p.type, 'inAppEnabled')}
+                          disabled={p.type === 'MENTION_CREATED'}
+                          className="accent-primary-500"
+                        />
+                        In-app
+                      </label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </Section>
         </>
       )}

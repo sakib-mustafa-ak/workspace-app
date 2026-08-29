@@ -94,7 +94,8 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "moduleNameMapper": {
-      "^@repo/database$": "<rootDir>/__mocks__/@repo/database"
+      "^@repo/database$": "<rootDir>/__mocks__/@repo/database",
+      "^(\\.{1,2}/.*)\\.js$": "$1"
     }
   }
 }

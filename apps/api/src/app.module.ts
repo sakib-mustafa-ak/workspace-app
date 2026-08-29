@@ -10,6 +10,7 @@ import { AppLoggerModule } from './infrastructure/logger/logger.module.js';
 import { WorkspaceMembershipGuard } from './common/guards/workspace-membership.guard.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
+import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module.js';
 import { BoardsModule } from './modules/boards/boards.module.js';
@@ -39,12 +40,14 @@ import { AdminModule } from './modules/admin/admin.module.js';
  * - Export its public token from `module.ts`.
  * - Register it below. Do not edit siblings.
  *
- * Note on APP_GUARD placement: NestJS resolves APP_GUARD-injected
- * guards in the module where they are declared; declaring the guard
- * here would mean TokenService / UserRepository (which live in
- * AuthModule) become "unknown dependencies". AuthModule registers
- * APP_GUARD itself so the guard's constructor resolves inside the
- * auth scope.
+ * Note on APP_GUARD placement: NestJS executes global guards declared in
+ * the root module BEFORE guards declared in imported modules. So the auth,
+ * membership, and throttler guards must ALL be mounted here (in execution
+ * order) rather than inside AuthModule — otherwise `WorkspaceMembershipGuard`
+ * runs before `JwtAuthGuard` has populated `request.user` and every
+ * workspace-scoped route fails with 401 "Authentication required.". The
+ * guard's constructor deps (TokenService, UserRepository) resolve through
+ * AuthModule's exports.
  */
 @Module({
   imports: [
@@ -90,8 +93,14 @@ import { AdminModule } from './modules/admin/admin.module.js';
     AdminModule,
   ],
   providers: [
-    // Order matters: JwtAuthGuard (registered in AuthModule) authenticates
-    // first, then the workspace boundary check, then rate limiting.
+    // Global guard execution order (runs top-to-bottom, root module first):
+    //   1. JwtAuthGuard — authenticate and populate request.user
+    //   2. WorkspaceMembershipGuard — workspace-scoped boundary check
+    //   3. ThrottlerGuard — rate limiting
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
     {
       provide: APP_GUARD,
       useClass: WorkspaceMembershipGuard,

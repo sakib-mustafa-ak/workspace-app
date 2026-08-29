@@ -12,16 +12,28 @@ import { type MailMessage, type MailSendResult } from './mail.provider';
  */
 @Injectable()
 export class ResendMailProvider {
-  private readonly resend: Resend;
-  private readonly from: string;
+  private resend: Resend | null = null;
+  private from: string;
   private readonly logger = new Logger(ResendMailProvider.name);
 
   constructor(config: ConfigService) {
-    this.resend = new Resend(config.get<string>('RESEND_API_KEY'));
-    this.from = config.getOrThrow<string>('MAIL_FROM');
+    const apiKey = config.get<string>('RESEND_API_KEY');
+    this.from = config.get<string>('MAIL_FROM') ?? 'onboarding@resend.dev';
+    if (apiKey) {
+      this.resend = new Resend(apiKey);
+    } else {
+      this.logger.warn(
+        'RESEND_API_KEY is not set — ResendMailProvider will throw if used.',
+      );
+    }
   }
 
   public async send(message: MailMessage): Promise<MailSendResult> {
+    if (!this.resend) {
+      throw new Error(
+        'RESEND_API_KEY is not configured. Email delivery is unavailable.',
+      );
+    }
     const result = await this.resend.emails.send({
       from: this.from,
       to: message.to,

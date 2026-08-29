@@ -21,6 +21,7 @@ export default function BoardsPage() {
   const [error, setError] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const [name, setName] = useState('');
+  const [creating, setCreating] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
@@ -57,6 +58,8 @@ export default function BoardsPage() {
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
+    if (creating || !name.trim()) return;
+    setCreating(true);
     try {
       const board = await boardsApi.create(workspaceId, { name });
       setBoards((prev) => [...prev, board]);
@@ -64,6 +67,8 @@ export default function BoardsPage() {
       setName('');
     } catch {
       toast.error('Failed to create board. Please try again.');
+    } finally {
+      setCreating(false);
     }
   }
 
@@ -119,15 +124,17 @@ export default function BoardsPage() {
               placeholder="Board name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-surface-700 bg-surface-900/50 px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-surface-500 focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50"
+              disabled={creating}
+              className="w-full rounded-lg border border-surface-700 bg-surface-900/50 px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-surface-500 focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50 disabled:opacity-50"
               required
             />
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-primary-500 hover:shadow-lg hover:shadow-primary-600/25"
+                disabled={creating || !name.trim()}
+                className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-primary-500 hover:shadow-lg hover:shadow-primary-600/25 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Create
+                {creating ? 'Creating...' : 'Create'}
               </button>
               <button
                 type="button"

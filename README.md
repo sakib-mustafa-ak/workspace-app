@@ -387,6 +387,22 @@ docs/
 
 ---
 
+## Phase 2 SaaS — Gaps Closed
+
+- [x] Web push scaffold removed (dead code cleanup)
+- [x] Postgres full-text search (boards + tasks, tsvector + GIN indexes)
+- [x] Audit event tracking (task/comment/upload/canvas handlers, widened payloads)
+- [x] Notification preferences API (10 event types, per-user opt-in)
+- [x] Email delivery (invitation + assignment emails, preference-gated)
+- [x] Active workspace persistence (per-user localStorage, login routing)
+- [x] Notification preference toggles UI (settings page)
+- [x] Platform admin role (isAdmin flag, JWT claims, AdminGuard)
+- [x] Admin API (user search, workspace search, subscription stub, impersonation)
+- [x] Three-step onboarding wizard (create workspace → invite teammates → sample board)
+- [x] Admin UI + impersonation flow (admin panel, "Log in as" with sidebar exit)
+
+---
+
 # 🎯 Project Goals
 
 This project is built with the following principles:
@@ -423,25 +439,28 @@ This project is licensed under the MIT License.
 
 # 📌 Current Status
 
-✅ **Active Development — Phases 1–7 Complete**
+✅ **Active Development — Phases 1–10 Complete + Phase 2 SaaS Gaps Closed**
 
 Current milestone:
 
-> **Milestone 5 — Frontend Integration & Real-Time**
+> **Phase 2 SaaS Gaps — Complete**
 >
-> Connecting the frontend to all backend modules with live collaboration features.
+> Admin, audit, notifications, onboarding, and platform admin features implemented across 11 tasks.
 
 | Module       | Backend | Frontend | Tests |
 |-------------|---------|----------|-------|
 | Auth        | ✅      | ✅       | ✅    |
 | Users       | ✅      | —        | ✅    |
 | Workspaces  | ✅      | ✅       | ✅    |
-| Boards      | ✅      | ✅       | 27    |
-| Tasks       | ✅      | ✅       | 23    |
-| Comments    | ✅      | —        | 17    |
-| Notifications| ✅     | —        | 17    |
+| Boards      | ✅      | ✅       | ✅    |
+| Tasks       | ✅      | ✅       | ✅    |
+| Comments    | ✅      | —        | ✅    |
+| Notifications| ✅     | ✅       | ✅    |
+| Audit       | ✅      | —        | ✅    |
+| Admin       | ✅      | ✅       | ✅    |
+| Search      | ✅      | —        | ✅    |
 
-**182 tests passing** across 23 suites.
+**288 tests passing** across 39 suites.
 
 ---
 

@@ -61,3 +61,6 @@ apps/api/uploads/
 
 # Git worktrees
 .worktrees/
+
+# SDD workspace + local scratch
+.superpowers/

@@ -58,3 +58,6 @@ graphify-out/
 apps/web/.impeccable/
 PRODUCT.md
 apps/api/uploads/
+
+# Git worktrees
+.worktrees/

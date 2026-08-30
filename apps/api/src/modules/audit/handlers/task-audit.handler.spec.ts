@@ -58,8 +58,50 @@ describe('TaskAuditHandler', () => {
       action: 'task.updated',
       resourceType: 'task',
       resourceId: 't-1',
-      metadata: { boardId: 'b-1', title: 'Write spec v2' },
+      metadata: {
+        boardId: 'b-1',
+        title: 'Write spec v2',
+        assigneeChange: { from: null, to: 'u-3' },
+      },
     });
+  });
+
+  it('records an assignee reassignment delta and omits the key when there is no change', () => {
+    bus.publishTaskUpdated({
+      taskId: 't-2',
+      workspaceId: 'ws-1',
+      boardId: 'b-1',
+      updatedBy: 'u-2',
+      title: 'Reassign',
+      previousAssigneeId: 'u-1',
+      assigneeId: 'u-4',
+    });
+    expect(audit.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        resourceId: 't-2',
+        metadata: {
+          boardId: 'b-1',
+          title: 'Reassign',
+          assigneeChange: { from: 'u-1', to: 'u-4' },
+        },
+      }),
+    );
+
+    bus.publishTaskUpdated({
+      taskId: 't-3',
+      workspaceId: 'ws-1',
+      boardId: 'b-1',
+      updatedBy: 'u-2',
+      title: 'Title only',
+      previousAssigneeId: 'u-5',
+      assigneeId: 'u-5',
+    });
+    expect(audit.record).toHaveBeenCalledWith(
+      expect.objectContaining({
+        resourceId: 't-3',
+        metadata: { boardId: 'b-1', title: 'Title only' },
+      }),
+    );
   });
 
   it('records task.moved via the event bus', () => {

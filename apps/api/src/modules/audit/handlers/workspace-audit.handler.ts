@@ -109,5 +109,19 @@ export class WorkspaceAuditHandler implements OnModuleInit {
         metadata: { email: p.email },
       });
     });
+
+    this.events.onWorkspaceTransferred((p) => {
+      void this.audit.record({
+        workspaceId: p.workspaceId,
+        userId: p.transferredBy,
+        action: 'workspace.transferred',
+        resourceType: 'workspace',
+        resourceId: p.workspaceId,
+        metadata: {
+          previousOwnerId: p.previousOwnerId,
+          newOwnerId: p.newOwnerId,
+        },
+      });
+    });
   }
 }

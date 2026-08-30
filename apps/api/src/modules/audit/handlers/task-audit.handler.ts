@@ -29,7 +29,18 @@ export class TaskAuditHandler implements OnModuleInit {
         action: 'task.updated',
         resourceType: 'task',
         resourceId: p.taskId,
-        metadata: { boardId: p.boardId, title: p.title },
+        metadata: {
+          boardId: p.boardId,
+          title: p.title,
+          ...(p.previousAssigneeId !== p.assigneeId
+            ? {
+                assigneeChange: {
+                  from: p.previousAssigneeId,
+                  to: p.assigneeId,
+                },
+              }
+            : {}),
+        },
       });
     });
 

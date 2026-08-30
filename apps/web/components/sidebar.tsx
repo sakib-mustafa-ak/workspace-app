@@ -9,7 +9,7 @@ import { api } from '@/lib/api';
 import { workspacesApi, type Workspace } from '@/lib/workspaces';
 import { boardsApi, type Board } from '@/lib/boards';
 import { notificationsApi } from '@/lib/notifications';
-import { setLastActiveWorkspace } from '@/lib/active-workspace';
+import { setLastActiveWorkspace, getLastActiveWorkspace } from '@/lib/active-workspace';
 import { WorkspaceLogo } from '@/components/workspace-logo';
 import {
   LayoutDashboard,
@@ -65,12 +65,25 @@ export function Sidebar() {
       if (user) {
         setLastActiveWorkspace(user.id, match[1]);
       }
+    } else if (user) {
+      const stored = getLastActiveWorkspace(user.id);
+      if (stored) {
+        setActiveWorkspaceId(stored);
+      }
     }
   }, [pathname, user]);
 
   // Load workspaces on mount
   useEffect(() => {
-    workspacesApi.list().then(setUserWorkspaces).catch(() => {});
+    workspacesApi
+      .list()
+      .then((list) => {
+        setUserWorkspaces(list);
+        setActiveWorkspaceId(
+          (prev) => (prev && list.some((w) => w.id === prev) ? prev : null),
+        );
+      })
+      .catch(() => {});
   }, []);
 
   // Load boards for active workspace

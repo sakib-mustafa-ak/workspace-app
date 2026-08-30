@@ -11,6 +11,7 @@ import {
   Users,
   LayoutGrid,
   CheckSquare,
+  ArrowRight,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { workspacesApi, type Invitation, type Workspace } from '@/lib/workspaces';
@@ -18,6 +19,7 @@ import { tasksApi, type Task } from '@/lib/tasks';
 import { boardsApi, type Board } from '@/lib/boards';
 import { EmailVerificationBanner } from '@/components/email-verification-banner';
 import { getRecentBoards, type RecentBoard } from '@/lib/recent-activity';
+import { getLastActiveWorkspace } from '@/lib/active-workspace';
 import { CalendarDropdown } from '@/components/calendar-dropdown';
 import { SkeletonCard } from '@/components/skeleton';
 import { useToast } from '@/contexts/toast-context';
@@ -222,6 +224,7 @@ function DashboardContent() {
   const [showCreate, setShowCreate] = useState(false);
   const [pendingInvites, setPendingInvites] = useState<Invitation[]>([]);
   const [recentBoards, setRecentBoards] = useState<RecentBoard[]>([]);
+  const [lastActiveWs, setLastActiveWs] = useState<Workspace | null>(null);
 
   function loadWorkspaces() {
     setLoading(true);
@@ -234,6 +237,16 @@ function DashboardContent() {
   }
 
   useEffect(() => { loadWorkspaces(); }, []);
+
+  useEffect(() => {
+    if (!user || workspaces.length === 0) {
+      setLastActiveWs(null);
+      return;
+    }
+    const stored = getLastActiveWorkspace(user.id);
+    const match = stored ? workspaces.find((w) => w.id === stored) : undefined;
+    setLastActiveWs(match ?? null);
+  }, [user, workspaces]);
 
   useEffect(() => {
     workspacesApi.listMyPendingInvitations?.()
@@ -302,6 +315,24 @@ function DashboardContent() {
         <div className="mb-6 animate-slideIn rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
           You have {pendingInvites.length} pending invitation{pendingInvites.length > 1 ? 's' : ''}
         </div>
+      )}
+
+      {/* Continue in last-active workspace */}
+      {lastActiveWs && (
+        <Link
+          href={`/workspaces/${lastActiveWs.id}`}
+          className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-primary-500/20 bg-primary-500/10 px-4 py-3 transition-colors hover:bg-primary-500/20"
+        >
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-600/20 text-xs font-bold text-primary-400">
+              {lastActiveWs.name.charAt(0).toUpperCase()}
+            </div>
+            <p className="truncate text-sm text-surface-200">
+              Continue in <span className="font-medium text-primary-300">{lastActiveWs.name}</span>
+            </p>
+          </div>
+          <ArrowRight size={16} className="shrink-0 text-primary-400" />
+        </Link>
       )}
 
       {showCreate && (

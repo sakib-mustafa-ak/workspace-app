@@ -20,6 +20,7 @@ import {
   clearSession,
   type User,
 } from '@/lib/auth';
+import { workspacesApi } from '@/lib/workspaces';
 
 type AuthContextType = {
   user: User | null;
@@ -67,7 +68,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await apiLogin(email, password);
       setUser(res.user);
       storeUser(res.user);
-      router.push('/dashboard');
+
+      const workspaces = await workspacesApi.list().catch(() => []);
+      router.push(workspaces.length === 0 ? '/onboarding' : '/dashboard');
     },
     [router],
   );
@@ -87,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await apiRegister(email, password, name);
       setUser(res.user);
       storeUser(res.user);
-      router.push('/dashboard');
+      router.push('/onboarding');
     },
     [router],
   );

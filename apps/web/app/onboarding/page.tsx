@@ -102,7 +102,7 @@ export default function OnboardingPage() {
         });
       }
       setLastActiveWorkspace(user.id, workspace.id);
-      router.push('/dashboard');
+      router.push(`/workspaces/${workspace.id}/boards`);
     } catch {
       toast.error('Something went wrong. Please try again.');
       setFinishing(false);

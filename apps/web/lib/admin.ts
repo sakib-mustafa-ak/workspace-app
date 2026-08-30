@@ -16,6 +16,23 @@ export type AdminWorkspace = {
   status: string;
 };
 
+export type AdminAuditEntry = {
+  id: string;
+  actorId: string;
+  action: string;
+  targetType: string;
+  targetId: string;
+  metadata: Record<string, unknown>;
+  createdAt: string;
+};
+
+export type AdminAuditFilters = {
+  actorId?: string;
+  action?: string;
+  from?: string;
+  to?: string;
+};
+
 export const adminApi = {
   searchUsers: (query: string) =>
     api.get<AdminUser[]>(`/admin/users?query=${encodeURIComponent(query)}`),
@@ -31,4 +48,13 @@ export const adminApi = {
     api.post<{ token: string; expiresInSeconds: number; user: AdminUser }>(
       `/admin/users/${userId}/impersonate`,
     ),
+  getAudit: (filters: AdminAuditFilters) => {
+    const params = new URLSearchParams();
+    if (filters.actorId) params.set('actorId', filters.actorId);
+    if (filters.action) params.set('action', filters.action);
+    if (filters.from) params.set('from', filters.from);
+    if (filters.to) params.set('to', filters.to);
+    const qs = params.toString();
+    return api.get<AdminAuditEntry[]>(`/admin/audit${qs ? `?${qs}` : ''}`);
+  },
 };

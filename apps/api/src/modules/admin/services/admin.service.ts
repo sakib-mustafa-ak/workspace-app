@@ -1,10 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
 
+import { AdminAuditLogRow } from '@repo/database';
+
 import { AuthErrorCode, AuthException } from '../../auth/errors/auth.errors';
 import { TokenService } from '../../auth/services/token.service';
 
 import { AdminAuditRepository } from '../data/admin-audit.repository';
 import { AdminRepository } from '../data/admin.repository';
+import type { AdminAuditFilters } from '../data/admin-audit.repository';
 
 @Injectable()
 export class AdminService {
@@ -74,5 +77,11 @@ export class AdminService {
         isAdmin: target.isAdmin,
       },
     };
+  }
+
+  public async listAudit(
+    filters: AdminAuditFilters = {},
+  ): Promise<AdminAuditLogRow[]> {
+    return this.adminAuditRepo.list(filters);
   }
 }

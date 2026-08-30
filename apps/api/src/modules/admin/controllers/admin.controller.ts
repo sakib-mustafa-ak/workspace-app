@@ -65,6 +65,23 @@ export class AdminController {
     return AdminService.STUB_SUBSCRIPTION;
   }
 
+  @Get('audit')
+  @ApiOperation({
+    summary: 'Read back the platform admin audit log (filterable)',
+  })
+  @ApiQuery({ name: 'actorId', required: false })
+  @ApiQuery({ name: 'action', required: false })
+  @ApiQuery({ name: 'from', required: false, description: 'ISO date' })
+  @ApiQuery({ name: 'to', required: false, description: 'ISO date' })
+  public async getAudit(
+    @Query('actorId') actorId?: string,
+    @Query('action') action?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.admin.listAudit({ actorId, action, from, to });
+  }
+
   @Post('users/:id/impersonate')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Sign in as another user (audit-logged)' })

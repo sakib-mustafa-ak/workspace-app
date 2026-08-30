@@ -21,7 +21,7 @@ describe('AdminService', () => {
     lookupWorkspaces: jest.Mock;
     findWorkspaceById: jest.Mock;
   };
-  let auditRepo: { record: jest.Mock };
+  let auditRepo: { record: jest.Mock; list: jest.Mock };
   let tokens: { signAccessToken: jest.Mock };
 
   beforeEach(async () => {
@@ -31,7 +31,10 @@ describe('AdminService', () => {
       lookupWorkspaces: jest.fn(),
       findWorkspaceById: jest.fn(),
     };
-    auditRepo = { record: jest.fn().mockResolvedValue(undefined) };
+    auditRepo = {
+      record: jest.fn().mockResolvedValue(undefined),
+      list: jest.fn(),
+    };
     tokens = { signAccessToken: jest.fn() };
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -95,5 +98,18 @@ describe('AdminService', () => {
       impersonatorId: 'u-1',
     });
     expect(res.token).toBe('tkn');
+  });
+
+  it('delegates listAudit to the admin audit repository', async () => {
+    auditRepo.list.mockResolvedValue([{ id: 'aud-1' }]);
+    const filters = {
+      actorId: 'u-1',
+      action: 'user.impersonated',
+      from: '2026-01-01T00:00:00.000Z',
+      to: '2026-02-01T00:00:00.000Z',
+    };
+    const res = await service.listAudit(filters);
+    expect(auditRepo.list).toHaveBeenCalledWith(filters);
+    expect(res).toEqual([{ id: 'aud-1' }]);
   });
 });

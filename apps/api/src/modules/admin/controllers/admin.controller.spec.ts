@@ -13,7 +13,7 @@ describe('AdminController', () => {
     lookupWorkspaces: jest.Mock;
     findWorkspaceById: jest.Mock;
   };
-  let admin: { impersonate: jest.Mock };
+  let admin: { impersonate: jest.Mock; listAudit: jest.Mock };
 
   beforeEach(async () => {
     adminRepo = {
@@ -22,7 +22,7 @@ describe('AdminController', () => {
       lookupWorkspaces: jest.fn(),
       findWorkspaceById: jest.fn(),
     };
-    admin = { impersonate: jest.fn() };
+    admin = { impersonate: jest.fn(), listAudit: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AdminController],
@@ -76,5 +76,22 @@ describe('AdminController', () => {
     const res = await controller.impersonate(currentUser, 'u-2');
     expect(admin.impersonate).toHaveBeenCalledWith('admin-1', 'u-2');
     expect(res).toEqual({ token: 'tkn' });
+  });
+
+  it('GET /audit passes filters to service.listAudit and returns rows', async () => {
+    admin.listAudit.mockResolvedValue([{ id: 'aud-1' }]);
+    const res = await controller.getAudit(
+      'u-1',
+      'user.impersonated',
+      '2026-01-01T00:00:00.000Z',
+      undefined,
+    );
+    expect(admin.listAudit).toHaveBeenCalledWith({
+      actorId: 'u-1',
+      action: 'user.impersonated',
+      from: '2026-01-01T00:00:00.000Z',
+      to: undefined,
+    });
+    expect(res).toEqual([{ id: 'aud-1' }]);
   });
 });

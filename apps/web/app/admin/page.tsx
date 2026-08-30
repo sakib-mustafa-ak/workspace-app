@@ -9,16 +9,24 @@ import {
   LogOut,
   Search,
   AlertTriangle,
+  History,
 } from 'lucide-react';
-import { adminApi, type AdminUser, type AdminWorkspace } from '@/lib/admin';
+import {
+  adminApi,
+  type AdminUser,
+  type AdminWorkspace,
+  type AdminAuditEntry,
+  type AdminAuditFilters,
+} from '@/lib/admin';
 import { useAuth } from '@/contexts/auth-context';
 import { storeUser } from '@/lib/auth';
 
-type Tab = 'users' | 'workspaces';
+type Tab = 'users' | 'workspaces' | 'audit';
 
 const TABS = [
   { id: 'users' as Tab, label: 'Users', icon: Users },
   { id: 'workspaces' as Tab, label: 'Workspaces', icon: Briefcase },
+  { id: 'audit' as Tab, label: 'Audit log', icon: History },
 ];
 
 function ImpersonationBanner({
@@ -178,32 +186,34 @@ export default function AdminPage() {
         ))}
       </div>
 
-      <div className="mb-6 flex gap-2">
-        <div className="relative flex-1">
-          <Search
-            size={14}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-500"
-          />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            placeholder={
-              activeTab === 'users'
-                ? 'Search users by name or email...'
-                : 'Search workspaces by name or slug...'
-            }
-            className="w-full rounded-lg border border-surface-700/60 bg-surface-800/40 py-2 pl-9 pr-3 text-sm outline-none transition-colors placeholder:text-surface-500 hover:border-surface-700 focus:border-primary-500/50"
-          />
+      {activeTab !== 'audit' && (
+        <div className="mb-6 flex gap-2">
+          <div className="relative flex-1">
+            <Search
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-500"
+            />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              placeholder={
+                activeTab === 'users'
+                  ? 'Search users by name or email...'
+                  : 'Search workspaces by name or slug...'
+              }
+              className="w-full rounded-lg border border-surface-700/60 bg-surface-800/40 py-2 pl-9 pr-3 text-sm outline-none transition-colors placeholder:text-surface-500 hover:border-surface-700 focus:border-primary-500/50"
+            />
+          </div>
+          <button
+            onClick={handleSearch}
+            disabled={loading || !query.trim()}
+            className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-500 disabled:opacity-50"
+          >
+            {loading ? 'Searching...' : 'Search'}
+          </button>
         </div>
-        <button
-          onClick={handleSearch}
-          disabled={loading || !query.trim()}
-          className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-500 disabled:opacity-50"
-        >
-          {loading ? 'Searching...' : 'Search'}
-        </button>
-      </div>
+      )}
 
       <div className="rounded-xl border border-surface-800 bg-surface-900 p-4">
         {activeTab === 'users' && (
@@ -222,6 +232,7 @@ export default function AdminPage() {
             onLoadSubscription={handleLoadSubscription}
           />
         )}
+        {activeTab === 'audit' && <AuditTab />}
       </div>
     </div>
   );
@@ -354,6 +365,147 @@ function WorkspacesTab({
         </div>
         );
       })}
+    </div>
+  );
+}
+
+const AUDIT_INPUT_CLASS =
+  'w-full rounded-lg border border-surface-700/60 bg-surface-800/40 px-3 py-2 text-sm outline-none transition-colors placeholder:text-surface-500 hover:border-surface-700 focus:border-primary-500/50';
+
+function AuditTab() {
+  const [actorId, setActorId] = useState('');
+  const [action, setAction] = useState('');
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const [entries, setEntries] = useState<AdminAuditEntry[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  const handleLoad = useCallback(async () => {
+    setLoading(true);
+    try {
+      const filters: AdminAuditFilters = {};
+      if (actorId.trim()) filters.actorId = actorId.trim();
+      if (action.trim()) filters.action = action.trim();
+      if (from) filters.from = `${from}T00:00:00.000Z`;
+      if (to) filters.to = `${to}T23:59:59.999Z`;
+      setEntries(await adminApi.getAudit(filters));
+      setLoaded(true);
+    } catch {
+      // handled
+    } finally {
+      setLoading(false);
+    }
+  }, [actorId, action, from, to]);
+
+  const hasFilters = actorId.trim() !== '' || action.trim() !== '' || from || to;
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <input
+          value={actorId}
+          onChange={(e) => setActorId(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleLoad()}
+          placeholder="Actor user ID"
+          className={AUDIT_INPUT_CLASS}
+        />
+        <input
+          value={action}
+          onChange={(e) => setAction(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleLoad()}
+          placeholder="Action (e.g. user.impersonated)"
+          className={AUDIT_INPUT_CLASS}
+        />
+        <div>
+          <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-surface-500">
+            From
+          </span>
+          <input
+            type="date"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+            className={AUDIT_INPUT_CLASS}
+          />
+        </div>
+        <div>
+          <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-surface-500">
+            To
+          </span>
+          <input
+            type="date"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            className={AUDIT_INPUT_CLASS}
+          />
+        </div>
+      </div>
+
+      <button
+        onClick={handleLoad}
+        disabled={loading}
+        className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-500 disabled:opacity-50"
+      >
+        {loading ? 'Loading...' : 'Load audit log'}
+      </button>
+
+      {loading && (
+        <p className="py-6 text-center text-sm text-surface-500">Loading...</p>
+      )}
+
+      {!loading && !loaded && (
+        <p className="py-6 text-center text-sm text-surface-500">
+          Set filters and load the audit log.
+        </p>
+      )}
+
+      {!loading && loaded && entries.length === 0 && (
+        <p className="py-6 text-center text-sm text-surface-500">
+          {hasFilters
+            ? 'No admin audit entries match these filters.'
+            : 'The audit log is empty.'}
+        </p>
+      )}
+
+      {!loading && entries.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-surface-800 text-[10px] font-semibold uppercase tracking-wider text-surface-500">
+                <th className="pb-2 pr-3">When</th>
+                <th className="pb-2 pr-3">Actor</th>
+                <th className="pb-2 pr-3">Action</th>
+                <th className="pb-2 pr-3">Target</th>
+                <th className="pb-2">Metadata</th>
+              </tr>
+            </thead>
+            <tbody>
+              {entries.map((entry) => (
+                <tr
+                  key={entry.id}
+                  className="border-b border-surface-800/60 last:border-0"
+                >
+                  <td className="whitespace-nowrap py-2 pr-3 text-xs text-surface-400">
+                    {new Date(entry.createdAt).toLocaleString()}
+                  </td>
+                  <td className="py-2 pr-3 font-mono text-xs text-surface-300">
+                    {entry.actorId}
+                  </td>
+                  <td className="whitespace-nowrap py-2 pr-3 text-xs font-medium text-surface-200">
+                    {entry.action}
+                  </td>
+                  <td className="py-2 pr-3 font-mono text-xs text-surface-400">
+                    {entry.targetType}:{entry.targetId}
+                  </td>
+                  <td className="py-2 font-mono text-xs text-surface-500">
+                    {JSON.stringify(entry.metadata)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

@@ -59,4 +59,7 @@ jobs:
         run: pnpm migrate
 
       - name: API tests
-        run: pnpm --filter api test --ci
+        run: pnpm --filter api test -- --ci
+
+      - name: Web build
+        run: pnpm --filter web build

@@ -164,7 +164,7 @@ Returns a plain 2xx `{ received: true }` (Stripe does not parse the body, so the
 | `boards.service.create` | `assertCanCreateBoard` (after role check) |
 | `workspaces.service.create` | `assertCanOwnWorkspace` |
 | `workspaces.service.transferOwnership` | `assertCanOwnWorkspace` against the new owner |
-| `workspaces.service.createInvitation` / direct member add | `assertCanAddMember` (against ACTIVE count) |
+| `workspaces.service.createInvitation` (any path that adds an ACTIVE member) | `assertCanAddMember` (against ACTIVE count) |
 
 Pending invites do not consume a seat (locked decision #3), so the accept path needs no re-check. Nothing that reduces usage (deletions, removals, transfers out) is ever blocked.
 
@@ -235,7 +235,7 @@ New "Plan & billing" card:
 
 Exact point where real Stripe keys are required:
 
-1. **`STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`** — needed to (a) flake out a live Checkout session that Stripe redirects to, (b) deliver a real webhook to a public URL (Render), and (c) round-trip `checkout.session.completed` → subscription persisted → settings UI reflects it. Everything before that (data model, guard logic, idempotency, UI, unit tests) is buildable and testable without them.
+1. **`STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`** — needed to (a) exercise a live Checkout session that Stripe redirects to, (b) deliver a real webhook to a public URL (Render), and (c) round-trip `checkout.session.completed` → subscription persisted → settings UI reflects it. Everything before that (data model, guard logic, idempotency, UI, unit tests) is buildable and testable without them.
 2. **Public webhook URL**: `https://workspace-api-8387.onrender.com/api/v1/billing/webhook` must be registered in the Stripe dashboard, which the user does once keys are provided.
 
 Deploy note: `render.yaml` needs no change for this phase — all Stripe env is optional; when keys are supplied they get added as Render env vars (`sync: false`) and the webhook endpoint registered.

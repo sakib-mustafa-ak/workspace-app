@@ -3,6 +3,7 @@ import type { NotificationRow } from '@repo/database';
 
 import { NotificationsRepository } from '../repositories/notifications.repository';
 import { NotificationsEventBus } from '../events/notifications.events';
+import { NotificationPreferencesService } from './notification-preferences.service';
 import { NotificationsService } from './notifications.service';
 
 const mockNotification: NotificationRow = {
@@ -32,6 +33,7 @@ describe('NotificationsService', () => {
   let service: NotificationsService;
   let repo: jest.Mocked<NotificationsRepository>;
   let events: jest.Mocked<NotificationsEventBus>;
+  let prefs: jest.Mocked<NotificationPreferencesService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -51,6 +53,12 @@ describe('NotificationsService', () => {
           },
         },
         {
+          provide: NotificationPreferencesService,
+          useValue: {
+            isInAppEnabled: jest.fn().mockResolvedValue(true),
+          },
+        },
+        {
           provide: NotificationsEventBus,
           useValue: {
             publishNotificationCreated: jest.fn(),
@@ -62,6 +70,7 @@ describe('NotificationsService', () => {
     service = module.get<NotificationsService>(NotificationsService);
     repo = module.get(NotificationsRepository);
     events = module.get(NotificationsEventBus);
+    prefs = module.get(NotificationPreferencesService);
   });
 
   describe('create', () => {
@@ -87,6 +96,19 @@ describe('NotificationsService', () => {
       );
       expect(events.publishNotificationCreated).toHaveBeenCalled();
     });
+
+    it('skips creation when in-app notifications are disabled for the type', async () => {
+      prefs.isInAppEnabled.mockResolvedValue(false);
+
+      const result = await service.create('u1', {
+        type: 'COMMENT_ADDED',
+        title: 'New comment',
+      });
+
+      expect(result).toBeNull();
+      expect(repo.create).not.toHaveBeenCalled();
+      expect(events.publishNotificationCreated).not.toHaveBeenCalled();
+    });
   });
 
   describe('createAndDeliver', () => {
@@ -100,6 +122,19 @@ describe('NotificationsService', () => {
 
       expect(result.id).toBe('n1');
       expect(repo.deliver).toHaveBeenCalledWith('n1');
+    });
+
+    it('skips delivery when in-app notifications are disabled for the type', async () => {
+      prefs.isInAppEnabled.mockResolvedValue(false);
+
+      const result = await service.createAndDeliver('u1', {
+        type: 'COMMENT_ADDED',
+        title: 'New comment',
+      });
+
+      expect(result).toBeNull();
+      expect(repo.create).not.toHaveBeenCalled();
+      expect(repo.deliver).not.toHaveBeenCalled();
     });
   });
 

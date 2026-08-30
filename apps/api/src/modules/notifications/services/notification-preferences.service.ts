@@ -52,4 +52,12 @@ export class NotificationPreferencesService {
     const row = await this.repo.findByUserAndType(userId, type);
     return row ? row.emailEnabled : true;
   }
+
+  public async isInAppEnabled(
+    userId: string,
+    type: NotificationType,
+  ): Promise<boolean> {
+    const row = await this.repo.findByUserAndType(userId, type);
+    return row ? row.inAppEnabled : true;
+  }
 }

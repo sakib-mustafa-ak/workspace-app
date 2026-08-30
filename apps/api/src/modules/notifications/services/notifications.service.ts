@@ -8,6 +8,7 @@ import {
 } from '../errors/notifications.errors';
 import { NotificationsRepository } from '../repositories/notifications.repository';
 import { NotificationsEventBus } from '../events/notifications.events';
+import { NotificationPreferencesService } from './notification-preferences.service';
 
 @Injectable()
 export class NotificationsService {
@@ -18,6 +19,8 @@ export class NotificationsService {
     private readonly notificationsRepo: NotificationsRepository,
     @Inject(NotificationsEventBus)
     private readonly events: NotificationsEventBus,
+    @Inject(NotificationPreferencesService)
+    private readonly preferences: NotificationPreferencesService,
   ) {}
 
   public async create(
@@ -29,7 +32,15 @@ export class NotificationsService {
       resourceType?: string;
       resourceId?: string;
     },
-  ): Promise<NotificationRow> {
+  ): Promise<NotificationRow | null> {
+    const inAppEnabled = await this.preferences.isInAppEnabled(
+      userId,
+      input.type,
+    );
+    if (!inAppEnabled) {
+      return null;
+    }
+
     const notification = await this.notificationsRepo.create({
       userId,
       type: input.type,
@@ -61,8 +72,11 @@ export class NotificationsService {
       resourceType?: string;
       resourceId?: string;
     },
-  ): Promise<NotificationRow> {
+  ): Promise<NotificationRow | null> {
     const notification = await this.create(userId, input);
+    if (!notification) {
+      return null;
+    }
 
     await this.notificationsRepo.deliver(notification.id);
 

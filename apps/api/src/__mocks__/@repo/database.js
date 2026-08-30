@@ -54,7 +54,6 @@ module.exports = {
   identities: { id: 'identities.id' },
   emailVerificationTokens: { id: 'emailVerificationTokens.id' },
   passwordResetTokens: { id: 'passwordResetTokens.id' },
-  pushSubscriptions: { id: 'pushSubscriptions.id' },
   canvas: { id: 'canvas.id' },
   canvasObjects: { id: 'canvasObjects.id' },
   uploadedFiles: { id: 'uploadedFiles.id' },

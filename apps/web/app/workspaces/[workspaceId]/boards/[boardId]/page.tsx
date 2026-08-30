@@ -259,18 +259,18 @@ export default function BoardDetailPage() {
   if (loading) {
     return (
       <div className="flex h-full flex-col">
-        <header className="flex items-center justify-between border-b border-surface-800 px-8 py-4">
-          <div className="flex items-center gap-3">
-            <SkeletonBlock className="h-4 w-4 rounded" />
+        <header className="flex flex-col gap-3 border-b border-surface-800 px-8 py-4">
+          <SkeletonBlock className="h-3 w-56 rounded" />
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <SkeletonBlock className="h-5 w-48 rounded" />
               <SkeletonBlock className="mt-1 h-3 w-32 rounded" />
             </div>
-          </div>
-          <div className="flex gap-2">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <SkeletonBlock key={i} className="h-8 w-20 rounded-lg" />
-            ))}
+            <div className="flex flex-wrap gap-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <SkeletonBlock key={i} className="h-8 w-20 rounded-lg" />
+              ))}
+            </div>
           </div>
         </header>
         <div className="flex flex-1 gap-4 p-6">
@@ -307,15 +307,15 @@ export default function BoardDetailPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex items-center justify-between border-b border-surface-800 px-8 py-4">
-        <div className="flex items-center gap-3">
-          <Breadcrumbs
-            items={[
-              { label: workspace?.name || 'Workspace', href: `/workspaces/${workspaceId}` },
-              { label: 'Boards', href: `/workspaces/${workspaceId}/boards` },
-            ]}
-            currentLabel={taskLabel ?? (board?.name || 'Board')}
-          />
+      <header className="flex flex-col gap-3 border-b border-surface-800 px-8 py-4">
+        <Breadcrumbs
+          items={[
+            { label: workspace?.name || 'Workspace', href: `/workspaces/${workspaceId}` },
+            { label: 'Boards', href: `/workspaces/${workspaceId}/boards` },
+          ]}
+          currentLabel={taskLabel ?? (board?.name || 'Board')}
+        />
+        <div className="flex flex-wrap items-center justify-between gap-3">
           {editingBoard ? (
             <div className="flex items-center gap-2">
               <input
@@ -338,9 +338,8 @@ export default function BoardDetailPage() {
               </p>
             </div>
           )}
-        </div>
-        <div className="flex items-center gap-2">
-          <BoardUploadButton workspaceId={workspaceId} boardId={boardId} onUploaded={() => setShowFiles(true)} />
+          <div className="flex flex-wrap items-center gap-2">
+            <BoardUploadButton workspaceId={workspaceId} boardId={boardId} onUploaded={() => setShowFiles(true)} />
           <button
             onClick={() => setShowFiles(!showFiles)}
             className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs transition-colors ${
@@ -428,6 +427,7 @@ export default function BoardDetailPage() {
               </div>
             )}
           </div>
+        </div>
         </div>
       </header>
 

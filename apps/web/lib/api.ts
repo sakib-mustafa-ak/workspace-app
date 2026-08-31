@@ -38,6 +38,7 @@ export class ApiError extends Error {
     public status: number,
     public code: string,
     message: string,
+    public details?: Record<string, unknown>,
   ) {
     super(message);
     this.name = 'ApiError';
@@ -133,10 +134,16 @@ async function request<T>(
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
+    const err = (body?.error ?? body) as {
+      code?: string;
+      details?: Record<string, unknown>;
+      message?: string;
+    };
     throw new ApiError(
       res.status,
-      body.code || 'UNKNOWN',
-      body.message || 'An error occurred',
+      err.code || 'UNKNOWN',
+      err.message || body?.message || 'An error occurred',
+      err.details,
     );
   }
 
@@ -209,10 +216,16 @@ async function requestFormData<T>(
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
+    const err = (body?.error ?? body) as {
+      code?: string;
+      details?: Record<string, unknown>;
+      message?: string;
+    };
     throw new ApiError(
       res.status,
-      body.code || 'UNKNOWN',
-      body.message || 'An error occurred',
+      err.code || 'UNKNOWN',
+      err.message || body?.message || 'An error occurred',
+      err.details,
     );
   }
 

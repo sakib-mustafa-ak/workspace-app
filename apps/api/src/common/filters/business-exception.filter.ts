@@ -38,11 +38,15 @@ export class BusinessExceptionFilter implements ExceptionFilter {
         typeof body === 'object' && body !== null && 'message' in body
           ? String((body as { message: unknown }).message)
           : exception.message;
+      const details =
+        typeof body === 'object' && body !== null && 'details' in body
+          ? (body as { details?: Record<string, unknown> }).details
+          : undefined;
 
       response.status(status).json({
         success: false,
         message,
-        error: { code },
+        error: details ? { code, details } : { code },
         path: request.url,
       });
       return;

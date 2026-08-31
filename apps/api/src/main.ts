@@ -17,6 +17,7 @@ import {
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
+    rawBody: true,
   });
 
   app.useBodyParser('json', { limit: '10mb' });

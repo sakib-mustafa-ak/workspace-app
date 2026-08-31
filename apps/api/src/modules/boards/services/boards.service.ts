@@ -17,6 +17,7 @@ import { BoardsRepository } from '../repositories/boards.repository';
 import { BoardColumnsRepository } from '../repositories/board-columns.repository';
 import { BoardsEventBus } from '../events/boards.events';
 import { TasksRepository } from '../../tasks/repositories/tasks.repository';
+import { UsageService } from '../../billing/services/usage.service';
 import type { BoardExportData } from '../dto/board-export.dto';
 import type { BoardTemplate } from '../dto/create-board-template.dto';
 import { getTemplateColumns } from '../dto/create-board-template.dto';
@@ -34,6 +35,7 @@ export class BoardsService {
     @Inject(BoardPolicy) private readonly policy: BoardPolicy,
     @Inject(BoardsEventBus) private readonly events: BoardsEventBus,
     @Inject(TasksRepository) private readonly tasksRepo: TasksRepository,
+    @Inject(UsageService) private readonly usage: UsageService,
   ) {}
 
   public async createFromTemplate(
@@ -42,6 +44,7 @@ export class BoardsService {
     input: { name: string; template: BoardTemplate },
   ): Promise<BoardRow> {
     await this.requireRole(workspaceId, userId, 'EDITOR');
+    await this.usage.assertCanCreateBoard(workspaceId);
 
     const board = await this.db.transaction(async (tx) => {
       const created = await this.boardsRepo.create(
@@ -84,6 +87,7 @@ export class BoardsService {
     input: { name: string; description?: string },
   ): Promise<BoardRow> {
     await this.requireRole(workspaceId, userId, 'EDITOR');
+    await this.usage.assertCanCreateBoard(workspaceId);
 
     // Board and its default columns are one atomic unit: a partial
     // board without all three columns would break the kanban view.

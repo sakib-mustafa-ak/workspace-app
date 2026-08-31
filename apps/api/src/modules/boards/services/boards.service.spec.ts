@@ -12,6 +12,7 @@ import { BoardsRepository } from '../repositories/boards.repository';
 import { BoardColumnsRepository } from '../repositories/board-columns.repository';
 import { BoardsEventBus } from '../events/boards.events';
 import { TasksRepository } from '../../tasks/repositories/tasks.repository';
+import { UsageService } from '../../billing/services/usage.service';
 import { BoardsService } from './boards.service';
 
 const mockBoard: BoardRow = {
@@ -83,6 +84,7 @@ describe('BoardsService', () => {
   let columnsRepo: jest.Mocked<BoardColumnsRepository>;
   let policy: jest.Mocked<BoardPolicy>;
   let events: jest.Mocked<BoardsEventBus>;
+  let usage: { assertCanCreateBoard: jest.Mock };
 
   beforeEach(async () => {
     db = {
@@ -96,6 +98,8 @@ describe('BoardsService', () => {
       insert: jest.fn(),
       select: jest.fn(),
     };
+
+    usage = { assertCanCreateBoard: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -151,6 +155,7 @@ describe('BoardsService', () => {
             countByBoard: jest.fn(),
           },
         },
+        { provide: UsageService, useValue: usage },
       ],
     }).compile();
 
@@ -209,6 +214,31 @@ describe('BoardsService', () => {
       await expect(
         service.create('w1', 'u1', { name: 'Board' }),
       ).rejects.toThrow('Requires EDITOR role');
+    });
+
+    it('enforces the board limit before creating', async () => {
+      mockDbSelect([mockMembership]);
+      policy.isAtLeast.mockReturnValue(true);
+      usage.assertCanCreateBoard.mockRejectedValue(
+        new Error('BILLING.LIMIT_REACHED'),
+      );
+      await expect(
+        service.create('w1', 'u1', { name: 'Blocked' }),
+      ).rejects.toThrow('BILLING.LIMIT_REACHED');
+      expect(usage.assertCanCreateBoard).toHaveBeenCalledWith('w1');
+    });
+
+    it('passes through when the plan allows another board', async () => {
+      mockDbSelect([mockMembership]);
+      policy.isAtLeast.mockReturnValue(true);
+      usage.assertCanCreateBoard.mockResolvedValue(undefined);
+      boardsRepo.listByWorkspace.mockResolvedValue([]);
+      boardsRepo.create.mockResolvedValue(mockBoard);
+      columnsRepo.create.mockResolvedValue(mockColumn);
+      await expect(
+        service.create('w1', 'u1', { name: 'Allowed' }),
+      ).resolves.toEqual(mockBoard);
+      expect(usage.assertCanCreateBoard).toHaveBeenCalledWith('w1');
     });
   });
 

@@ -78,17 +78,15 @@ export class BillingRepository {
     return created;
   }
 
-  public async upsertFromStripe(
-    data: {
-      workspaceId: string;
-      plan: SubscriptionPlan;
-      status: SubscriptionStatus;
-      stripeCustomerId?: string | null;
-      stripeSubscriptionId?: string | null;
-      currentPeriodStart?: Date | null;
-      currentPeriodEnd?: Date | null;
-    },
-  ): Promise<WorkspaceSubscriptionRow> {
+  public async upsertFromStripe(data: {
+    workspaceId: string;
+    plan: SubscriptionPlan;
+    status: SubscriptionStatus;
+    stripeCustomerId?: string | null;
+    stripeSubscriptionId?: string | null;
+    currentPeriodStart?: Date | null;
+    currentPeriodEnd?: Date | null;
+  }): Promise<WorkspaceSubscriptionRow> {
     const [row] = await this.db
       .insert(workspaceSubscriptions)
       .values({

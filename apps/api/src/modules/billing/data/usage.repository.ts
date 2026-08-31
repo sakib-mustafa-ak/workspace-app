@@ -34,7 +34,10 @@ export class UsageRepository {
       .select({ count: sql<number>`count(*)::int` })
       .from(boards)
       .where(
-        and(eq(boards.workspaceId, workspaceId), sql`${boards.deletedAt} IS NULL`),
+        and(
+          eq(boards.workspaceId, workspaceId),
+          sql`${boards.deletedAt} IS NULL`,
+        ),
       );
     return row?.count ?? 0;
   }
@@ -44,7 +47,10 @@ export class UsageRepository {
       .select({ count: sql<number>`count(*)::int` })
       .from(workspaces)
       .where(
-        and(eq(workspaces.ownerId, userId), sql`${workspaces.deletedAt} IS NULL`),
+        and(
+          eq(workspaces.ownerId, userId),
+          sql`${workspaces.deletedAt} IS NULL`,
+        ),
       );
     return row?.count ?? 0;
   }

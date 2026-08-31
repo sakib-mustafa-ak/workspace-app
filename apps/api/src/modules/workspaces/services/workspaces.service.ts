@@ -33,6 +33,8 @@ import {
   INVITATION_AUTH_TTL_SECONDS,
   INVITATION_TOKEN_BYTES,
 } from '../workspaces.constants';
+import { BillingRepository } from '../../billing/data/billing.repository';
+import { UsageService } from '../../billing/services/usage.service';
 
 @Injectable()
 export class WorkspacesService {
@@ -48,6 +50,8 @@ export class WorkspacesService {
     private readonly invitations: InvitationsRepository,
     @Inject(WorkspacePolicy) private readonly policy: WorkspacePolicy,
     @Inject(WorkspacesEventBus) private readonly events: WorkspacesEventBus,
+    @Inject(UsageService) private readonly usage: UsageService,
+    @Inject(BillingRepository) private readonly billingSubs: BillingRepository,
   ) {}
 
   public async transferOwnership(
@@ -74,6 +78,8 @@ export class WorkspacesService {
         'New owner must be a member of the workspace.',
       );
     }
+
+    await this.usage.assertCanOwnWorkspace(newOwnerId);
 
     await this.db.transaction(async (tx) => {
       await tx
@@ -126,6 +132,8 @@ export class WorkspacesService {
       );
     }
 
+    await this.usage.assertCanOwnWorkspace(userId);
+
     const workspace = await this.db.transaction(async (tx) => {
       const [ws] = await tx
         .insert(workspaces)
@@ -145,6 +153,8 @@ export class WorkspacesService {
         status: 'ACTIVE',
         joinedAt: new Date(),
       });
+
+      await this.billingSubs.createFree(ws.id, tx);
 
       return ws;
     });
@@ -358,6 +368,7 @@ export class WorkspacesService {
     input: { email: string; role: WorkspaceRole },
   ): Promise<{ selector: string; verifier: string }> {
     await this.requireRole(workspaceId, invitedByUserId, 'ADMIN');
+    await this.usage.assertCanAddMember(workspaceId);
 
     const pendingCount =
       await this.invitations.countPendingByWorkspace(workspaceId);

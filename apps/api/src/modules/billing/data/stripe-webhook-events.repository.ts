@@ -13,7 +13,9 @@ import {
 export class StripeWebhookEventsRepository {
   constructor(@Inject(DATABASE) private readonly db: Db) {}
 
-  public async findById(id: string): Promise<StripeWebhookEventRow | undefined> {
+  public async findById(
+    id: string,
+  ): Promise<StripeWebhookEventRow | undefined> {
     const [row] = await this.db
       .select()
       .from(stripeWebhookEvents)
@@ -22,7 +24,9 @@ export class StripeWebhookEventsRepository {
     return row;
   }
 
-  public async create(row: NewStripeWebhookEventRow): Promise<StripeWebhookEventRow> {
+  public async create(
+    row: NewStripeWebhookEventRow,
+  ): Promise<StripeWebhookEventRow> {
     const [created] = await this.db
       .insert(stripeWebhookEvents)
       .values(row)
@@ -31,7 +35,10 @@ export class StripeWebhookEventsRepository {
     return created;
   }
 
-  public async setStatus(id: string, status: 'COMPLETED' | 'FAILED'): Promise<void> {
+  public async setStatus(
+    id: string,
+    status: 'COMPLETED' | 'FAILED',
+  ): Promise<void> {
     await this.db
       .update(stripeWebhookEvents)
       .set({ status, processedAt: new Date() })

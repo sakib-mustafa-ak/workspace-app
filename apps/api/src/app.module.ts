@@ -24,6 +24,7 @@ import { AiModule } from './modules/ai/ai.module.js';
 import { AuditModule } from './modules/audit/audit.module.js';
 import { ChecklistModule } from './modules/checklists/checklist.module.js';
 import { AdminModule } from './modules/admin/admin.module.js';
+import { BillingModule } from './modules/billing/billing.module.js';
 
 /**
  * Root Nest module.
@@ -91,6 +92,7 @@ import { AdminModule } from './modules/admin/admin.module.js';
     AuditModule,
     ChecklistModule,
     AdminModule,
+    BillingModule,
   ],
   providers: [
     // Global guard execution order (runs top-to-bottom, root module first):

@@ -16,6 +16,8 @@ import {
 import { InvitationsRepository } from '../repositories/invitations.repository';
 import { WorkspacesEventBus } from '../events/workspaces.events';
 import { WorkspacesService } from './workspaces.service';
+import { UsageService } from '../../billing/services/usage.service';
+import { BillingRepository } from '../../billing/data/billing.repository';
 
 const mockWorkspace: WorkspaceRow = {
   id: 'w1',
@@ -69,9 +71,16 @@ describe('WorkspacesService', () => {
   let policy: jest.Mocked<WorkspacePolicy>;
   let events: jest.Mocked<WorkspacesEventBus>;
   let db: { transaction: jest.Mock };
+  let usage: {
+    assertCanOwnWorkspace: jest.Mock;
+    assertCanAddMember: jest.Mock;
+  };
+  let billingSubs: { createFree: jest.Mock };
 
   beforeEach(async () => {
     db = { transaction: jest.fn() };
+    usage = { assertCanOwnWorkspace: jest.fn(), assertCanAddMember: jest.fn() };
+    billingSubs = { createFree: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -140,6 +149,8 @@ describe('WorkspacesService', () => {
             publishInvitationAccepted: jest.fn(),
           },
         },
+        { provide: UsageService, useValue: usage },
+        { provide: BillingRepository, useValue: billingSubs },
       ],
     }).compile();
 
@@ -567,6 +578,55 @@ describe('WorkspacesService', () => {
       await expect(service.getMembership('w1', 'u3')).rejects.toThrow(
         'not a member',
       );
+    });
+  });
+
+  describe('plan enforcement', () => {
+    it('create() throws when the user may not own another workspace on FREE', async () => {
+      workspacesRepo.findBySlug.mockResolvedValue(undefined);
+      usage.assertCanOwnWorkspace.mockRejectedValue(
+        new Error('BILLING.LIMIT_REACHED'),
+      );
+      await expect(
+        service.create('u-1', { name: 'New', slug: 'new-space' }),
+      ).rejects.toThrow('BILLING.LIMIT_REACHED');
+    });
+
+    it('transferOwnership() throws when the new owner is over the FREE owned limit', async () => {
+      const ownerUser: WorkspaceMemberWithUser = {
+        ...mockOwnership,
+        workspaceId: 'ws-1',
+        userId: 'owner-1',
+      };
+      const newOwnerUser: WorkspaceMemberWithUser = {
+        ...mockMemberEntry,
+        workspaceId: 'ws-1',
+        userId: 'someone-else',
+      };
+      members.findByWorkspaceAndUser
+        .mockResolvedValueOnce(ownerUser)
+        .mockResolvedValueOnce(newOwnerUser);
+      policy.isAtLeast.mockReturnValue(true);
+      usage.assertCanOwnWorkspace.mockRejectedValue(
+        new Error('BILLING.LIMIT_REACHED'),
+      );
+      await expect(
+        service.transferOwnership('ws-1', 'owner-1', 'someone-else'),
+      ).rejects.toThrow('BILLING.LIMIT_REACHED');
+    });
+
+    it('createInvitation() throws when the workspace is at the FREE member limit', async () => {
+      members.findByWorkspaceAndUser.mockResolvedValue(mockOwnership);
+      policy.isAtLeast.mockReturnValue(true);
+      usage.assertCanAddMember.mockRejectedValue(
+        new Error('BILLING.LIMIT_REACHED'),
+      );
+      await expect(
+        service.createInvitation('w1', 'u1', {
+          email: 'x@y.z',
+          role: 'VIEWER',
+        }),
+      ).rejects.toThrow('BILLING.LIMIT_REACHED');
     });
   });
 });

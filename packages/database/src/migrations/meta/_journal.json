@@ -50,6 +50,13 @@
       "when": 1787832572734,
       "tag": "0006_bent_prowler",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1788167845324,
+      "tag": "0007_opposite_nextwave",
+      "breakpoints": true
     }
   ]
 }

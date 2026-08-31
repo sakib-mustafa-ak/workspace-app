@@ -21,3 +21,4 @@ export * from './canvas/index.js';
 export * from './uploads/index.js';
 export * from './audit/index.js';
 export * from './checklists/index.js';
+export * from './billing/index.js';

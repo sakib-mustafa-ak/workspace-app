@@ -6,3 +6,4 @@ export * from './task.enums.js';
 export * from './workspace.enums.js';
 export * from './invitation.enums.js';
 export * from './canvas.enums.js';
+export * from './billing.enums.js';

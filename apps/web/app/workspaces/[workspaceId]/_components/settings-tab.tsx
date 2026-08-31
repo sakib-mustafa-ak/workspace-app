@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { Pencil, Check, Archive, Trash2 } from 'lucide-react';
 import { workspacesApi, type Workspace, type WorkspaceMember } from '@/lib/workspaces';
+import { type SubscriptionInfo } from '@/lib/billing';
+import { BillingSection } from './billing-section';
 import { ConfirmModal } from '@/components/confirm-modal';
 import { useToast } from '@/contexts/toast-context';
 
@@ -12,6 +14,8 @@ type Props = {
   wsOwner: boolean;
   members: WorkspaceMember[];
   currentUserId?: string;
+  subscription: SubscriptionInfo | null;
+  currentRole: string | null;
   onUpdate: () => void;
 };
 
@@ -21,6 +25,8 @@ export function SettingsTab({
   wsOwner,
   members,
   currentUserId,
+  subscription,
+  currentRole,
   onUpdate,
 }: Props) {
   const [editingWs, setEditingWs] = useState(false);
@@ -32,6 +38,7 @@ export function SettingsTab({
   const [confirmTransfer, setConfirmTransfer] = useState(false);
   const [transferTarget, setTransferTarget] = useState('');
   const toast = useToast();
+  const canManage = currentRole === 'ADMIN' || currentRole === 'OWNER';
 
   async function handleUpdateWs() {
     setActionError('');
@@ -99,6 +106,16 @@ export function SettingsTab({
 
   return (
     <div className="max-w-lg p-6">
+      <div className="mb-6">
+        <BillingSection
+          workspaceId={workspaceId}
+          subscription={subscription}
+          canManage={canManage}
+          boardCount={workspace.boardCount}
+          memberCount={workspace.memberCount}
+          onChanged={onUpdate}
+        />
+      </div>
       <h2 className="mb-6 text-sm font-semibold">Workspace settings</h2>
       {actionError && (
         <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm text-red-400">

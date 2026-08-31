@@ -13,6 +13,7 @@ import {
   type Invitation,
 } from '@/lib/workspaces';
 import { boardsApi, type Board } from '@/lib/boards';
+import { billingApi, type SubscriptionInfo } from '@/lib/billing';
 import { SkeletonBlock, SkeletonCard } from '@/components/skeleton';
 import { OverviewTab } from './_components/overview-tab';
 import { BoardsTab } from './_components/boards-tab';
@@ -20,6 +21,7 @@ import { MembersTab } from './_components/members-tab';
 import { InvitationsTab } from './_components/invitations-tab';
 import { SettingsTab } from './_components/settings-tab';
 import { ActivityTabContent } from './_components/activity-tab';
+import { UpgradeNotice } from './_components/upgrade-notice';
 import { useToast } from '@/contexts/toast-context';
 import { ConfirmModal } from '@/components/confirm-modal';
 import { Breadcrumbs } from '@/components/breadcrumbs';
@@ -36,6 +38,7 @@ export default function WorkspaceDetailPage() {
   const [boards, setBoards] = useState<Board[]>([]);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
+  const [subscription, setSubscription] = useState<SubscriptionInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [confirmRemove, setConfirmRemove] = useState(false);
@@ -48,10 +51,14 @@ export default function WorkspaceDetailPage() {
     Promise.all([
       workspacesApi.getById(workspaceId),
       boardsApi.list(workspaceId),
+      billingApi.getSubscription(workspaceId).catch(() => null),
+      workspacesApi.getMembers(workspaceId).catch(() => []),
     ])
-      .then(([ws, boardList]) => {
+      .then(([ws, boardList, subInfo, memberList]) => {
         setWorkspace(ws);
         setBoards(boardList);
+        setSubscription(subInfo);
+        setMembers(memberList);
       })
       .catch(() => setError('Failed to load this workspace. It may have been deleted or you may not have access.'))
       .finally(() => setLoading(false));
@@ -70,6 +77,7 @@ export default function WorkspaceDetailPage() {
   useEffect(() => { if (tab === 'invitations') loadInvitations(); }, [tab, workspaceId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const wsOwner = workspace?.ownerId === user?.id;
+  const currentRole = members.find((m) => m.userId === user?.id)?.role ?? null;
 
   async function handleChangeRole(memberId: string, userId: string, role: string) {
     try {
@@ -200,6 +208,13 @@ export default function WorkspaceDetailPage() {
         </nav>
       </header>
 
+      <UpgradeNotice
+        plan={subscription?.plan ?? 'FREE'}
+        boardCount={workspace.boardCount}
+        memberCount={workspace.memberCount}
+        onUpgrade={() => setTab('settings')}
+      />
+
       <div className="flex-1 overflow-auto">
         {tab === 'overview' && (
           <OverviewTab workspaceId={workspaceId} onInvite={() => setTab('invitations')} />
@@ -231,7 +246,7 @@ export default function WorkspaceDetailPage() {
             }}
           />
         )}
-        {tab === 'activity' && <ActivityTabContent workspaceId={workspaceId} />}
+        {tab === 'activity' && <ActivityTabContent workspaceId={workspaceId} plan={subscription?.plan ?? 'FREE'} />}
         {tab === 'settings' && (
           <SettingsTab
             workspace={workspace}
@@ -239,6 +254,8 @@ export default function WorkspaceDetailPage() {
             wsOwner={wsOwner}
             members={members}
             currentUserId={user?.id}
+            subscription={subscription}
+            currentRole={currentRole}
             onUpdate={loadWorkspace}
           />
         )}

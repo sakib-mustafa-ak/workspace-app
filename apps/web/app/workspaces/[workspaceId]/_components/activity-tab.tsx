@@ -1,13 +1,16 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { workspacesApi, type AuditEvent } from '@/lib/workspaces';
-import { History } from 'lucide-react';
+import { billingApi } from '@/lib/billing';
+import { History, Download } from 'lucide-react';
 import { SkeletonBlock } from '@/components/skeleton';
+import { useToast } from '@/contexts/toast-context';
 
-export function ActivityTabContent({ workspaceId }: { workspaceId: string }) {
+export function ActivityTabContent({ workspaceId, plan }: { workspaceId: string; plan: 'FREE' | 'PRO' | 'TEAM' }) {
   const [events, setEvents] = useState<AuditEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [cursor, setCursor] = useState<string | null>(null);
+  const toast = useToast();
 
   function load() {
     setLoading(true);
@@ -37,6 +40,22 @@ export function ActivityTabContent({ workspaceId }: { workspaceId: string }) {
   return (
     <div className="p-6">
       <h2 className="mb-4 text-sm font-semibold">Recent activity</h2>
+      {plan === 'TEAM' && (
+        <div className="mb-4 flex gap-2">
+          <button
+            onClick={() => billingApi.exportAudit(workspaceId, 'csv').catch(() => toast.error('Export failed.'))}
+            className="flex items-center gap-1.5 rounded-lg border border-surface-700 px-3 py-1.5 text-xs text-surface-300 hover:border-primary-600 hover:text-primary-300"
+          >
+            <Download size={13} /> Export CSV
+          </button>
+          <button
+            onClick={() => billingApi.exportAudit(workspaceId, 'json').catch(() => toast.error('Export failed.'))}
+            className="flex items-center gap-1.5 rounded-lg border border-surface-700 px-3 py-1.5 text-xs text-surface-300 hover:border-primary-600 hover:text-primary-300"
+          >
+            <Download size={13} /> Export JSON
+          </button>
+        </div>
+      )}
       <div className="space-y-1">
         {events.length === 0 ? (
           <p className="text-sm text-surface-500">No activity yet</p>

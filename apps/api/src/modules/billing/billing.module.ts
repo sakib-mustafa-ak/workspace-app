@@ -4,6 +4,7 @@ import { AuditModule } from '../audit/audit.module';
 
 import { BillingController } from './controllers/billing.controller';
 import { WorkspaceSubscriptionController } from './controllers/workspace-subscription.controller';
+import { AuditExportController } from './controllers/audit-export.controller';
 import { BillingRepository } from './data/billing.repository';
 import { StripeWebhookEventsRepository } from './data/stripe-webhook-events.repository';
 import { UsageRepository } from './data/usage.repository';
@@ -15,7 +16,11 @@ import { UsageService } from './services/usage.service';
 @Global()
 @Module({
   imports: [AuditModule],
-  controllers: [BillingController, WorkspaceSubscriptionController],
+  controllers: [
+    BillingController,
+    WorkspaceSubscriptionController,
+    AuditExportController,
+  ],
   providers: [
     BillingRepository,
     StripeWebhookEventsRepository,

@@ -88,4 +88,14 @@ export class AuditRepository {
       .orderBy(desc(auditEvents.createdAt))
       .limit(limit);
   }
+
+  public async listAllByWorkspace(
+    workspaceId: string,
+  ): Promise<AuditEventRow[]> {
+    return this.db
+      .select()
+      .from(auditEvents)
+      .where(eq(auditEvents.workspaceId, workspaceId))
+      .orderBy(desc(auditEvents.createdAt), desc(auditEvents.id));
+  }
 }

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import { type NewAuditEventRow } from '@repo/database';
+import { type NewAuditEventRow, type AuditEventRow } from '@repo/database';
 
 import { AuditRepository } from '../repositories/audit.repository';
 import { AUDIT_PAGE_SIZE } from '../audit.constants';
@@ -27,5 +27,9 @@ export class AuditService {
       action: query.action,
       resourceType: query.resourceType,
     });
+  }
+
+  public async exportWorkspace(workspaceId: string): Promise<AuditEventRow[]> {
+    return this.repo.listAllByWorkspace(workspaceId);
   }
 }

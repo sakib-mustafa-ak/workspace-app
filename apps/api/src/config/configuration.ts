@@ -61,6 +61,13 @@ export function configuration() {
             }
           : null,
     },
+
+    billing: {
+      stripeSecretKey: env.STRIPE_SECRET_KEY,
+      stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET,
+      priceProMonthly: env.STRIPE_PRICE_PRO_MONTHLY,
+      priceTeamMonthly: env.STRIPE_PRICE_TEAM_MONTHLY,
+    },
   };
 }
 

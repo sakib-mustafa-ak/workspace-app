@@ -67,6 +67,15 @@ export const envSchema = z.object({
   // absent, the in-memory RecordingMailProvider captures messages for dev/test.
   RESEND_API_KEY: z.string().optional(),
   MAIL_FROM: z.string().optional(),
+
+  // Stripe billing (Phase 3). All optional at boot — billing simply stays
+  // "not configured" — EXCEPT the pair rule enforced in the superRefine
+  // below: a secret key must ship with a webhook secret, or signature
+  // verification can never work.
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  STRIPE_PRICE_PRO_MONTHLY: z.string().optional(),
+  STRIPE_PRICE_TEAM_MONTHLY: z.string().optional(),
 });
 
 // Cross-field rule: the s3 driver is useless (and fails at first upload,
@@ -90,6 +99,15 @@ export const envSchemaWithRefinements = envSchema.superRefine((env, ctx) => {
         });
       }
     }
+  }
+
+  if (env.STRIPE_SECRET_KEY && !env.STRIPE_WEBHOOK_SECRET) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['STRIPE_WEBHOOK_SECRET'],
+      message:
+        'STRIPE_WEBHOOK_SECRET is required when STRIPE_SECRET_KEY is set.',
+    });
   }
 });
 

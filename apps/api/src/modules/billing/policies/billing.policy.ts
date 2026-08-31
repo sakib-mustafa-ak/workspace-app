@@ -1,6 +1,12 @@
 import { Injectable } from '@nestjs/common';
 
-import { PLAN_FEATURES, PLAN_LIMITS, PLAN_RANK, type BillingFeature, type BillingPlan } from '../billing.constants';
+import {
+  PLAN_FEATURES,
+  PLAN_LIMITS,
+  PLAN_RANK,
+  type BillingFeature,
+  type BillingPlan,
+} from '../billing.constants';
 
 /**
  * Pure decision logic for plan limits and feature gating. No I/O.
@@ -29,6 +35,9 @@ export class BillingPolicy {
   }
 
   public highestPlan(plans: BillingPlan[]): BillingPlan {
-    return plans.reduce<BillingPlan>((acc, p) => (PLAN_RANK[p] > PLAN_RANK[acc] ? p : acc), 'FREE');
+    return plans.reduce<BillingPlan>(
+      (acc, p) => (PLAN_RANK[p] > PLAN_RANK[acc] ? p : acc),
+      'FREE',
+    );
   }
 }

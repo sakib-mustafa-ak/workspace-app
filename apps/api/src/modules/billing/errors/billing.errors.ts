@@ -9,7 +9,8 @@ export const BillingErrorCode = {
   WEBHOOK_INVALID: 'BILLING.WEBHOOK_INVALID',
   FORBIDDEN: 'BILLING.FORBIDDEN',
 } as const;
-export type BillingErrorCodeValue = (typeof BillingErrorCode)[keyof typeof BillingErrorCode];
+export type BillingErrorCodeValue =
+  (typeof BillingErrorCode)[keyof typeof BillingErrorCode];
 
 export class BillingException extends BusinessException {
   constructor(
@@ -23,13 +24,23 @@ export class BillingException extends BusinessException {
 }
 
 export class LimitReachedException extends BillingException {
-  constructor(details: { feature: string; current: number; limit: number; plan: string }) {
+  constructor(details: {
+    feature: string;
+    current: number;
+    limit: number;
+    plan: string;
+  }) {
     super(BillingErrorCode.LIMIT_REACHED, 'Plan limit reached.', 422, details);
   }
 }
 
 export class FeatureRequiredException extends BillingException {
   constructor(details: { feature: string; plan: string }) {
-    super(BillingErrorCode.FEATURE_REQUIRED, 'This feature is not included in your plan.', 422, details);
+    super(
+      BillingErrorCode.FEATURE_REQUIRED,
+      'This feature is not included in your plan.',
+      422,
+      details,
+    );
   }
 }

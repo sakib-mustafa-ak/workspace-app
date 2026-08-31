@@ -8,9 +8,17 @@ export function isPricedPlan(value: string | undefined): value is PricedPlan {
   return value === 'PRO' || value === 'TEAM';
 }
 
-export const PLAN_RANK: Record<BillingPlan, number> = { FREE: 0, PRO: 1, TEAM: 2 };
+export const PLAN_RANK: Record<BillingPlan, number> = {
+  FREE: 0,
+  PRO: 1,
+  TEAM: 2,
+};
 
-export type PlanLimits = { boards: number | null; members: number | null; ownedWorkspaces: number | null };
+export type PlanLimits = {
+  boards: number | null;
+  members: number | null;
+  ownedWorkspaces: number | null;
+};
 
 export const PLAN_LIMITS: Record<BillingPlan, PlanLimits> = {
   FREE: { boards: 3, members: 3, ownedWorkspaces: 1 },
@@ -23,12 +31,17 @@ export const BILLING_FEATURES = {
   SSO: 'SSO',
   ADMIN_TOOLS: 'ADMIN_TOOLS',
 } as const;
-export type BillingFeature = (typeof BILLING_FEATURES)[keyof typeof BILLING_FEATURES];
+export type BillingFeature =
+  (typeof BILLING_FEATURES)[keyof typeof BILLING_FEATURES];
 
 export const PLAN_FEATURES: Record<BillingPlan, readonly BillingFeature[]> = {
   FREE: [],
   PRO: [],
-  TEAM: [BILLING_FEATURES.AUDIT_LOG_EXPORT, BILLING_FEATURES.SSO, BILLING_FEATURES.ADMIN_TOOLS],
+  TEAM: [
+    BILLING_FEATURES.AUDIT_LOG_EXPORT,
+    BILLING_FEATURES.SSO,
+    BILLING_FEATURES.ADMIN_TOOLS,
+  ],
 };
 
 export const PLACEHOLDER_PRICES: Record<PricedPlan, { monthly: number }> = {

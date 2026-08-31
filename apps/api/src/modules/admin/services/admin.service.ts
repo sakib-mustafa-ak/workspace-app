@@ -18,12 +18,6 @@ export class AdminService {
     @Inject(TokenService) private readonly tokens: TokenService,
   ) {}
 
-  static readonly STUB_SUBSCRIPTION = {
-    plan: 'free',
-    status: 'active',
-    note: 'stubbed — billed in Phase 3',
-  } as const;
-
   public async impersonate(actorId: string, targetId: string) {
     if (actorId === targetId) {
       throw new AuthException(

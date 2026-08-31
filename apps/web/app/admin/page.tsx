@@ -138,7 +138,7 @@ export default function AdminPage() {
   const handleLoadSubscription = useCallback(async (userId: string) => {
     if (subscriptions[userId]) return;
     try {
-      const sub = await adminApi.getSubscription(userId);
+      const sub = await adminApi.getWorkspaceSubscription(userId);
       setSubscriptions((prev) => ({ ...prev, [userId]: sub }));
     } catch {
       // handled

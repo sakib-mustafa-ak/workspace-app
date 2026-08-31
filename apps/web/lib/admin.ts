@@ -40,9 +40,9 @@ export const adminApi = {
     api.get<AdminWorkspace[]>(
       `/admin/workspaces?query=${encodeURIComponent(query)}`,
     ),
-  getSubscription: (userId: string) =>
+  getWorkspaceSubscription: (workspaceId: string) =>
     api.get<{ plan: string; status: string }>(
-      `/admin/users/${userId}/subscription`,
+      `/admin/workspaces/${workspaceId}/subscription`,
     ),
   impersonate: (userId: string) =>
     api.post<{ token: string; expiresInSeconds: number; user: AdminUser }>(

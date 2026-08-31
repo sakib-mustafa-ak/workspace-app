@@ -22,6 +22,7 @@ import type { CurrentUser as CurrentUserModel } from '../../auth/interfaces/curr
 
 import { AdminService } from '../services/admin.service';
 import { AdminRepository } from '../data/admin.repository';
+import { BillingRepository } from '../../billing/data/billing.repository';
 
 @ApiTags('Admin')
 @ApiBearerAuth()
@@ -31,6 +32,7 @@ export class AdminController {
   constructor(
     @Inject(AdminService) private readonly admin: AdminService,
     @Inject(AdminRepository) private readonly adminRepo: AdminRepository,
+    @Inject(BillingRepository) private readonly billingRepo: BillingRepository,
   ) {}
 
   @Get('users')
@@ -59,10 +61,11 @@ export class AdminController {
     return this.adminRepo.findWorkspaceById(id);
   }
 
-  @Get('users/:id/subscription')
-  @ApiOperation({ summary: 'Get a user subscription (stubbed until Phase 3)' })
-  public getSubscription() {
-    return AdminService.STUB_SUBSCRIPTION;
+  @Get('workspaces/:id/subscription')
+  @ApiOperation({ summary: 'Get a workspace subscription plan and status' })
+  public async getWorkspaceSubscription(@Param('id') id: string) {
+    const sub = await this.billingRepo.findByWorkspace(id);
+    return { plan: sub?.plan ?? 'FREE', status: sub?.status ?? 'ACTIVE' };
   }
 
   @Get('audit')

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { AdminGuard } from '../../auth/guards/admin.guard';
+import { BillingRepository } from '../../billing/data/billing.repository';
 import { AdminRepository } from '../data/admin.repository';
 import { AdminService } from '../services/admin.service';
 import { AdminController } from './admin.controller';
@@ -14,6 +15,7 @@ describe('AdminController', () => {
     findWorkspaceById: jest.Mock;
   };
   let admin: { impersonate: jest.Mock; listAudit: jest.Mock };
+  const billingRepo = { findByWorkspace: jest.fn() };
 
   beforeEach(async () => {
     adminRepo = {
@@ -23,12 +25,14 @@ describe('AdminController', () => {
       findWorkspaceById: jest.fn(),
     };
     admin = { impersonate: jest.fn(), listAudit: jest.fn() };
+    billingRepo.findByWorkspace.mockReset();
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AdminController],
       providers: [
         { provide: AdminService, useValue: admin },
         { provide: AdminRepository, useValue: adminRepo },
+        { provide: BillingRepository, useValue: billingRepo },
         { provide: AdminGuard, useValue: { canActivate: () => true } },
       ],
     }).compile();
@@ -64,10 +68,20 @@ describe('AdminController', () => {
     expect(res).toEqual({ id: 'ws-1' });
   });
 
-  it('GET /users/:id/subscription returns the stub', () => {
-    expect(controller.getSubscription()).toEqual(
-      AdminService.STUB_SUBSCRIPTION,
-    );
+  it('GET /workspaces/:id/subscription returns the stored plan', async () => {
+    billingRepo.findByWorkspace.mockResolvedValue({
+      plan: 'PRO',
+      status: 'ACTIVE',
+    });
+    const res = await controller.getWorkspaceSubscription('ws-1');
+    expect(billingRepo.findByWorkspace).toHaveBeenCalledWith('ws-1');
+    expect(res).toEqual({ plan: 'PRO', status: 'ACTIVE' });
+  });
+
+  it('GET /workspaces/:id/subscription defaults to FREE when no row exists', async () => {
+    billingRepo.findByWorkspace.mockResolvedValue(undefined);
+    const res = await controller.getWorkspaceSubscription('legacy-1');
+    expect(res).toEqual({ plan: 'FREE', status: 'ACTIVE' });
   });
 
   it('POST /users/:id/impersonate calls service.impersonate', async () => {

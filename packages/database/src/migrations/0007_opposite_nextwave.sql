@@ -31,7 +31,7 @@ ALTER TABLE "stripe_webhook_events" ADD CONSTRAINT "stripe_webhook_events_worksp
 CREATE UNIQUE INDEX "workspace_subscriptions_workspace_unique" ON "workspace_subscriptions" USING btree ("workspace_id");--> statement-breakpoint
 CREATE INDEX "workspace_subscriptions_stripe_sub_idx" ON "workspace_subscriptions" USING btree ("stripe_subscription_id");--> statement-breakpoint
 CREATE INDEX "stripe_webhook_events_workspace_idx" ON "stripe_webhook_events" USING btree ("workspace_id");--> statement-breakpoint
-INSERT INTO workspace_subscriptions (workspace_id, plan, status)
-SELECT id, 'FREE', 'ACTIVE'
+INSERT INTO workspace_subscriptions (id, workspace_id, plan, status)
+SELECT gen_random_uuid(), id, 'FREE', 'ACTIVE'
 FROM workspaces
 WHERE deleted_at IS NULL;

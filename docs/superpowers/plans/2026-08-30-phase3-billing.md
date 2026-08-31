@@ -224,11 +224,13 @@ Expected: a new `.sql` file under `packages/database/src/migrations/` creating t
 Pre-existing workspaces have no subscription row. Open the generated migration `.sql` and append BEFORE the final `--> statement-breakpoint` (so it runs in the same migration after all tables exist):
 
 ```sql
-INSERT INTO workspace_subscriptions (workspace_id, plan, status)
-SELECT id, 'FREE', 'ACTIVE'
+INSERT INTO workspace_subscriptions (id, workspace_id, plan, status)
+SELECT gen_random_uuid(), id, 'FREE', 'ACTIVE'
 FROM workspaces
 WHERE deleted_at IS NULL;
 ```
+
+IMPORTANT (post-review fix): the `id` column MUST be supplied here. `PRIMARY_ID()` gives the id via a drizzle client-side `$defaultFn(() => uuidv7())`, which produces NO SQL-level default — the migration emits `"id" uuid PRIMARY KEY NOT NULL` with no `DEFAULT`. So a raw-SQL backfill that omits `id` fails with `null value in column "id"` on any non-empty DB (this only masked on an empty DB where 0 rows are inserted). `gen_random_uuid()` is built-in on PG13+ (PG17 here), so it needs no pgcrypto dependency. Backfilled ids are UUIDv4 while app inserts are UUIDv7 — both are valid unique uuids against the `uuid` column type, so this is acceptable.
 
 NOTE: drizzle-kit migrations are forward-only — this repo's `.sql` files (see `0006_bent_prowler.sql`) contain no DOWN section, so do NOT add one. The new pgEnums (`subscription_plan`, `subscription_status`, `stripe_webhook_event_status`) are managed by drizzle-kit's journal; there is no manual downgrade here.
 

@@ -53,14 +53,19 @@ export const envSchema = z.object({
 
   // Upload storage. `local` writes to the API container's disk (dev only —
   // ephemeral on most hosts). `s3` targets any S3-compatible bucket
-  // (AWS S3 or Cloudflare R2 via S3_ENDPOINT).
-  STORAGE_DRIVER: z.enum(['local', 's3']).default('local'),
+  // (AWS S3 or Cloudflare R2 via S3_ENDPOINT). `vercel-blob` targets a
+  // Vercel Blob store using private blobs + signed URLs.
+  STORAGE_DRIVER: z.enum(['local', 's3', 'vercel-blob']).default('local'),
 
   S3_ENDPOINT: z.string().url().optional(),
   S3_REGION: z.string().optional(),
   S3_BUCKET: z.string().optional(),
   S3_ACCESS_KEY_ID: z.string().optional(),
   S3_SECRET_ACCESS_KEY: z.string().optional(),
+
+  // Vercel Blob read-write token. Required when STORAGE_DRIVER=vercel-blob,
+  // enforced in the superRefine below (fail fast at boot, not first upload).
+  BLOB_READ_WRITE_TOKEN: z.string().optional(),
 
   // Mail delivery. When RESEND_API_KEY is set, the Resend provider is used
   // for transactional email (verification, password reset, invites). When
@@ -99,6 +104,15 @@ export const envSchemaWithRefinements = envSchema.superRefine((env, ctx) => {
         });
       }
     }
+  }
+
+  if (env.STORAGE_DRIVER === 'vercel-blob' && !env.BLOB_READ_WRITE_TOKEN) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['BLOB_READ_WRITE_TOKEN'],
+      message:
+        'BLOB_READ_WRITE_TOKEN is required when STORAGE_DRIVER=vercel-blob.',
+    });
   }
 
   if (env.STRIPE_SECRET_KEY && !env.STRIPE_WEBHOOK_SECRET) {

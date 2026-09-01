@@ -60,6 +60,10 @@ export function configuration() {
               secretAccessKey: env.S3_SECRET_ACCESS_KEY as string,
             }
           : null,
+      blob:
+        env.STORAGE_DRIVER === 'vercel-blob'
+          ? { token: env.BLOB_READ_WRITE_TOKEN as string }
+          : null,
     },
 
     billing: {

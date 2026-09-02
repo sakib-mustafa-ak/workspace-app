@@ -77,3 +77,14 @@ export const PLAN_SHORT_DESCRIPTION: Record<PlanId, string> = {
   PRO: 'For growing teams that need more room',
   TEAM: 'For organizations that need control and oversight',
 };
+
+/**
+ * Human-readable short labels for each gated feature, used by the public
+ * pricing page (and anywhere else that needs to describe a feature in plain
+ * terms) so marketing copy cannot drift from the enforced feature set.
+ */
+export const PLAN_FEATURE_SHORT_LABEL: Record<PlanFeature, string> = {
+  [PLAN_FEATURES.AUDIT_LOG_EXPORT]: 'Audit log export',
+  [PLAN_FEATURES.SSO]: 'Single sign-on',
+  [PLAN_FEATURES.ADMIN_TOOLS]: 'Admin tools',
+};

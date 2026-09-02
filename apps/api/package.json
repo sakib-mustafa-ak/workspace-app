@@ -34,6 +34,7 @@
     "@nestjs/websockets": "^11.1.28",
     "@repo/database": "workspace:^",
     "@repo/plans": "workspace:^",
+    "@sentry/nestjs": "^10.73.0",
     "@vercel/blob": "^2.8.0",
     "argon2": "^0.43.0",
     "class-transformer": "^0.5.1",

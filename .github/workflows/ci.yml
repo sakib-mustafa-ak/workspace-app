@@ -63,3 +63,22 @@ jobs:
 
       - name: Web build
         run: pnpm --filter web build
+
+      - name: API smoke test (boot + liveness check)
+        run: |
+          pnpm --filter api build
+          node apps/api/dist/main.js &
+          API_PID=$!
+          trap "kill $API_PID 2>/dev/null || true" EXIT
+          for i in $(seq 1 20); do
+            if curl -fsS http://localhost:4000/api/v1/health >/tmp/health.json 2>/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          if ! grep -q '"status":"ok"' /tmp/health.json; then
+            echo "Health check did not return ok:"
+            cat /tmp/health.json 2>/dev/null || echo "(no response)"
+            exit 1
+          fi
+          node -e "const h=require('/tmp/health.json'); console.log('health ok, database:', h.checks.database.status, '| integrations:', h.checks.integrations.map(i=>i.name+':'+i.provider).join(', '))"

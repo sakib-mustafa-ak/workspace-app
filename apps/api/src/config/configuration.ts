@@ -72,6 +72,10 @@ export function configuration() {
       priceProMonthly: env.STRIPE_PRICE_PRO_MONTHLY,
       priceTeamMonthly: env.STRIPE_PRICE_TEAM_MONTHLY,
     },
+
+    sentry: {
+      dsn: env.SENTRY_DSN,
+    },
   };
 }
 

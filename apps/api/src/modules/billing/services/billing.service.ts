@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { SentryExceptionCaptured } from '@sentry/nestjs';
 import Stripe from 'stripe';
 
 import type { SubscriptionPlan } from '@repo/database';
@@ -24,6 +25,7 @@ export class BillingService {
     @Inject(ConfigService) private readonly config: ConfigService,
   ) {}
 
+  @SentryExceptionCaptured()
   public async checkout(
     workspaceId: string,
     userId: string,
@@ -82,6 +84,7 @@ export class BillingService {
     return { url: session.url };
   }
 
+  @SentryExceptionCaptured()
   public async handleWebhook(
     rawBody: Buffer,
     signature: string,

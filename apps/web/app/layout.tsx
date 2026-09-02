@@ -17,8 +17,15 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: 'Workspace OS',
+  title: {
+    default: 'Workspace OS',
+    template: '%s · Workspace OS',
+  },
   description: 'Collaborative workspace platform',
+  openGraph: {
+    siteName: 'Workspace OS',
+    type: 'website',
+  },
 };
 
 const themeScript = `

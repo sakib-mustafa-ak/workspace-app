@@ -73,6 +73,10 @@ export const envSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   MAIL_FROM: z.string().optional(),
 
+  // Error tracking. When SENTRY_DSN is set, runtimes capture exceptions to
+  // Sentry; when absent, error tracking is disabled and the app runs normally.
+  SENTRY_DSN: z.string().url().optional(),
+
   // Stripe billing (Phase 3). All optional at boot — billing simply stays
   // "not configured" — EXCEPT the pair rule enforced in the superRefine
   // below: a secret key must ship with a webhook secret, or signature

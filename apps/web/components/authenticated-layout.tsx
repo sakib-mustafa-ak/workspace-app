@@ -64,6 +64,20 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
           </div>
 
           <ErrorBoundary>{children}</ErrorBoundary>
+
+          <footer className="border-t border-surface-800/70 px-6 py-5 lg:px-8">
+            <div className="flex flex-col gap-2 text-xs text-surface-500 sm:flex-row sm:items-center sm:justify-between">
+              <span>© {new Date().getFullYear()} Workspace OS</span>
+              <div className="flex gap-4">
+                <Link href="/legal/terms" className="transition-colors hover:text-surface-300">
+                  Terms
+                </Link>
+                <Link href="/legal/privacy" className="transition-colors hover:text-surface-300">
+                  Privacy
+                </Link>
+              </div>
+            </div>
+          </footer>
         </main>
 
         <nav className="fixed bottom-0 left-0 right-0 z-40 flex max-lg:flex lg:hidden border-t border-surface-800 bg-surface-950/95 backdrop-blur-md">

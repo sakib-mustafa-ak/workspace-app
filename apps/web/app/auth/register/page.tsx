@@ -30,13 +30,14 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string; terms?: string }>({});
   const [submitting, setSubmitting] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const strength = getPasswordStrength(password);
 
   function validate(): boolean {
-    const errors: { email?: string; password?: string } = {};
+    const errors: { email?: string; password?: string; terms?: string } = {};
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       errors.email = 'Invalid email address';
     }
@@ -50,6 +51,9 @@ export default function RegisterPage() {
     ) {
       errors.password =
         'Password must include uppercase, lowercase, a number, and a symbol';
+    }
+    if (!acceptedTerms) {
+      errors.terms = 'You must accept the Terms of Service and Privacy Policy';
     }
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
@@ -146,7 +150,35 @@ export default function RegisterPage() {
                   placeholder="••••••••"
                   minLength={8}
                 />
-                <button
+            <div>
+              <label className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={acceptedTerms}
+                  onChange={(e) => {
+                    setAcceptedTerms(e.target.checked);
+                    if (fieldErrors.terms) setFieldErrors((prev) => ({ ...prev, terms: '' }));
+                  }}
+                  className="mt-0.5 h-4 w-4 rounded border-surface-700 bg-surface-950 text-primary-600 focus:ring-primary-500/50"
+                />
+                <span className="text-sm text-surface-400">
+                  I agree to the{' '}
+                  <Link href="/legal/terms" className="font-medium text-primary-400 hover:text-primary-300">
+                    Terms of Service
+                  </Link>{' '}
+                  and{' '}
+                  <Link href="/legal/privacy" className="font-medium text-primary-400 hover:text-primary-300">
+                    Privacy Policy
+                  </Link>
+                  .
+                </span>
+              </label>
+              {fieldErrors.terms && (
+                <p className="mt-1 text-xs text-red-400">{fieldErrors.terms}</p>
+              )}
+            </div>
+
+            <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-500 hover:text-surface-300"

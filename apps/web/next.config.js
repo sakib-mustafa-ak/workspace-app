@@ -1,3 +1,5 @@
+import { withSentryConfig } from '@sentry/nextjs/config';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   async rewrites() {
@@ -14,4 +16,8 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+// Source maps upload and build-time Sentry features are opt-in via
+// SENTRY_ORG/SENTRY_PROJECT/SENTRY_AUTH_TOKEN; without them the build runs
+// normally and no upload occurs. Runtime error capture/tracing still work when
+// a DSN is configured.
+export default withSentryConfig(nextConfig);

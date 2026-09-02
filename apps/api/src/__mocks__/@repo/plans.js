@@ -21,6 +21,11 @@ const PLAN_FEATURE_BY_ID = {
 const PLAN_LABELS = { FREE: 'Free', PRO: 'Pro', TEAM: 'Team' };
 const PRICED_PLAN_IDS = ['PRO', 'TEAM'];
 const PRICED_PLAN_MONTHLY_PRICE_CENTS = { PRO: 0, TEAM: 0 };
+const PLAN_FEATURE_SHORT_LABEL = {
+  AUDIT_LOG_EXPORT: 'Audit log export',
+  SSO: 'Single sign-on',
+  ADMIN_TOOLS: 'Admin tools',
+};
 
 function isPricedPlanId(value) {
   return value === 'PRO' || value === 'TEAM';
@@ -31,6 +36,7 @@ module.exports = {
   PLAN_LIMITS,
   PLAN_FEATURES,
   PLAN_FEATURE_BY_ID,
+  PLAN_FEATURE_SHORT_LABEL,
   PLAN_LABELS,
   PRICED_PLAN_IDS,
   PRICED_PLAN_MONTHLY_PRICE_CENTS,

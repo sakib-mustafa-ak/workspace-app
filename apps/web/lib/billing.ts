@@ -1,6 +1,19 @@
 import { api } from './api';
 
-export type BillingPlan = 'FREE' | 'PRO' | 'TEAM';
+import {
+  PLAN_LABELS,
+  PLAN_LIMITS,
+  PRICED_PLAN_MONTHLY_PRICE_CENTS,
+  type PlanId,
+  type PricedPlanId,
+} from '@repo/plans';
+
+// Re-exported so existing call sites keep their naming. The values come from
+// the shared `@repo/plans` package — the same source of truth the API uses
+// for enforcement — so the UI can never drift from the enforcement limits.
+export type BillingPlan = PlanId;
+export type PricedPlan = PricedPlanId;
+export { PLAN_LABELS, PLAN_LIMITS };
 
 export type SubscriptionInfo = {
   workspaceId: string;
@@ -9,23 +22,26 @@ export type SubscriptionInfo = {
   currentPeriodEnd: string | null;
 };
 
-export const PLAN_LABELS: Record<BillingPlan, string> = {
-  FREE: 'Free',
-  PRO: 'Pro',
-  TEAM: 'Team',
+/**
+ * Display formatter for prices. NOTE: prices are not confirmed yet — the
+ * source of truth ships `0` (see PRICED_PLAN_MONTHLY_PRICE_CENTS), so we
+ * surface a clear "Coming soon" placeholder rather than inventing a final
+ * number.
+ */
+export const PLACEHOLDER_PRICES: Record<PricedPlan, { monthly: string }> = {
+  PRO: { monthly: formatPrice(PRICED_PLAN_MONTHLY_PRICE_CENTS.PRO) },
+  TEAM: { monthly: formatPrice(PRICED_PLAN_MONTHLY_PRICE_CENTS.TEAM) },
 };
 
-export const PLACEHOLDER_PRICES: Record<'PRO' | 'TEAM', { monthly: string }> = {
-  // TODO: confirm pricing before launch (keep in sync with the API)
-  PRO: { monthly: '$0' },
-  TEAM: { monthly: '$0' },
-};
+function formatPrice(cents: number): string {
+  return cents === 0 ? 'Coming soon' : `$${cents / 100}/mo`;
+}
 
 export const billingApi = {
   getSubscription: (workspaceId: string) =>
     api.get<SubscriptionInfo>(`/workspaces/${workspaceId}/subscription`),
 
-  checkout: (workspaceId: string, plan: 'PRO' | 'TEAM') =>
+  checkout: (workspaceId: string, plan: PricedPlan) =>
     api.post<{ url: string }>('/billing/checkout', { workspaceId, plan }),
 
   portal: (workspaceId: string) =>

@@ -1,57 +1,45 @@
-import type { SubscriptionPlan } from '@repo/database';
+import {
+  PLAN_FEATURES as PLANS_FEATURES_KEYS,
+  PLAN_FEATURE_BY_ID,
+  PLAN_LABELS as PLANS_LABELS,
+  PLAN_LIMITS as PLANS_LIMITS,
+  PLAN_RANK as PLANS_RANK,
+  PRICED_PLAN_IDS,
+  isPricedPlanId,
+  type PlanFeature,
+  type PlanId,
+  type PricedPlanId,
+} from '@repo/plans';
 
-export type BillingPlan = SubscriptionPlan;
+/**
+ * Plan identity and limitation data comes from the shared `@repo/plans`
+ * package — the single source of truth that also drives the public pricing
+ * page and web billing UI. This file re-exports that data under the names
+ * this module's consumers already use, so enforcement and display can never
+ * drift apart.
+ */
+export type BillingPlan = PlanId;
 
-export const PRICED_PLANS = ['PRO', 'TEAM'] as const;
-export type PricedPlan = (typeof PRICED_PLANS)[number];
+export const PRICED_PLANS = PRICED_PLAN_IDS;
+export type PricedPlan = PricedPlanId;
 export function isPricedPlan(value: string | undefined): value is PricedPlan {
-  return value === 'PRO' || value === 'TEAM';
+  return isPricedPlanId(value);
 }
 
-export const PLAN_RANK: Record<BillingPlan, number> = {
-  FREE: 0,
-  PRO: 1,
-  TEAM: 2,
-};
+export const PLAN_RANK = PLANS_RANK;
 
-export type PlanLimits = {
-  boards: number | null;
-  members: number | null;
-  ownedWorkspaces: number | null;
-};
+export const PLAN_LIMITS = PLANS_LIMITS;
 
-export const PLAN_LIMITS: Record<BillingPlan, PlanLimits> = {
-  FREE: { boards: 3, members: 3, ownedWorkspaces: 1 },
-  PRO: { boards: null, members: null, ownedWorkspaces: null },
-  TEAM: { boards: null, members: null, ownedWorkspaces: null },
-};
+export const BILLING_FEATURES = PLANS_FEATURES_KEYS;
+export type BillingFeature = PlanFeature;
 
-export const BILLING_FEATURES = {
-  AUDIT_LOG_EXPORT: 'AUDIT_LOG_EXPORT',
-  SSO: 'SSO',
-  ADMIN_TOOLS: 'ADMIN_TOOLS',
-} as const;
-export type BillingFeature =
-  (typeof BILLING_FEATURES)[keyof typeof BILLING_FEATURES];
+export const PLAN_FEATURES = PLAN_FEATURE_BY_ID;
 
-export const PLAN_FEATURES: Record<BillingPlan, readonly BillingFeature[]> = {
-  FREE: [],
-  PRO: [],
-  TEAM: [
-    BILLING_FEATURES.AUDIT_LOG_EXPORT,
-    BILLING_FEATURES.SSO,
-    BILLING_FEATURES.ADMIN_TOOLS,
-  ],
-};
+// Display-only metadata. Prices are explicit placeholders until confirmed
+// (see PRICED_PLAN_MONTHLY_PRICE_CENTS in @repo/plans); surfaced on the
+// public pricing page, never enforced.
+export const PLACEHOLDER_PRICES = Object.fromEntries(
+  PRICED_PLAN_IDS.map((plan) => [plan, { monthly: 0 }]),
+) as Record<PricedPlan, { monthly: number }>;
 
-export const PLACEHOLDER_PRICES: Record<PricedPlan, { monthly: number }> = {
-  // TODO: confirm pricing before launch
-  PRO: { monthly: 0 },
-  TEAM: { monthly: 0 },
-};
-
-export const PLAN_LABELS: Record<BillingPlan, string> = {
-  FREE: 'Free',
-  PRO: 'Pro',
-  TEAM: 'Team',
-};
+export const PLAN_LABELS = PLANS_LABELS;

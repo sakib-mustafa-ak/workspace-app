@@ -5,6 +5,7 @@ import { CreditCard, ExternalLink } from 'lucide-react';
 import {
   billingApi,
   PLAN_LABELS,
+  PLAN_LIMITS,
   PLACEHOLDER_PRICES,
   type SubscriptionInfo,
 } from '@/lib/billing';
@@ -71,11 +72,11 @@ export function BillingSection({ workspaceId, subscription, canManage, boardCoun
       <dl className="space-y-1 text-xs">
         <div className="flex justify-between">
           <dt className="text-surface-400">Boards</dt>
-          <dd className="text-surface-200">{usageLabel(boardCount, plan === 'FREE' ? 3 : null)}</dd>
+          <dd className="text-surface-200">{usageLabel(boardCount, PLAN_LIMITS[plan].boards)}</dd>
         </div>
         <div className="flex justify-between">
           <dt className="text-surface-400">Members</dt>
-          <dd className="text-surface-200">{usageLabel(memberCount, plan === 'FREE' ? 3 : null)}</dd>
+          <dd className="text-surface-200">{usageLabel(memberCount, PLAN_LIMITS[plan].members)}</dd>
         </div>
         {paid && periodEnd && (
           <div className="flex justify-between">

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Sparkles, X, Loader2 } from 'lucide-react';
 import { aiApi } from '@/lib/ai';
+import { useFocusTrap } from '@/hooks/use-focus-trap';
 
 type Props = {
   boardId: string;
@@ -12,6 +13,7 @@ type Props = {
 export function AiSummarizePanel({ boardId, onClose }: Props) {
   const [summary, setSummary] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const trapRef = useFocusTrap(true, onClose);
 
   useEffect(() => {
     aiApi.summarizeBoard(boardId)
@@ -21,13 +23,13 @@ export function AiSummarizePanel({ boardId, onClose }: Props) {
   }, [boardId]);
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 w-96 border-l border-surface-800 bg-surface-900 shadow-xl shadow-black/20 animate-slideIn">
+    <div ref={trapRef} role="dialog" aria-modal="true" aria-labelledby="ai-summary-title" className="fixed inset-y-0 right-0 z-50 w-96 border-l border-surface-800 bg-surface-900 shadow-xl shadow-black/20 animate-slideIn">
       <div className="flex items-center justify-between border-b border-surface-800 px-6 py-4">
         <div className="flex items-center gap-2">
           <Sparkles size={16} className="text-primary-400" />
-          <h2 className="text-sm font-semibold">AI Summary</h2>
+          <h2 id="ai-summary-title" className="text-sm font-semibold">AI Summary</h2>
         </div>
-        <button onClick={onClose} className="text-surface-500 hover:text-surface-300">
+        <button onClick={onClose} className="text-surface-500 hover:text-surface-300" aria-label="Close AI summary">
           <X size={16} />
         </button>
       </div>

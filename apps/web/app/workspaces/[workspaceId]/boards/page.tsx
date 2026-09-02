@@ -109,7 +109,7 @@ export default function BoardsPage() {
           placeholder="Search boards..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="flex-1 bg-transparent text-sm outline-none placeholder:text-surface-500"
+          className="flex-1 rounded bg-transparent text-sm outline-none placeholder:text-surface-500 focus:ring-1 focus:ring-primary-500/50"
         />
       </div>
 

@@ -24,6 +24,28 @@ function usageLabel(current: number, limit: number | null): string {
   return limit === null ? `${current} / unlimited` : `${current} / ${limit}`;
 }
 
+function UsageBar({ label, current, limit }: { label: string; current: number; limit: number | null }) {
+  if (limit === null) {
+    return (
+      <progress
+        className="h-1.5 w-full appearance-none rounded-full"
+        max={1}
+        value={1}
+        aria-label={`${label}: unlimited`}
+      />
+    );
+  }
+  const over = current > limit;
+  return (
+    <progress
+      className={`h-1.5 w-full appearance-none rounded-full ${over ? '[&::-webkit-progress-bar]:bg-red-500/20 [&::-webkit-progress-value]:bg-red-500' : 'text-primary-400 [&::-webkit-progress-bar]:bg-surface-800 [&::-webkit-progress-value]:bg-primary-400'}`}
+      max={limit}
+      value={current}
+      aria-label={`${label}: ${current} of ${limit}${over ? ', limit exceeded' : ''}`}
+    />
+  );
+}
+
 export function BillingSection({ workspaceId, subscription, canManage, boardCount, memberCount }: Props) {
   const [busy, setBusy] = useState<'checkout' | 'portal' | null>(null);
   const toast = useToast();
@@ -69,14 +91,24 @@ export function BillingSection({ workspaceId, subscription, canManage, boardCoun
         </span>
       </div>
 
-      <dl className="space-y-1 text-xs">
-        <div className="flex justify-between">
-          <dt className="text-surface-400">Boards</dt>
-          <dd className="text-surface-200">{usageLabel(boardCount, PLAN_LIMITS[plan].boards)}</dd>
+      <dl className="space-y-3 text-xs">
+        <div>
+          <div className="flex justify-between">
+            <dt className="text-surface-400">Boards</dt>
+            <dd className="text-surface-200">{usageLabel(boardCount, PLAN_LIMITS[plan].boards)}</dd>
+          </div>
+          <div className="mt-1">
+            <UsageBar label="Boards" current={boardCount} limit={PLAN_LIMITS[plan].boards} />
+          </div>
         </div>
-        <div className="flex justify-between">
-          <dt className="text-surface-400">Members</dt>
-          <dd className="text-surface-200">{usageLabel(memberCount, PLAN_LIMITS[plan].members)}</dd>
+        <div>
+          <div className="flex justify-between">
+            <dt className="text-surface-400">Members</dt>
+            <dd className="text-surface-200">{usageLabel(memberCount, PLAN_LIMITS[plan].members)}</dd>
+          </div>
+          <div className="mt-1">
+            <UsageBar label="Members" current={memberCount} limit={PLAN_LIMITS[plan].members} />
+          </div>
         </div>
         {paid && periodEnd && (
           <div className="flex justify-between">

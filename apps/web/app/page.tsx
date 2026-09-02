@@ -233,7 +233,7 @@ function LayerStack() {
     <div className="relative mx-auto max-w-md">
       <div className="absolute -inset-6 rounded-full bg-primary-500/10 blur-3xl" />
       <div className="relative rotate-[-4deg] space-y-4">
-        <div className="rounded-xl border border-surface-700 bg-surface-900/80 p-5 shadow-2xl shadow-black/30 backdrop-blur">
+        <div className="rounded-xl border border-surface-700 bg-surface-900/80 p-4 backdrop-blur">
           <div className="mb-3 flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-primary-400" />
             <span className="text-xs font-semibold text-surface-200">Research</span>
@@ -245,7 +245,7 @@ function LayerStack() {
             <div className="h-2 w-2/3 rounded bg-primary-600/40" />
           </div>
         </div>
-        <div className="ml-8 rounded-xl border border-surface-700 bg-surface-900/80 p-5 shadow-2xl shadow-black/30 backdrop-blur">
+        <div className="ml-8 rounded-xl border border-surface-700 bg-surface-900/80 p-4 backdrop-blur">
           <div className="mb-3 flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-warm-400" />
             <span className="text-xs font-semibold text-surface-200">Launch plan</span>
@@ -262,7 +262,7 @@ function LayerStack() {
           </div>
         </div>
       </div>
-      <div className="relative -mt-2 ml-16 w-2/3 rounded-xl border border-surface-700 bg-surface-900/80 p-4 shadow-2xl shadow-black/30 backdrop-blur">
+      <div className="relative -mt-2 ml-16 w-2/3 rounded-xl border border-surface-700 bg-surface-900/80 p-4 backdrop-blur">
         <div className="mb-2 flex items-center gap-1.5">
           <span className="h-1.5 w-1.5 rounded-full bg-primary-400" />
           <span className="h-1.5 w-1.5 rounded-full bg-surface-600" />

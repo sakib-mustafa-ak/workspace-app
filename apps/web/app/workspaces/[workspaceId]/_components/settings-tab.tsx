@@ -184,7 +184,7 @@ export function SettingsTab({
                       setConfirmTransfer(true);
                     }
                   }}
-                  className="w-full rounded border border-surface-700 bg-surface-800 px-3 py-2 text-xs outline-none"
+                  className="w-full rounded border border-surface-700 bg-surface-800 px-3 py-2 text-xs outline-none focus:border-primary-500/50"
                 >
                   <option value="">Select new owner...</option>
                   {members.filter((m) => m.userId !== currentUserId).map((m) => (

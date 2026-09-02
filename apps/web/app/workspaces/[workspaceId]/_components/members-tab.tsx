@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { UserMinus } from 'lucide-react';
+import { Eye, Pencil, UserMinus } from 'lucide-react';
 import type { WorkspaceMember } from '@/lib/workspaces';
 import { ConfirmModal } from '@/components/confirm-modal';
 
@@ -15,15 +15,25 @@ type Props = {
 
 const ROLE_STYLES: Record<string, string> = {
   ADMIN: 'bg-red-500/10 text-red-400 border-red-500/20',
-  EDITOR: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  COMMENTER: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  EDITOR: 'bg-primary-400/10 text-primary-300 border-primary-400/20',
+  COMMENTER: 'bg-primary-400/10 text-primary-300 border-primary-400/20',
   VIEWER: 'bg-surface-500/10 text-surface-400 border-surface-500/20',
   OWNER: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
 };
 
+const ROLE_ICONS: Record<string, typeof Pencil | null> = {
+  ADMIN: null,
+  EDITOR: Pencil,
+  COMMENTER: Eye,
+  VIEWER: null,
+  OWNER: null,
+};
+
 function RoleBadge({ role }: { role: string }) {
+  const Icon = ROLE_ICONS[role] ?? null;
   return (
-    <span className={`rounded border px-1.5 py-0.5 text-caption font-medium ${ROLE_STYLES[role] || ROLE_STYLES.VIEWER}`}>
+    <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-caption font-medium ${ROLE_STYLES[role] || ROLE_STYLES.VIEWER}`}>
+      {Icon && <Icon size={10} aria-hidden />}
       {role}
     </span>
   );
@@ -87,7 +97,7 @@ export function MembersTab({
             onChange={async (e) => {
               if (e.target.value) await handleBatchRoleChange(e.target.value);
             }}
-            className="rounded border border-surface-700 bg-surface-800 px-2 py-1 text-xs outline-none"
+            className="rounded border border-surface-700 bg-surface-800 px-2 py-1 text-xs outline-none focus:border-primary-500/50"
           >
             <option value="">Change role...</option>
             <option value="ADMIN">Admin</option>
@@ -144,7 +154,7 @@ export function MembersTab({
                   <select
                     value={m.role}
                     onChange={(e) => onChangeRole(m.id, m.userId, e.target.value)}
-                    className="rounded border border-surface-700 bg-surface-800 px-2 py-1 text-xs outline-none"
+                    className="rounded border border-surface-700 bg-surface-800 px-2 py-1 text-xs outline-none focus:border-primary-500/50"
                   >
                     <option value="EDITOR">Editor</option>
                     <option value="ADMIN">Admin</option>

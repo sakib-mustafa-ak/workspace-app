@@ -263,7 +263,7 @@ function DashboardContent() {
       {/* Desktop background */}
       <div className="relative inset-0">
         <Image
-          src="/bg-desktop.jpeg"
+          src="/bg-desktop.webp"
           alt=""
           fill
           className="object-cover"
@@ -275,7 +275,7 @@ function DashboardContent() {
       {/* Mobile background */}
       <div className="relative inset-0 sm:hidden">
         <Image
-          src="/bg-mobile.jpeg"
+          src="/bg-mobile.webp"
           alt=""
           fill
           className="object-cover"

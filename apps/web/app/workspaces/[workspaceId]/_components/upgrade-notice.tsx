@@ -16,7 +16,7 @@ export function UpgradeNotice({ plan, boardCount, memberCount, onUpgrade }: Prop
   const over = boardCount > 3 || memberCount > 3;
 
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-amber-900/40 bg-amber-950/40 px-8 py-2.5">
+    <div role="alert" className="flex items-center justify-between gap-3 border-b border-amber-900/40 bg-amber-950/40 px-8 py-2.5">
       <p className="flex items-center gap-2 text-xs text-amber-300">
         <Sparkles size={14} />
         {over

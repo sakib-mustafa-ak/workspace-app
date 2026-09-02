@@ -150,7 +150,7 @@ export function PreferencesTab() {
                       value={tzSearch}
                       onChange={(e) => setTzSearch(e.target.value)}
                       placeholder="Search timezones…"
-                      className="w-full bg-transparent text-sm outline-none placeholder:text-surface-500"
+                      className="w-full rounded bg-transparent text-sm outline-none placeholder:text-surface-500 focus:ring-1 focus:ring-primary-500/50"
                     />
                   </div>
                   <div className="max-h-60 overflow-y-auto p-1">

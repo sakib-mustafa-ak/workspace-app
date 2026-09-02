@@ -470,13 +470,14 @@ function AuditTab() {
       {!loading && entries.length > 0 && (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
+            <caption className="sr-only">Admin audit log</caption>
             <thead>
               <tr className="border-b border-surface-800 text-[10px] font-semibold uppercase tracking-wider text-surface-500">
-                <th className="pb-2 pr-3">When</th>
-                <th className="pb-2 pr-3">Actor</th>
-                <th className="pb-2 pr-3">Action</th>
-                <th className="pb-2 pr-3">Target</th>
-                <th className="pb-2">Metadata</th>
+                <th scope="col" className="pb-2 pr-3">When</th>
+                <th scope="col" className="pb-2 pr-3">Actor</th>
+                <th scope="col" className="pb-2 pr-3">Action</th>
+                <th scope="col" className="pb-2 pr-3">Target</th>
+                <th scope="col" className="pb-2">Metadata</th>
               </tr>
             </thead>
             <tbody>

@@ -461,7 +461,7 @@ export default function BoardDetailPage() {
                       <input
                         value={editingColName}
                         onChange={(e) => setEditingColName(e.target.value)}
-                        className="w-28 rounded border border-surface-700 bg-surface-800 px-1.5 py-0.5 text-xs outline-none"
+                        className="w-28 rounded border border-surface-700 bg-surface-800 px-1.5 py-0.5 text-xs outline-none focus:border-primary-500/50"
                         autoFocus
                       />
                       <button onClick={() => handleUpdateColumn(col.id)} className="text-emerald-400">
@@ -535,7 +535,7 @@ export default function BoardDetailPage() {
                 value={newColName}
                 onChange={(e) => setNewColName(e.target.value)}
                 placeholder="New column name"
-                className="flex-1 bg-transparent text-xs outline-none placeholder:text-surface-600"
+                className="flex-1 rounded bg-transparent text-xs outline-none placeholder:text-surface-600 focus:ring-1 focus:ring-primary-500/50"
                 onKeyDown={(e) => e.key === 'Enter' && handleCreateColumn()}
               />
               <button onClick={handleCreateColumn} className="text-primary-400 hover:text-primary-300">

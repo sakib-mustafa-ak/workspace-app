@@ -44,7 +44,7 @@ export function OverviewTab({ workspaceId, onInvite }: Props) {
 
   const cards = [
     { label: 'Boards', value: stats.boards, icon: Columns, color: 'text-emerald-400', bg: 'bg-emerald-600/10' },
-    { label: 'Members', value: stats.members, icon: Users, color: 'text-blue-400', bg: 'bg-blue-600/10' },
+    { label: 'Members', value: stats.members, icon: Users, color: 'text-primary-300', bg: 'bg-primary-400/10' },
     { label: 'Tasks', value: stats.tasks, icon: ListTodo, color: 'text-amber-400', bg: 'bg-amber-600/10' },
   ];
 

@@ -167,7 +167,7 @@ export function TaskModal({
 
         <form onSubmit={handleSubmit} className="space-y-4 p-6">
           {error && (
-            <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-2 text-sm text-red-400">
+            <div role="alert" className="rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-2 text-sm text-red-400">
               {error}
             </div>
           )}

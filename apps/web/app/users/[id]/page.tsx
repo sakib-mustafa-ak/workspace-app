@@ -94,10 +94,10 @@ export default function UserDetailPage() {
               <img
                 src={user.avatarUrl}
                 alt={user.displayName}
-                className="h-16 w-16 shrink-0 rounded-full object-cover shadow-lg shadow-black/20"
+                className="h-16 w-16 shrink-0 rounded-full object-cover shadow-sm shadow-black/20"
               />
             ) : (
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-surface-500 to-surface-600 text-xl font-bold text-white shadow-lg shadow-black/20">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-surface-500 to-surface-600 text-xl font-bold text-white shadow-sm shadow-black/20">
                 {user.displayName.charAt(0).toUpperCase()}
               </div>
             )}

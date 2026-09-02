@@ -115,7 +115,7 @@ export default function CalendarPage() {
       {/* Desktop background */}
       <div className="relative inset-0">
         <Image
-          src="/bg-desktop.jpeg"
+          src="/bg-desktop.webp"
           alt=""
           fill
           className="object-cover"
@@ -127,7 +127,7 @@ export default function CalendarPage() {
       {/* Mobile background */}
       <div className="relative inset-0 sm:hidden">
         <Image
-          src="/bg-mobile.jpeg"
+          src="/bg-mobile.webp"
           alt=""
           fill
           className="object-cover"
@@ -208,13 +208,13 @@ export default function CalendarPage() {
                         {day.tasks.slice(0, 2).map((task) => (
                           <div
                             key={task.id}
-                            className="hidden truncate rounded bg-primary-500/20 px-1 py-0.5 text-[9px] text-primary-300 sm:block sm:text-caption"
+                            className="hidden truncate rounded bg-primary-500/20 px-1 py-0.5 text-caption text-primary-300 sm:block"
                           >
                             {task.title}
                           </div>
                         ))}
                         {day.tasks.length > 0 && (
-                          <div className="text-[8px] text-surface-500 sm:text-caption">
+                          <div className="text-caption text-surface-500">
                             {day.tasks.length > 2 ? `+${day.tasks.length - 2}` : day.tasks.length === 1 ? '' : day.tasks.length}
                           </div>
                         )}

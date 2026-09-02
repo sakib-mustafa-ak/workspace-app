@@ -74,11 +74,12 @@ function ToastContainer() {
   };
 
   return (
-    <div aria-live="polite" aria-atomic="true" className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2">
+    <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2">
       {toasts.map(t => {
         const Icon = icons[t.type];
+        const live = t.type === 'error' ? { role: 'alert' as const } : { 'aria-live': 'polite' as const, 'aria-atomic': true };
         return (
-          <div key={t.id} className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-sm shadow-xl backdrop-blur-md animate-slideUp ${colors[t.type]}`}>
+          <div key={t.id} role={live.role} aria-live={live['aria-live']} aria-atomic={live['aria-atomic']} className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-sm shadow-xl backdrop-blur-md animate-slideUp ${colors[t.type]}`}>
             <Icon size={16} className="shrink-0" />
             <span className="flex-1">{t.message}</span>
             {t.undo && (

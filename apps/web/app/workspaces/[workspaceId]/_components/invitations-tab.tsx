@@ -66,7 +66,7 @@ export function InvitationsTab({
           <select
             value={inviteRole}
             onChange={(e) => setInviteRole(e.target.value)}
-            className="rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm outline-none"
+            className="rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm outline-none focus:border-primary-500/50"
           >
             <option value="EDITOR">Editor</option>
             <option value="ADMIN">Admin</option>

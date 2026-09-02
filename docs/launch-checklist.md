@@ -41,9 +41,9 @@ Legend: P0 = blocks public launch · P1 = should-have before public launch · P2
 - [ ] CORS + origin allowlist on the API, Socket.IO `transport`/origin checks, and canvas payload size limits (image data URLs are stored in the DB via `data`).
 
 ### 5. Observability
-- [ ] Error tracking on web + API + Socket.IO gateway (Sentry).
+- [x] Error tracking on web + API + Socket.IO gateway (`@sentry/nestjs` + `@sentry/nextjs`; DSN-gated via `SENTRY_DSN`; request-ID correlation; billing-path capture). Remaining: create the Sentry gateway/project and set `SENTRY_DSN` (API) + `NEXT_PUBLIC_SENTRY_DSN` (web) in prod env.
 - [ ] Structured prod logging (today's logs are dev-style). Include websocket connect/disconnect + object-lock events for the realtime path.
-- [ ] Uptime monitoring + alerting (UptimeRobot / Betterstack).
+- [~] Uptime monitoring + alerting (UptimeRobot / Betterstack) — ops doc done (`docs/uptime-monitoring.md`; keyword-based: assert body contains `"status":"ok"`). Remaining: provision the account + monitor against the prod URL.
 - [ ] Product analytics (PostHog or Plausible) — activation events: first board, first canvas object, invite sent.
 
 ## P1 — Should have before public launch

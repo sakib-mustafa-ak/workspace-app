@@ -52,7 +52,7 @@ Legend: P0 = blocks public launch · P1 = should-have before public launch · P2
 - [ ] E2E test suite for: auth → workspace → board → task → comments → notifications → canvas → 2-user collab (presence, cursors, locks). None exists today; Playwright is the pragmatic choice.
 - [ ] OAuth/SSO (Google, GitHub) — roadmap P4#13; most SaaS users expect it.
 - [ ] Legal: Terms of Service, Privacy Policy, cookie consent (EU); GDPR/CCPA basics. AI features (Gemini) add a data-processing disclosure.
-- [~] Empty/error/offline states: canvas load failure now surfaces an error banner + toast with an in-place retry (`canvas-sync.tsx` sets `loadError`, `CanvasLoadError` renders it). Remaining: document offline/backoff behavior for sockets.
+- [x] Empty/error/offline states: canvas load failure surfaces an error banner + toast with an in-place retry (`canvas-sync.tsx` sets `loadError`, `CanvasLoadError` renders it). Socket drops auto-reconnect via socket.io-client defaults (auto-`reconnection` on, exponential backoff 1s→5s max with ±50% jitter, retries indefinitely); `board:join` re-emits on every reconnect, so presence and object locks self-heal. Known gap (open): no UI "reconnecting" indicator, and no offline queue for broadcasts emitted during the drop window — an edit made while disconnected survives only if its own REST persist succeeds.
 - [ ] CI/CD (roadmap P4#12): build + lint + test + migrate + deploy on every push; at minimum a `pnpm lint && pnpm test && pnpm build` gate.
 - [ ] Backups: prod DB daily snapshots + restore drill + retention policy; R2 lifecycle rules for uploads.
 

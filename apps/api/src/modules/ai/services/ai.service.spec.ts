@@ -3,6 +3,22 @@ import { AiService } from './ai.service';
 import { BoardsRepository } from '../../boards/repositories/boards.repository';
 import { GeminiAiProvider } from '../providers/gemini-ai.provider';
 import { MockAiProvider } from '../providers/mock-ai.provider';
+import { type BoardRow } from '@repo/database';
+
+const makeBoard = (overrides: Partial<BoardRow> = {}): BoardRow => ({
+  id: 'b-1',
+  workspaceId: 'ws-1',
+  name: 'Sprint 1',
+  description: null,
+  position: 0,
+  searchVector: '',
+  status: 'ACTIVE',
+  archivedAt: null,
+  createdAt: new Date('2026-01-01T00:00:00.000Z'),
+  updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+  deletedAt: null,
+  ...overrides,
+});
 
 describe('AiService', () => {
   let service: AiService;
@@ -28,10 +44,9 @@ describe('AiService', () => {
   });
 
   it('should generate summary for board', async () => {
-    boardsRepo.findById.mockResolvedValue({
-      id: 'b-1',
-      name: 'Sprint 1',
-    } as any);
+    boardsRepo.findById.mockResolvedValue(
+      makeBoard({ id: 'b-1', name: 'Sprint 1' }),
+    );
 
     const res = await service.summarizeBoard('b-1');
     expect(res.title).toBe('Sprint 1');

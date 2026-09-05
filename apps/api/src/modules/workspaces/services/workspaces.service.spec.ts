@@ -442,7 +442,7 @@ describe('WorkspacesService', () => {
       it('throws when too many pending invitations', async () => {
         members.findByWorkspaceAndUser.mockResolvedValue(mockOwnership);
         policy.isAtLeast.mockReturnValue(true);
-        invitationsRepo.countPendingByWorkspace.mockResolvedValue(100);
+        invitationsRepo.countPendingByWorkspace.mockResolvedValue(201);
 
         await expect(
           service.createInvitation('w1', 'u1', {

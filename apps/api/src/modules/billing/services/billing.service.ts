@@ -138,8 +138,16 @@ export class BillingService {
     session: Stripe.Checkout.Session,
   ): Promise<void> {
     const workspaceId = session.metadata?.workspaceId;
+    if (!workspaceId) return; // unrelated/legacy session — skip silently
+
     const plan = session.metadata?.plan;
-    if (!workspaceId || !isPricedPlan(plan)) return; // unrelated/legacy event — skip silently
+    if (!isPricedPlan(plan)) {
+      throw new BillingException(
+        BillingErrorCode.PLAN_NOT_FOUND,
+        `Unrecognized plan "${String(plan)}" on checkout session ${session.id}.`,
+        400,
+      );
+    }
 
     await this.subs.upsertFromStripe({
       workspaceId,

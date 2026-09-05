@@ -177,6 +177,24 @@ describe('BillingService', () => {
       expect(res).toEqual({ received: true });
     });
 
+    it('loudly rejects a checkout with an unrecognized plan and marks the event FAILED', async () => {
+      events.findById.mockResolvedValue(undefined);
+      events.create.mockResolvedValue({ id: 'evt_1' } as never);
+      stripe.constructEvent.mockReturnValue({
+        id: 'evt_1',
+        type: 'checkout.session.completed',
+        data: {
+          object: { metadata: { workspaceId: 'ws-1', plan: 'PLATINUM' } },
+        },
+      });
+      await expect(
+        service.handleWebhook(Buffer.from('{}'), 'sig'),
+      ).rejects.toMatchObject({ code: BillingErrorCode.PLAN_NOT_FOUND });
+      expect(events.setStatus).toHaveBeenCalledWith('evt_1', 'FAILED');
+      expect(subs.upsertFromStripe).not.toHaveBeenCalled();
+      expect(audit.record).not.toHaveBeenCalled();
+    });
+
     it('marks FAILED and rethrows when applying the event fails', async () => {
       events.findById.mockResolvedValue(undefined);
       events.create.mockResolvedValue({ id: 'evt_1' } as never);

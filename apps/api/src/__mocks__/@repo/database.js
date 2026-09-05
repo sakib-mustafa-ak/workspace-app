@@ -1,3 +1,13 @@
+// Jest mock for `@repo/database` (a workspace package).
+// WHY it is mocked instead of importing the real source:
+//  packages/database/src/client/db.ts constructs a `postgres()` client at
+//  module scope, so importing the real package instantiates a connection
+//  pool in every unit test. The mock keeps unit tests in-memory, and its
+//  `DATABASE` token + drizzle operator re-exports are part of the test
+//  surface (repositories inject the token; SQL fragments are built via
+//  the re-exported operators).
+// It MUST stay in sync with the real source (schema/enums/*, schema/*/*.constants.ts).
+// This file is a pure-JS mirror; prefer fixing drift here over relaxing the mock.
 const drizzleOrm = require('drizzle-orm');
 
 const DATABASE = Symbol.for('WORKSPACE_OS.DATABASE');
@@ -26,12 +36,12 @@ module.exports = {
   asc: drizzleOrm.asc,
   desc: drizzleOrm.desc,
   between: drizzleOrm.between,
-  WORKSPACE_ROLE_RANK: { VIEWER: 0, EDITOR: 1, ADMIN: 2, OWNER: 3 },
+  WORKSPACE_ROLE_RANK: { VIEWER: 0, COMMENTER: 1, EDITOR: 2, ADMIN: 3, OWNER: 4 },
   WORKSPACE_SLUG_PATTERN: /^[a-z0-9](?:[a-z0-9-]{0,30}[a-z0-9])?$/,
   WORKSPACE_SLUG_MAX_LENGTH: 32,
-  WORKSPACE_NAME_MIN_LENGTH: 1,
-  WORKSPACE_NAME_MAX_LENGTH: 100,
-  MAX_PENDING_INVITATIONS_PER_WORKSPACE: 50,
+  WORKSPACE_NAME_MIN_LENGTH: 2,
+  WORKSPACE_NAME_MAX_LENGTH: 60,
+  MAX_PENDING_INVITATIONS_PER_WORKSPACE: 200,
   users: { id: 'users.id' },
   sessions: { id: 'sessions.id' },
   workspaces: { id: 'workspaces.id' },
@@ -44,9 +54,9 @@ module.exports = {
   BOARD_NAME_MAX_LENGTH: 128,
   COLUMN_NAME_MIN_LENGTH: 1,
   COLUMN_NAME_MAX_LENGTH: 64,
-  UserStatus: { ACTIVE: 'ACTIVE', SUSPENDED: 'SUSPENDED', DELETED: 'DELETED' },
+  UserStatus: { ACTIVE: 'ACTIVE', INACTIVE: 'INACTIVE', SUSPENDED: 'SUSPENDED', DELETED: 'DELETED' },
   WorkspaceStatus: { ACTIVE: 'ACTIVE', ARCHIVED: 'ARCHIVED', DELETED: 'DELETED' },
-  WorkspaceRole: { VIEWER: 'VIEWER', EDITOR: 'EDITOR', ADMIN: 'ADMIN', OWNER: 'OWNER' },
+  WorkspaceRole: { VIEWER: 'VIEWER', COMMENTER: 'COMMENTER', EDITOR: 'EDITOR', ADMIN: 'ADMIN', OWNER: 'OWNER' },
   InvitationStatus: { PENDING: 'PENDING', ACCEPTED: 'ACCEPTED', REVOKED: 'REVOKED', EXPIRED: 'EXPIRED' },
   BoardStatus: { ACTIVE: 'ACTIVE', ARCHIVED: 'ARCHIVED' },
   boardComments: { id: 'boardComments.id' },
@@ -60,7 +70,7 @@ module.exports = {
   auditEvents: { id: 'auditEvents.id' },
   checklistItems: { id: 'checklistItems.id' },
   NotificationStatus: { CREATED: 'CREATED', QUEUED: 'QUEUED', DELIVERED: 'DELIVERED', READ: 'READ', ARCHIVED: 'ARCHIVED' },
-  NotificationType: { COMMENT_ADDED: 'COMMENT_ADDED', BOARD_SHARED: 'BOARD_SHARED', WORKSPACE_UPDATED: 'WORKSPACE_UPDATED', MENTION_CREATED: 'MENTION_CREATED', MEMBER_ADDED: 'MEMBER_ADDED', INVITATION_ACCEPTED: 'INVITATION_ACCEPTED', TASK_ASSIGNED: 'TASK_ASSIGNED' },
+  NotificationType: { COMMENT_ADDED: 'COMMENT_ADDED', BOARD_SHARED: 'BOARD_SHARED', WORKSPACE_UPDATED: 'WORKSPACE_UPDATED', MENTION_CREATED: 'MENTION_CREATED', MEMBER_ADDED: 'MEMBER_ADDED', INVITATION_ACCEPTED: 'INVITATION_ACCEPTED', TASK_ASSIGNED: 'TASK_ASSIGNED', TASK_UNASSIGNED: 'TASK_UNASSIGNED', TASK_DELETED: 'TASK_DELETED', FILE_UPLOADED: 'FILE_UPLOADED' },
   notificationTypeEnum: {
     enumValues: [
       'COMMENT_ADDED',

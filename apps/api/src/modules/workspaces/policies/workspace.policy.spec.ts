@@ -65,9 +65,10 @@ describe('WorkspacePolicy', () => {
   describe('rank', () => {
     it('returns numeric rank', () => {
       expect(policy.rank('VIEWER')).toBe(0);
-      expect(policy.rank('EDITOR')).toBe(1);
-      expect(policy.rank('ADMIN')).toBe(2);
-      expect(policy.rank('OWNER')).toBe(3);
+      expect(policy.rank('COMMENTER')).toBe(1);
+      expect(policy.rank('EDITOR')).toBe(2);
+      expect(policy.rank('ADMIN')).toBe(3);
+      expect(policy.rank('OWNER')).toBe(4);
     });
   });
 });

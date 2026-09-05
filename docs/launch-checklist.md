@@ -15,12 +15,12 @@ Legend: P0 = blocks public launch · P1 = should-have before public launch · P2
   - Cloudflare Workers + Pages is the roadmap lean (`docs/project-progress.md`) — NOTE: the API is NestJS 11, which does not run on Workers without a port; either use a container runtime (Fly.io / Railway / VPS) or plan a Workers rewrite.
   - API + web share the repo; both need prod builds (`pnpm build`), env split, and a deploy pipeline.
 - [ ] Managed PostgreSQL 17 (Supabase or Neon). Local is Postgres on :5433; Drizzle migrations must run against prod.
-- [ ] Managed Redis (Upstash or similar) — required by the realtime module and JWT/session flows; without it the canvas gateway and presence die.
+- [ ] Managed Redis (Upstash or similar) — NOT currently a dependency: `RedisModule` is an intentional no-op and the canvas gateway + presence run fully in-memory. It only becomes required if the realtime layer is meant to scale horizontally — presence and object-lock state are single-instance today, are lost on restart, and will not behave correctly across multiple API instances.
 - [ ] Domain(s) + TLS + DNS. Cookie/localStorage JWT auth means one origin first; use a single app domain for MVP (e.g. `app.example.com`) rather than splitting API subdomain until you know you must.
 - [ ] Environment: prod `.env` in a secrets store (never in git). Mirror `apps/api/src/config/env.schema.ts` and `apps/api/src/config/configuration.ts` keys in prod.
 
 ### 2. Production file storage
-- [ ] Replace the local uploads provider (currently writes to `apps/api/uploads/` — see the committed test file under `a473e5b9-.../` as evidence it's live) with Cloudflare R2 or S3.
+- [ ] Set `STORAGE_DRIVER` in the deploy env: the `s3` and `vercel-blob` providers already exist in code (`apps/api/src/modules/uploads/providers/`), so this is a config/wiring task, not a missing-code task. Until it is set, uploads fall back to the local provider (`apps/api/uploads/`).
 - [ ] Set per-user and per-board quotas + file-type allowlist before public traffic (uploaded images are rendered on the canvas — validation is the attack surface).
 
 ### 3. Functionality gates (the canvas was live-tested 2026-08-11; these were found and fixed)
@@ -52,7 +52,7 @@ Legend: P0 = blocks public launch · P1 = should-have before public launch · P2
 - [ ] E2E test suite for: auth → workspace → board → task → comments → notifications → canvas → 2-user collab (presence, cursors, locks). None exists today; Playwright is the pragmatic choice.
 - [ ] OAuth/SSO (Google, GitHub) — roadmap P4#13; most SaaS users expect it.
 - [ ] Legal: Terms of Service, Privacy Policy, cookie consent (EU); GDPR/CCPA basics. AI features (Gemini) add a data-processing disclosure.
-- [ ] Empty/error/offline states: canvas load failure currently resolves to a silent empty canvas (`canvas-sync.tsx` swallows the load error) — surface it. Document offline/backoff for sockets.
+- [~] Empty/error/offline states: canvas load failure now surfaces an error banner + toast with an in-place retry (`canvas-sync.tsx` sets `loadError`, `CanvasLoadError` renders it). Remaining: document offline/backoff behavior for sockets.
 - [ ] CI/CD (roadmap P4#12): build + lint + test + migrate + deploy on every push; at minimum a `pnpm lint && pnpm test && pnpm build` gate.
 - [ ] Backups: prod DB daily snapshots + restore drill + retention policy; R2 lifecycle rules for uploads.
 

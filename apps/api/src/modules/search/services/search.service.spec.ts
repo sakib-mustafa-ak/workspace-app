@@ -3,6 +3,23 @@ import { SearchService } from './search.service';
 import { BoardsRepository } from '../../boards/repositories/boards.repository';
 import { TasksRepository } from '../../tasks/repositories/tasks.repository';
 import { WorkspaceMembersRepository } from '../../workspaces/repositories/workspace-members.repository';
+import { type WorkspaceMemberRow } from '@repo/database';
+
+const makeMember = (
+  overrides: Partial<WorkspaceMemberRow> = {},
+): WorkspaceMemberRow => ({
+  id: 'm-1',
+  workspaceId: 'ws-1',
+  userId: 'user-1',
+  role: 'VIEWER',
+  status: 'ACTIVE',
+  joinedAt: new Date('2026-01-01T00:00:00.000Z'),
+  invitationId: null,
+  createdAt: new Date('2026-01-01T00:00:00.000Z'),
+  updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+  deletedAt: null,
+  ...overrides,
+});
 
 describe('SearchService', () => {
   let service: SearchService;
@@ -41,10 +58,10 @@ describe('SearchService', () => {
 
   it('returns mapped boards and tasks scoped to the user workspaces', async () => {
     membersRepo.listByUser.mockResolvedValue([
-      { id: 'm-1', workspaceId: 'ws-1', userId: 'user-1' } as any,
+      makeMember({ id: 'm-1', workspaceId: 'ws-1', userId: 'user-1' }),
     ]);
     boardsRepo.searchByQuery.mockResolvedValue([
-      { id: 'b-1', name: 'Frontend Architecture', workspaceId: 'ws-1' } as any,
+      { id: 'b-1', name: 'Frontend Architecture', workspaceId: 'ws-1' },
     ]);
     tasksRepo.searchByQuery.mockResolvedValue([
       {
@@ -52,7 +69,7 @@ describe('SearchService', () => {
         boardId: 'b-1',
         workspaceId: 'ws-1',
         title: 'Fix login redirect',
-      } as any,
+      },
     ]);
 
     const res = await service.searchGlobal('user-1', 'login');

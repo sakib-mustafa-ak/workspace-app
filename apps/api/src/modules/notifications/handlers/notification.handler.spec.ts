@@ -14,6 +14,23 @@ import {
 } from '../../auth/mail/mail.provider';
 import { UserRepository } from '../../auth/repositories/user.repository';
 import { NotificationPreferencesService } from '../services/notification-preferences.service';
+import { type WorkspaceMemberRow } from '@repo/database';
+
+const makeMember = (
+  overrides: Partial<WorkspaceMemberRow> = {},
+): WorkspaceMemberRow => ({
+  id: 'm1',
+  workspaceId: 'ws-1',
+  userId: 'user-1',
+  role: 'VIEWER',
+  status: 'ACTIVE',
+  joinedAt: new Date('2026-01-01T00:00:00.000Z'),
+  invitationId: null,
+  createdAt: new Date('2026-01-01T00:00:00.000Z'),
+  updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+  deletedAt: null,
+  ...overrides,
+});
 
 describe('NotificationHandler', () => {
   let handler: NotificationHandler;
@@ -86,30 +103,18 @@ describe('NotificationHandler', () => {
 
   it('should deliver BOARD_SHARED notification to non-creator workspace members on BoardCreated', async () => {
     workspaceMembersRepo.listByWorkspace.mockResolvedValue([
-      {
+      makeMember({
         id: 'm1',
         workspaceId: 'ws-1',
         userId: 'user-creator',
         role: 'OWNER',
-        status: 'ACTIVE',
-        joinedAt: new Date(),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        deletedAt: null,
-        invitationId: null,
-      } as any,
-      {
+      }),
+      makeMember({
         id: 'm2',
         workspaceId: 'ws-1',
         userId: 'user-other',
         role: 'EDITOR',
-        status: 'ACTIVE',
-        joinedAt: new Date(),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        deletedAt: null,
-        invitationId: null,
-      } as any,
+      }),
     ]);
 
     boardsEventBus.publishBoardCreated({

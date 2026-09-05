@@ -16,9 +16,11 @@ import {
   type CanvasObjectType,
   type CreateCanvasObjectData,
 } from '@/lib/canvas';
+import { ApiError } from '@/lib/api';
 import { createCanvasSocket } from '@/lib/canvas-socket';
 import { useCanvas, type CanvasObject } from './canvas-state';
 import { getStoredUser } from '@/lib/auth';
+import { useToast } from '@/contexts/toast-context';
 
 export type RemotePresenceUser = {
   userId: string;
@@ -175,6 +177,7 @@ type CanvasSyncApi = {
   requestLock: (objectId: string) => void;
   releaseLock: (objectId: string) => void;
   loadError: string;
+  retryLoad: () => void;
 };
 
 const CanvasSyncContext = createContext<CanvasSyncApi | null>(null);
@@ -194,9 +197,13 @@ type Props = {
 
 export function CanvasSyncProvider({ boardId, children }: Props) {
   const { dispatch } = useCanvas();
+  const toast = useToast();
+  const toastRef = useRef(toast);
+  toastRef.current = toast;
   const socketRef = useRef<ReturnType<typeof createCanvasSocket> | null>(null);
   const boardIdRef = useRef(boardId);
   const dispatchRef = useRef(dispatch);
+  const [reloadKey, setReloadKey] = useState(0);
   boardIdRef.current = boardId;
   dispatchRef.current = dispatch;
 
@@ -226,6 +233,10 @@ export function CanvasSyncProvider({ boardId, children }: Props) {
     });
     objectLocksRef.current.delete(objectId);
     setObjectLocks(new Map(objectLocksRef.current));
+  }, []);
+
+  const retryLoad = useCallback(() => {
+    setReloadKey((k) => k + 1);
   }, []);
 
   const emitCursor = useCallback((x: number, y: number) => {
@@ -340,14 +351,19 @@ socket.on('cursor:moved', (data: unknown) => {
           payload: canvas.objects.map(toLocalObject),
         });
       })
-      .catch(() => {
+      .catch((err) => {
         if (cancelled) return;
-        setLoadError('Failed to load this canvas. Please try again.');
+        const detail =
+          err instanceof ApiError
+            ? err.message
+            : 'Failed to load this canvas. Please try again.';
+        setLoadError(detail);
+        toastRef.current.error('Failed to load this canvas. Please try again.');
       });
     return () => {
       cancelled = true;
     };
-  }, [boardId]);
+  }, [boardId, reloadKey]);
 
   const broadcastObjectUpdate = useCallback((obj: CanvasObject) => {
     socketRef.current?.emit('object:updated', {
@@ -486,9 +502,10 @@ socket.on('cursor:moved', (data: unknown) => {
       requestLock,
       releaseLock,
       loadError,
+      retryLoad,
       broadcastObjectUpdate,
     }),
-    [presence, remoteCursors, emitCursor, objectLocks, requestLock, releaseLock, loadError, broadcastObjectUpdate],
+    [presence, remoteCursors, emitCursor, objectLocks, requestLock, releaseLock, loadError, retryLoad, broadcastObjectUpdate],
   );
 
   return (

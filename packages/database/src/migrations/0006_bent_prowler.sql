@@ -17,8 +17,6 @@ CREATE TABLE "notification_preferences" (
 	CONSTRAINT "notification_preferences_user_id_type_pk" PRIMARY KEY("user_id","type")
 );
 --> statement-breakpoint
-ALTER TABLE "push_subscriptions" DISABLE ROW LEVEL SECURITY;--> statement-breakpoint
-DROP TABLE "push_subscriptions" CASCADE;--> statement-breakpoint
 ALTER TABLE "boards" ADD COLUMN "search_vector" "tsvector" GENERATED ALWAYS AS (to_tsvector('english', name || ' ' || COALESCE(description, ''))) STORED;--> statement-breakpoint
 ALTER TABLE "users" ADD COLUMN "is_admin" boolean DEFAULT false NOT NULL;--> statement-breakpoint
 ALTER TABLE "tasks" ADD COLUMN "search_vector" "tsvector" GENERATED ALWAYS AS (to_tsvector('english', title)) STORED;--> statement-breakpoint

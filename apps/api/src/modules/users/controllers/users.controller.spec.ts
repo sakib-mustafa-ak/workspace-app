@@ -5,6 +5,7 @@ import { UsersService } from '../services/users.service';
 import { UsersController } from './users.controller';
 
 const mockUserRow: UserRow = {
+  isAdmin: false,
   id: 'u1',
   displayName: 'Ada',
   email: 'ada@example.com',

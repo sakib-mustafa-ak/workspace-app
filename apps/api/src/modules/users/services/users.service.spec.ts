@@ -11,6 +11,7 @@ import { UsersService } from './users.service';
 
 const mockDb = {};
 const mockUser: UserRow = {
+  isAdmin: false,
   id: 'user-1',
   displayName: 'Ada',
   email: 'ada@example.com',
@@ -34,6 +35,7 @@ const mockSuspendedUser: UserRow = {
 };
 
 const makeUser = (id: string, displayName: string, email: string): UserRow => ({
+  isAdmin: false,
   id,
   displayName,
   email,

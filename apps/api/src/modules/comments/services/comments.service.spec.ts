@@ -13,6 +13,7 @@ import { CommentsEventBus } from '../events/comments.events';
 import { CommentsService } from './comments.service';
 
 const mockBoard: BoardRow = {
+  searchVector: null,
   id: 'b1',
   workspaceId: 'w1',
   name: 'Sprint 24',
@@ -195,8 +196,8 @@ describe('CommentsService', () => {
       mockDbSelect([mockMembership]);
       policy.isAtLeast.mockReturnValue(true);
       commentsRepo.findByBoardWithAuthor.mockResolvedValue([
-        mockComment,
-        mockReply,
+        { ...mockComment, author: null },
+        { ...mockReply, author: null },
       ]);
 
       const result = await service.listByBoard('b1', 'u1');

@@ -56,10 +56,10 @@ jobs:
 
       - name: Run database migrations
         working-directory: packages/database
-        run: pnpm migrate
+        run: pnpm check-migrations && pnpm migrate
 
       - name: API tests
-        run: pnpm --filter api test -- --ci
+        run: pnpm --filter api exec jest --ci --runInBand
 
       - name: Web build
         run: pnpm --filter web build
@@ -81,4 +81,4 @@ jobs:
             cat /tmp/health.json 2>/dev/null || echo "(no response)"
             exit 1
           fi
-          node -e "const h=require('/tmp/health.json'); console.log('health ok, database:', h.checks.database.status, '| integrations:', h.checks.integrations.map(i=>i.name+':'+i.provider).join(', '))"
+          node -e "const h=require('/tmp/health.json'); console.log('health ok, database:', h.data.checks.database.status, '| integrations:', h.data.checks.integrations.map(i=>i.name+':'+i.provider).join(', '))"

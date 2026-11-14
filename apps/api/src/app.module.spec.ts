@@ -11,7 +11,7 @@ interface GuardProvider {
   useClass: unknown;
 }
 
-function globalGuards(moduleClass: unknown): GuardProvider[] {
+function globalGuards(moduleClass: object): GuardProvider[] {
   const providers = Reflect.getMetadata('providers', moduleClass) as
     | unknown[]
     | undefined;

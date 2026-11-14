@@ -13,6 +13,7 @@ import { TokenService } from './token.service';
 import { AuthService } from './auth.service';
 
 const mockUser: UserRow = {
+  isAdmin: false,
   id: 'u1',
   displayName: 'Test User',
   email: 'test@test.com',

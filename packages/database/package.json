@@ -13,6 +13,7 @@
     }
   },
   "scripts": {
+    "check-migrations": "node scripts/check-migrations.mjs",
     "build": "tsc -p tsconfig.json",
     "generate": "drizzle-kit generate",
     "migrate": "drizzle-kit migrate",
@@ -23,6 +24,7 @@
     "postgres": "^3.4.7"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.16",
     "@types/node": "^24.0.0",
     "drizzle-kit": "^0.31.4",
     "tsx": "^4.22.4",

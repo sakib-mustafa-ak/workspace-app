@@ -107,6 +107,7 @@ export default function AdminPage() {
       try {
         const result = await adminApi.impersonate(userId);
         localStorage.setItem('accessToken', result.token);
+        localStorage.removeItem('refreshToken');
         localStorage.setItem('impersonatingUserId', userId);
         storeUser({
           id: result.user.id,

@@ -85,7 +85,7 @@ describe('NotificationsService', () => {
         resourceId: 'b1',
       });
 
-      expect(result.id).toBe('n1');
+      expect(result?.id).toBe('n1');
       expect(repo.create).toHaveBeenCalledWith(
         expect.objectContaining({
           userId: 'u1',
@@ -120,7 +120,7 @@ describe('NotificationsService', () => {
         title: 'New comment',
       });
 
-      expect(result.id).toBe('n1');
+      expect(result?.id).toBe('n1');
       expect(repo.deliver).toHaveBeenCalledWith('n1');
     });
 

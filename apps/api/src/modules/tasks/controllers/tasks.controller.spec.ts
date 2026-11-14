@@ -5,6 +5,7 @@ import { TasksService } from '../services/tasks.service';
 import { TasksController } from './tasks.controller';
 
 const mockTask: TaskRow = {
+  searchVector: null,
   id: 't1',
   workspaceId: 'w1',
   boardId: 'b1',

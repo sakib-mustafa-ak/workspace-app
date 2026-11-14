@@ -18,7 +18,8 @@ import { type WorkspaceMemberRow } from '@repo/database';
 
 const makeMember = (
   overrides: Partial<WorkspaceMemberRow> = {},
-): WorkspaceMemberRow => ({
+): WorkspaceMemberRow & { user: null } => ({
+  user: null,
   id: 'm1',
   workspaceId: 'ws-1',
   userId: 'user-1',

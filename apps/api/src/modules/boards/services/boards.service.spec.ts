@@ -16,6 +16,7 @@ import { UsageService } from '../../billing/services/usage.service';
 import { BoardsService } from './boards.service';
 
 const mockBoard: BoardRow = {
+  searchVector: null,
   id: 'b1',
   workspaceId: 'w1',
   name: 'Sprint 24',

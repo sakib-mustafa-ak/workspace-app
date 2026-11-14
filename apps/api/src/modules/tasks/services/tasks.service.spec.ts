@@ -13,6 +13,7 @@ import { TasksEventBus } from '../events/tasks.events';
 import { TasksService } from './tasks.service';
 
 const mockTask: TaskRow = {
+  searchVector: null,
   id: 't1',
   workspaceId: 'w1',
   boardId: 'b1',

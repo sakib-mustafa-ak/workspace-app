@@ -36,7 +36,7 @@ describe('NotificationPreferencesController', () => {
     const res = await controller.update(currentUser, {
       preferences: [
         { type: 'TASK_ASSIGNED', emailEnabled: true, inAppEnabled: true },
-        { type: 'BOGUS' },
+        { type: 'BOGUS' } as never,
       ],
     });
     expect(service.upsert).toHaveBeenCalledWith('u-1', [

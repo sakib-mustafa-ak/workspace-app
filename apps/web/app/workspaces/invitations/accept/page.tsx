@@ -46,11 +46,9 @@ function AcceptInvitationInner() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-surface-950 px-4">
-      <div className="pointer-events-none absolute -left-40 -top-40 h-[500px] w-[500px] rounded-full bg-primary-600/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-40 -right-40 h-[500px] w-[500px] rounded-full bg-primary-500/5 blur-3xl" />
 
       <div className="relative w-full max-w-sm">
-        <div className="rounded-2xl border border-surface-800/50 bg-gradient-to-br from-surface-900 to-surface-900/60 p-8 shadow-2xl shadow-black/20 backdrop-blur-xl">
+        <div className="rounded-2xl border border-surface-800/50 bg-surface-900 p-8 shadow-sm shadow-black/10">
           {status === 'loading' && (
             <div className="text-center">
               <Loader2 size={40} className="mx-auto mb-4 animate-spin text-primary-500" />
@@ -68,7 +66,7 @@ function AcceptInvitationInner() {
               <p className="mt-2 text-sm text-surface-400">{message}</p>
               <button
                 onClick={() => router.push(`/workspaces/${workspaceId}`)}
-                className="mt-6 inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-500 hover:shadow-primary-500/30 active:scale-[0.98]"
+                className="mt-6 inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-primary-500 action-interaction"
               >
                 <LogIn size={16} />
                 Go to workspace
@@ -85,7 +83,7 @@ function AcceptInvitationInner() {
               <p className="mt-2 text-sm text-surface-400">{message}</p>
               <Link
                 href="/dashboard"
-                className="mt-6 inline-block rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-500 hover:shadow-primary-500/30 active:scale-[0.98]"
+                className="mt-6 inline-block rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-primary-500 action-interaction"
               >
                 Go to dashboard
               </Link>

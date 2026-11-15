@@ -54,7 +54,7 @@ export default function UserDetailPage() {
       <div className="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-8">
         <SkeletonBlock className="mb-6 h-4 w-28 rounded" />
         <div className="overflow-hidden rounded-2xl border border-surface-800/50 bg-surface-900/60">
-          <div className="flex items-center gap-4 bg-gradient-to-br from-primary-600/10 to-primary-600/5 p-6 sm:p-8">
+          <div className="flex items-center gap-4 bg-surface-900 p-6 sm:p-8">
             <SkeletonCircle className="h-16 w-16" />
             <div className="flex-1 space-y-2">
               <SkeletonBlock className="h-5 w-40 rounded" />
@@ -84,10 +84,9 @@ export default function UserDetailPage() {
         Back to users
       </Link>
 
-      <div className="overflow-hidden rounded-2xl border border-surface-800/50 bg-gradient-to-br from-surface-900 to-surface-900/60 shadow-xl shadow-black/20">
+      <div className="overflow-hidden rounded-2xl border border-surface-800/50 bg-surface-900 shadow-xl shadow-black/20">
         {/* Header */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-primary-600/10 to-primary-600/5 p-6 sm:p-8">
-          <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary-600/10 blur-3xl" />
+        <div className="relative overflow-hidden bg-surface-900 p-6 sm:p-8">
           <div className="relative flex flex-col items-center gap-4 sm:flex-row">
             {user.avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element

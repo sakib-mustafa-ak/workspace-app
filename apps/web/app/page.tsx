@@ -11,6 +11,7 @@ import {
 import { WorkspaceLogo } from '@/components/workspace-logo';
 import { SiteFooter } from '@/components/site-footer';
 import { ThemeSwitch } from '@/components/theme-switch';
+import { MotionReveal } from '@/components/motion-reveal';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -75,7 +76,7 @@ export default function LandingPage() {
             </Link>
             <Link
               href="/auth/register"
-              className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-500 hover:shadow-primary-500/30"
+              className="action-interaction rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-primary-500"
             >
               Create account
             </Link>
@@ -85,11 +86,8 @@ export default function LandingPage() {
 
       <main>
         <section className="relative overflow-hidden border-b border-surface-800/70">
-          <div className="pointer-events-none absolute -right-48 -top-48 h-[560px] w-[560px] rounded-full bg-primary-500/10 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-56 -left-40 h-[520px] w-[520px] rounded-full bg-primary-600/10 blur-3xl" />
-
           <div className="relative mx-auto grid w-full max-w-6xl gap-14 px-6 pb-20 pt-20 sm:px-10 lg:grid-cols-2 lg:items-center lg:pb-28 lg:pt-28">
-            <div>
+            <MotionReveal>
               <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-surface-800 bg-surface-900/60 px-3 py-1 text-xs font-medium uppercase tracking-[0.22em] text-primary-300">
                 <span className="h-1.5 w-1.5 rounded-full bg-primary-400" />
                 Real-time collaborative workspace
@@ -105,7 +103,7 @@ export default function LandingPage() {
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link
                   href="/auth/register"
-                  className="rounded-lg bg-primary-600 px-5 py-3 text-sm font-medium text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-500 hover:shadow-primary-500/30"
+                  className="action-interaction rounded-lg bg-primary-600 px-5 py-3 text-sm font-medium text-white transition-all hover:bg-primary-500"
                 >
                   Create your workspace
                 </Link>
@@ -116,11 +114,11 @@ export default function LandingPage() {
                   Sign in
                 </Link>
               </div>
-            </div>
+            </MotionReveal>
 
-            <div className="relative" aria-hidden="true">
-              <LayerStack />
-            </div>
+            <MotionReveal className="relative" delay={70}>
+              <div aria-hidden="true"><LayerStack /></div>
+            </MotionReveal>
           </div>
         </section>
 
@@ -133,14 +131,14 @@ export default function LandingPage() {
               Everything your team actually works in, stacked in one place.
             </h2>
             <div className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-surface-800 bg-surface-800 sm:grid-cols-2 lg:grid-cols-3">
-              {features.map((f) => (
-                <div key={f.label} className="bg-surface-950 p-6">
+              {features.map((f, index) => (
+                <MotionReveal key={f.label} delay={(index % 3) * 45} className="surface-interaction bg-surface-950 p-6">
                   <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg border border-surface-800 bg-surface-900">
                     <WorkspaceLogo className="h-5 w-5" name={f.label.charAt(0)} />
                   </div>
                   <h3 className="text-base font-semibold">{f.label}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-surface-400">{f.body}</p>
-                </div>
+                </MotionReveal>
               ))}
             </div>
           </div>
@@ -169,7 +167,7 @@ export default function LandingPage() {
                     className={`flex flex-col rounded-2xl border p-6 ${
                       isFree
                         ? 'border-surface-800 bg-surface-900/40'
-                        : 'border-primary-600/40 bg-gradient-to-br from-surface-900 to-surface-900/60'
+                        : 'border-primary-600/40 bg-surface-900'
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -208,7 +206,7 @@ export default function LandingPage() {
                       className={`mt-8 rounded-lg px-4 py-2.5 text-center text-sm font-medium transition-all ${
                         isFree
                           ? 'border border-surface-700 text-surface-200 hover:border-surface-600'
-                          : 'bg-primary-600 text-white shadow-lg shadow-primary-600/20 hover:bg-primary-500'
+                          : 'bg-primary-600 text-white  hover:bg-primary-500'
                       }`}
                     >
                       {formatPrice(planId) === 'Not yet priced' ? 'Get early access' : 'Choose this'}
@@ -233,9 +231,8 @@ export default function LandingPage() {
 function LayerStack() {
   return (
     <div className="relative mx-auto max-w-md">
-      <div className="absolute -inset-6 rounded-full bg-primary-500/10 blur-3xl" />
-      <div className="relative rotate-[-4deg] space-y-4">
-        <div className="rounded-xl border border-surface-700 bg-surface-900/80 p-4 backdrop-blur">
+      <div className="relative space-y-4">
+        <div className="surface-interaction rounded-xl border border-surface-700 bg-surface-900 p-4">
           <div className="mb-3 flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-primary-400" />
             <span className="text-xs font-semibold text-surface-200">Research</span>
@@ -247,7 +244,7 @@ function LayerStack() {
             <div className="h-2 w-2/3 rounded bg-primary-600/40" />
           </div>
         </div>
-        <div className="ml-8 rounded-xl border border-surface-700 bg-surface-900/80 p-4 backdrop-blur">
+        <div className="ml-8 surface-interaction rounded-xl border border-surface-700 bg-surface-900 p-4">
           <div className="mb-3 flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-warm-400" />
             <span className="text-xs font-semibold text-surface-200">Launch plan</span>
@@ -264,7 +261,7 @@ function LayerStack() {
           </div>
         </div>
       </div>
-      <div className="relative -mt-2 ml-16 w-2/3 rounded-xl border border-surface-700 bg-surface-900/80 p-4 backdrop-blur">
+      <div className="relative -mt-2 ml-16 w-2/3 surface-interaction rounded-xl border border-surface-700 bg-surface-900 p-4">
         <div className="mb-2 flex items-center gap-1.5">
           <span className="h-1.5 w-1.5 rounded-full bg-primary-400" />
           <span className="h-1.5 w-1.5 rounded-full bg-surface-600" />

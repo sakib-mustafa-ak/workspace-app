@@ -72,7 +72,6 @@ function ResetPasswordInner() {
   if (done) {
     return (
       <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-surface-950 px-4">
-        <div className="pointer-events-none absolute -left-40 -top-40 h-[500px] w-[500px] rounded-full bg-emerald-600/10 blur-3xl" />
         <div className="w-full max-w-sm text-center animate-fadeIn">
           <CheckCircle size={40} className="mx-auto mb-4 text-emerald-500" />
           <h1 className="text-xl font-bold">Password changed</h1>
@@ -81,7 +80,7 @@ function ResetPasswordInner() {
           </p>
           <button
             onClick={() => router.push('/auth/login')}
-            className="mt-6 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-500 hover:shadow-primary-500/30 active:scale-[0.98]"
+            className="mt-6 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-primary-500 action-interaction"
           >
             Sign in with new password
           </button>
@@ -92,12 +91,10 @@ function ResetPasswordInner() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-surface-950 px-4">
-      <div className="pointer-events-none absolute -left-40 -top-40 h-[500px] w-[500px] rounded-full bg-primary-600/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-40 -right-40 h-[500px] w-[500px] rounded-full bg-primary-500/5 blur-3xl" />
 
       <div className="relative w-full max-w-sm">
         <div className="animate-fadeIn">
-          <div className="rounded-2xl border border-surface-800/50 bg-gradient-to-br from-surface-900 to-surface-900/60 p-6 sm:p-8 shadow-2xl shadow-black/20 backdrop-blur-xl">
+          <div className="rounded-2xl border border-surface-800/50 bg-surface-900 p-6 sm:p-8 shadow-sm shadow-black/10">
           <div className="mb-8 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-600/20 to-primary-600/10 shadow-sm shadow-primary-600/10">
               <KeyRound size={20} className="text-primary-400" />
@@ -193,7 +190,7 @@ function ResetPasswordInner() {
             <button
               type="submit"
               disabled={submitting || !token}
-              className="w-full rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-500 hover:shadow-primary-500/30 active:scale-[0.98] disabled:opacity-50 disabled:shadow-none"
+              className="w-full rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-primary-500 action-interaction disabled:opacity-50 disabled:shadow-none"
             >
               {submitting ? (
                 <span className="flex items-center gap-2">

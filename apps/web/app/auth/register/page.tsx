@@ -100,7 +100,7 @@ export default function RegisterPage() {
   return (
     <AuthPageShell>
       <div className="animate-fadeUp" style={{ animationDelay: "0.2s" }}>
-        <div className="rounded-2xl border border-surface-800/50 bg-gradient-to-br from-surface-900 to-surface-900/60 p-6 sm:p-8 shadow-2xl shadow-black/20 backdrop-blur-xl">
+        <div className="rounded-2xl border border-surface-800/50 bg-surface-900 p-6 sm:p-8 shadow-sm shadow-black/10">
           <div className="mb-8 text-center">
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary-600/20 to-primary-600/10 shadow-sm shadow-primary-600/10">
               <UserPlus size={20} className="text-primary-400" />
@@ -262,7 +262,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-500 hover:shadow-primary-500/30 active:scale-[0.98] disabled:opacity-50 disabled:shadow-none"
+              className="w-full rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-primary-500 action-interaction disabled:opacity-50 disabled:shadow-none"
             >
               {submitting ? (
                 <span className="flex items-center gap-2">

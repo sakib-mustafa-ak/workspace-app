@@ -35,7 +35,8 @@ const themeScript = `
       if (theme === 'system') {
         theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
       }
-      document.documentElement.classList.add(theme);
+      document.documentElement.classList.remove('dark', 'light');
+      document.documentElement.classList.add(theme === 'light' ? 'light' : 'dark');
       document.cookie = 'theme=' + theme + ';path=/;max-age=31536000';
     } catch(e) {}
   })();
@@ -45,12 +46,13 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const cookieStore = await cookies();
-  const theme = cookieStore.get('theme')?.value || '';
-  const themeClass = theme || '';
+  const theme = cookieStore.get('theme')?.value;
+  const themeClass = theme === 'light' ? 'light' : 'dark';
 
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${themeClass}`.trim()}
     >
       <body className="min-h-screen bg-surface-950 text-surface-100 antialiased font-sans">

@@ -10,6 +10,7 @@ import {
 } from '@repo/plans';
 import { WorkspaceLogo } from '@/components/workspace-logo';
 import { SiteFooter } from '@/components/site-footer';
+import { ThemeSwitch } from '@/components/theme-switch';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -62,12 +63,13 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-surface-950 text-surface-100">
       <header className="sticky top-0 z-40 border-b border-surface-800/70 bg-surface-950/70 backdrop-blur-xl">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4 sm:px-10">
+        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-10">
           <Link href="/" className="flex items-center gap-3" aria-label="Workspace OS home">
             <WorkspaceLogo className="h-8 w-8" />
-            <span className="text-sm font-semibold tracking-wide">Workspace OS</span>
+            <span className="hidden text-sm font-semibold tracking-wide sm:inline">Workspace OS</span>
           </Link>
-          <nav className="flex items-center gap-4 text-sm">
+          <nav aria-label="Main navigation" className="flex items-center gap-3 text-sm sm:gap-4">
+            <ThemeSwitch compact />
             <Link href="/auth/login" className="text-surface-300 transition-colors hover:text-surface-100">
               Sign in
             </Link>

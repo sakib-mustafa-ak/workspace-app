@@ -42,6 +42,7 @@ describe('NotificationsService', () => {
         {
           provide: NotificationsRepository,
           useValue: {
+            canReceive: jest.fn().mockResolvedValue(true),
             create: jest.fn(),
             findById: jest.fn(),
             listByUser: jest.fn(),

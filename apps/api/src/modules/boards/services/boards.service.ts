@@ -92,8 +92,14 @@ export class BoardsService {
     // Board and its default columns are one atomic unit: a partial
     // board without all three columns would break the kanban view.
     const board = await this.db.transaction(async (tx) => {
-      const existing = await this.listByWorkspace(workspaceId, userId);
-      const nextPosition = existing.length;
+      // Placement must include restricted boards, without exposing them to callers.
+      const existing = await this.boardsRepo.listByWorkspace(
+        workspaceId,
+        undefined,
+        tx,
+      );
+      const nextPosition =
+        Math.max(-1, ...existing.map((board) => board.position)) + 1;
       const created = await this.boardsRepo.create(
         {
           workspaceId,
@@ -154,7 +160,7 @@ export class BoardsService {
     userId: string,
   ): Promise<BoardRow[]> {
     await this.requireRole(workspaceId, userId, 'VIEWER');
-    return this.boardsRepo.listByWorkspace(workspaceId);
+    return this.boardsRepo.listByWorkspace(workspaceId, userId);
   }
 
   public async update(

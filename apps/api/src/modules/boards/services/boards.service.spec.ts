@@ -16,6 +16,7 @@ import { UsageService } from '../../billing/services/usage.service';
 import { BoardsService } from './boards.service';
 
 const mockBoard: BoardRow = {
+  accessUserIds: null,
   searchVector: null,
   id: 'b1',
   workspaceId: 'w1',
@@ -180,6 +181,10 @@ describe('BoardsService', () => {
       });
 
       expect(result.id).toBe('b1');
+      // Never request a second pooled connection from inside this transaction.
+      expect(boardsRepo.listByWorkspace).toHaveBeenCalledWith('w1', undefined, {
+        __tx: true,
+      });
       expect(boardsRepo.create).toHaveBeenCalledWith(
         {
           workspaceId: 'w1',

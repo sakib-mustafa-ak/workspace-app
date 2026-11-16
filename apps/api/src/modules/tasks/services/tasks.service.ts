@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { boardVisibleTo } from '../../../common/board-access/board-visibility';
 
 import {
   and,
@@ -298,6 +299,7 @@ export class TasksService {
       .where(
         and(
           inArray(tasks.workspaceId, workspaceIds),
+          boardVisibleTo(userId, tasks.boardId),
           or(eq(tasks.status, 'TODO'), eq(tasks.status, 'IN_PROGRESS')),
           isNull(tasks.deletedAt),
         ),

@@ -20,6 +20,9 @@ const navItems = [
 export function AuthenticatedLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
+  const showSidebar = pathname === '/dashboard';
+  const isBoardPage = /^\/workspaces\/[^/]+\/boards\/[^/]+\/?$/.test(pathname);
+  const workspaceId = pathname.match(/^\/workspaces\/([^/]+)/)?.[1];
   const router = useRouter();
 
   const shortcuts = [
@@ -35,23 +38,27 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
     <AuthProvider>
       <VerifiedAccess>
       <div className="flex h-screen">
-        {sidebarOpen && (
+        {showSidebar && sidebarOpen && (
           <div
             className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
             onClick={() => setSidebarOpen(false)}
           />
         )}
 
-        <div
+        {showSidebar && <div
           className={`fixed inset-y-0 left-0 z-50 -translate-x-full transition-transform duration-200 ease-in-out lg:static lg:z-auto lg:translate-x-0 ${
             sidebarOpen ? 'translate-x-0' : ''
           }`}
         >
           <Sidebar />
-        </div>
+        </div>}
 
-        <main className="relative flex min-w-0 flex-1 flex-col overflow-auto pb-16 lg:pb-0">
-          <div className="sticky top-0 z-30 flex h-20 flex-col items-center justify-center border-b border-surface-800/70 bg-surface-950/70 px-4 backdrop-blur-xl lg:hidden">
+        <main className={`relative flex min-w-0 flex-1 flex-col overflow-auto ${showSidebar ? 'pb-16 lg:pb-0' : ''}`}>
+          {!showSidebar && <nav aria-label="Main navigation" className="flex shrink-0 items-center justify-between gap-4 border-b border-surface-800 px-5 py-3 text-sm">
+            <div className="flex items-center gap-4"><Link href="/dashboard" className="font-semibold text-surface-300 hover:text-white">← Dashboard</Link>{workspaceId && !isBoardPage && <Link href={`/workspaces/${workspaceId}`} className="text-surface-500 hover:text-surface-200">Workspace home</Link>}</div>
+            <div className="flex gap-4"><Link href="/notifications" aria-label="Notifications" className="text-surface-500 hover:text-surface-200"><Bell size={17} /></Link><Link href="/settings" aria-label="Account settings" className="text-surface-500 hover:text-surface-200"><Settings size={17} /></Link></div>
+          </nav>}
+          {showSidebar && <div className="sticky top-0 z-30 flex h-20 flex-col items-center justify-center border-b border-surface-800/70 bg-surface-950/70 px-4 backdrop-blur-xl lg:hidden">
             <button
               onClick={() => setSidebarOpen(true)}
               title="Open navigation menu"
@@ -62,11 +69,11 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
             </button>
             <span className="text-xl font-bold uppercase tracking-[0.26em] text-surface-100">Workspace</span>
             <span className="mt-1.5 text-xs font-medium uppercase tracking-[0.26em] text-surface-500">OS</span>
-          </div>
+          </div>}
 
           <ErrorBoundary>{children}</ErrorBoundary>
 
-          <footer className="border-t border-surface-800/70 px-6 py-5 lg:px-8">
+          <footer className="shrink-0 border-t border-surface-800/70 px-6 py-5 lg:px-8">
             <div className="flex flex-col gap-2 text-xs text-surface-500 sm:flex-row sm:items-center sm:justify-between">
               <span>© {new Date().getFullYear()} Workspace OS</span>
               <div className="flex gap-4">
@@ -81,7 +88,7 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
           </footer>
         </main>
 
-        <nav className="fixed bottom-0 left-0 right-0 z-40 flex max-lg:flex lg:hidden border-t border-surface-800 bg-surface-950/95 backdrop-blur-md">
+        {showSidebar && <nav className="fixed bottom-0 left-0 right-0 z-40 flex max-lg:flex lg:hidden border-t border-surface-800 bg-surface-950/95 backdrop-blur-md">
           {navItems.slice(0, 4).map((item) => (
             <Link
               key={item.href}
@@ -94,7 +101,7 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
               {item.label}
             </Link>
           ))}
-        </nav>
+        </nav>}
 
         {showCheatSheet && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60" onClick={() => setShowCheatSheet(false)}>

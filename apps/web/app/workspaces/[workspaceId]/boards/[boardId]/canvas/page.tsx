@@ -7,6 +7,8 @@ import { CanvasSyncProvider, useCanvasSync } from './_context/canvas-sync';
 import { CanvasSurface } from './_components/canvas-surface';
 import { Toolbar } from './_components/toolbar';
 import { Breadcrumbs } from '@/components/breadcrumbs';
+import { workspacesApi } from '@/lib/workspaces';
+import { boardsApi } from '@/lib/boards';
 
 function CanvasLoadError() {
   const { loadError, retryLoad } = useCanvasSync();
@@ -16,7 +18,7 @@ function CanvasLoadError() {
       <div className="pointer-events-auto max-w-md rounded-xl border border-red-500/20 bg-surface-900/95 px-6 py-4 shadow-xl">
         <p className="text-sm font-medium text-red-400">{loadError}</p>
         <button
-          onClick={retryLoad}
+          onClick={loadError.startsWith('Board access') ? () => window.location.reload() : retryLoad}
           className="mt-2 rounded-lg bg-primary-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-primary-500"
         >
           Try again
@@ -35,13 +37,16 @@ function CanvasHeader() {
   const [board, setBoard] = useState<{ name: string } | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     Promise.all([
-      fetch(`/api/workspaces/${workspaceId}`).then(r => r.json()),
-      fetch(`/api/workspaces/${workspaceId}/boards/${boardId}`).then(r => r.json()),
+      workspacesApi.getById(workspaceId),
+      boardsApi.getById(workspaceId, boardId),
     ]).then(([ws, brd]) => {
+      if (cancelled) return;
       setWorkspace(ws);
       setBoard(brd);
-    });
+    }).catch(() => {});
+    return () => { cancelled = true; };
   }, [workspaceId, boardId]);
 
   return (

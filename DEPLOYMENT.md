@@ -35,8 +35,8 @@ speaks the same `postgresql://` URL the Drizzle driver already uses.
    - `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` → Render generated them
      (check they exist; each ≥16 chars).
    - Save → **Manual Deploy → Latest commit** if a build already started.
-5. The service URL is `https://workspace-api-m9q7.onrender.com`. Verify:
-   `curl https://workspace-api-m9q7.onrender.com/api/v1/health` → 200.
+5. The current service URL is `https://workspace-api-8387.onrender.com`. Verify:
+   `curl https://workspace-api-8387.onrender.com/api/v1/health` → 200.
 
 ### 4. Vercel (web)
 1. https://vercel.com → Sign in (GitHub) → **Add New Project** →
@@ -44,8 +44,33 @@ speaks the same `postgresql://` URL the Drizzle driver already uses.
 2. **Danger zone setting**: under Settings → General → Root Directory,
    select **`apps/web`** (the monorepo).
 3. Environment Variables (add `NEXT_PUBLIC_API_URL`):
-   `https://workspace-api-m9q7.onrender.com/api/v1`
-4. Deploy. The site comes up at `https://workspace-app.vercel.app`.
+   `https://workspace-api-8387.onrender.com/api/v1`
+4. Deploy. The current site is `https://workspace-app-web.vercel.app`.
+
+### Releasing workspace home, board access and events
+
+These changes require both the web and API deployments, plus database migrations:
+
+1. Include all new source files, SQL migrations and migration metadata in the commit.
+2. Deploy the API on Render. Its build command in [render.yaml](render.yaml)
+   builds the shared packages and API, then runs `drizzle-kit migrate`.
+   Confirm the actual Render service uses that command; changing this file alone
+   does not prove an existing service's dashboard settings have been updated.
+3. Confirm migrations `0008_handy_timeslip` (board access) and
+   `0009_chief_living_tribunal` (personal events) complete against the same Neon
+   database the API uses. Do not use schema push or reset on production.
+4. Confirm API health is 200 and an unauthenticated request to
+   `/api/v1/events` returns 401, not 404. Then test events while signed in.
+5. Deploy/redeploy Vercel with the production API URL above. If Vercel auto-deploys
+   first, wait for Render to finish before testing the new features. Verify both
+   services target the intended main-branch commit.
+6. Smoke-test sign-in, workspace/board creation, event create/edit/delete, task
+   assignment, restricted-board visibility and two-tab canvas collaboration.
+   Changing access on one board must not disconnect another board's canvas.
+
+The migrations add a nullable column and a new table; existing boards remain
+visible to workspace members by default. Integration tests use an isolated
+database and do not apply migrations to Neon or send real verification emails.
 
 ### 5. Smoke test
 - Configure real email using the Gmail API or Resend instructions below before
@@ -68,12 +93,12 @@ speaks the same `postgresql://` URL the Drizzle driver already uses.
 | `MAIL_FROM` | Render only | Resend: verified-domain sender. Gmail: omit or use `Workspace OS <workspace.os.verify@gmail.com>` |
 | `JWT_ACCESS_SECRET` | Render (generated) | random ≥16 chars |
 | `JWT_REFRESH_SECRET` | Render (generated) | random ≥16 chars |
-| `NEXT_PUBLIC_API_URL` | Vercel | `https://workspace-api-m9q7.onrender.com/api/v1` |
+| `NEXT_PUBLIC_API_URL` | Vercel | `https://workspace-api-8387.onrender.com/api/v1` |
 | `REDIS_HOST` / `REDIS_PORT` | optional | defaults `localhost`/`6379`; the Redis module is a no-op placeholder — no client connects yet |
 
 ## Known limits (free-tier demo)
 
-Production requires real email configuration at startup. Configure either Gmail API or Resend **before deploying this change**, or the API will refuse to start instead of silently recording email. Existing unverified accounts must verify before accessing workspace APIs or realtime connections. No database migration is required.
+Production requires real email configuration at startup. Configure either Gmail API or Resend **before deploying this change**, or the API will refuse to start instead of silently recording email. Existing unverified accounts must verify before accessing workspace APIs or realtime connections. Email configuration alone does not require a new migration; workspace home, board access and events require the migrations listed above.
 
 ### Activate email and verification
 

@@ -12,6 +12,7 @@ import {
   type StorageProvider,
 } from '../interfaces/storage-provider.interface';
 import type { UploadedFileRow } from '@repo/database';
+import { canUseBoard } from '../../../common/board-access/board-visibility';
 
 export interface EnrichedUpload extends UploadedFileRow {
   downloadUrl: string;
@@ -105,6 +106,11 @@ export class UploadsService {
           'Board does not belong to workspace',
         );
       }
+      if (!canUseBoard(membership.role, userId, board.accessUserIds))
+        throw new UploadException(
+          UploadErrorCode.INSUFFICIENT_ROLE,
+          'Board access denied.',
+        );
     }
 
     const { storageKey } = await this.storage.save(
@@ -183,7 +189,9 @@ export class UploadsService {
         'Insufficient role',
       );
     }
-    return this.enrichAll(await this.uploadsRepo.findByWorkspace(workspaceId));
+    return this.enrichAll(
+      await this.uploadsRepo.findByWorkspace(workspaceId, userId),
+    );
   }
 
   async delete(id: string, userId: string) {

@@ -2,17 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import {
-  Plus, MessageSquare, Layout, Settings, Pencil, Archive,
-  Trash2, X, Check, FileText, Sparkles, Calendar,
-} from 'lucide-react';
+import { Plus, Pencil, X, Check, MoreHorizontal } from 'lucide-react';
 import {
   DndContext, closestCorners, KeyboardSensor,
   PointerSensor, useSensor, useSensors, type DragEndEvent,
 } from '@dnd-kit/core';
 import {
-  SortableContext, verticalListSortingStrategy, arrayMove,
+  SortableContext, verticalListSortingStrategy, arrayMove, sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import { workspacesApi } from '@/lib/workspaces';
 import { boardsApi, type Board, type BoardColumn } from '@/lib/boards';
@@ -21,7 +17,6 @@ import { SkeletonBlock, SkeletonCard } from '@/components/skeleton';
 import { CommentsPanel } from '@/components/comments-panel';
 import { TaskModal } from '@/components/task-modal';
 import { SortableTaskCard } from '@/components/sortable-task-card';
-import { BoardUploadButton } from '@/components/board-upload-button';
 import { BoardFileSidebar } from '@/components/board-file-sidebar';
 import { AiSummarizePanel } from '@/components/ai-summarize-panel';
 import { AiIdeasDialog } from '@/components/ai-ideas-dialog';
@@ -29,7 +24,8 @@ import { CalendarView } from '@/components/calendar-view';
 import { addRecentBoard } from '@/lib/recent-activity';
 import { useToast } from '@/contexts/toast-context';
 import { ConfirmModal } from '@/components/confirm-modal';
-import { Breadcrumbs } from '@/components/breadcrumbs';
+import { BoardToolbar } from '@/components/board-toolbar';
+import { BoardListSurface } from '@/components/board-list-surface';
 
 type ModalState =
   | { type: 'create'; columnId: string }
@@ -52,7 +48,8 @@ export default function BoardDetailPage() {
   const [showFiles, setShowFiles] = useState(false);
   const [showAiSummary, setShowAiSummary] = useState(false);
   const [showAiIdeas, setShowAiIdeas] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
+  const [search, setSearch] = useState('');
+  const [addingList, setAddingList] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [modal, setModal] = useState<ModalState>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -68,7 +65,7 @@ export default function BoardDetailPage() {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
   function loadBoard() {
@@ -150,6 +147,7 @@ export default function BoardDetailPage() {
       const col = await boardsApi.createColumn(workspaceId, boardId, { name: newColName.trim() });
       setColumns((prev) => [...prev, col]);
       setNewColName('');
+      setAddingList(false);
     } catch {
       toast.error('Failed to create column. Please try again.');
     }
@@ -298,164 +296,48 @@ export default function BoardDetailPage() {
   const sortedColumns = [...columns].sort((a, b) => a.position - b.position);
   const colOptions = sortedColumns.map((c) => ({ id: c.id, name: c.name }));
 
-  const COLUMN_COLORS = [
-    'bg-blue-500', 'bg-emerald-500', 'bg-violet-500', 'bg-amber-500',
-    'bg-rose-500', 'bg-cyan-500', 'bg-pink-500', 'bg-lime-500',
-  ];
-
-  const taskLabel = modal?.type === 'edit' ? modal.task.title : modal?.type === 'create' ? 'New task' : null;
+  const visibleTasks = tasks.filter((task) => task.title.toLowerCase().includes(search.trim().toLowerCase()));
 
   return (
-    <div className="flex h-full flex-col">
-      <header className="flex flex-col gap-3 border-b border-surface-800 px-8 py-4">
-        <Breadcrumbs
-          items={[
-            { label: workspace?.name || 'Workspace', href: `/workspaces/${workspaceId}` },
-            { label: 'Boards', href: `/workspaces/${workspaceId}/boards` },
-          ]}
-          currentLabel={taskLabel ?? (board?.name || 'Board')}
-        />
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          {editingBoard ? (
-            <div className="flex items-center gap-2">
-              <input
-                value={boardName}
-                onChange={(e) => setBoardName(e.target.value)}
-                className="rounded border border-surface-700 bg-surface-800 px-2 py-1 text-sm outline-none focus:border-primary-500"
-              />
-              <button onClick={handleUpdateBoard} className="rounded p-1 text-emerald-400 hover:bg-surface-800">
-                <Check size={14} />
-              </button>
-              <button onClick={() => setEditingBoard(false)} className="rounded p-1 text-surface-500 hover:bg-surface-800">
-                <X size={14} />
-              </button>
-            </div>
-          ) : (
-            <div>
-              <h1 className="font-display text-lg font-bold">{board.name}</h1>
-              <p className="text-xs text-surface-500">
-                {board.description || 'No description'}
-              </p>
-            </div>
-          )}
-          <div className="flex flex-wrap items-center gap-2">
-            <BoardUploadButton workspaceId={workspaceId} boardId={boardId} onUploaded={() => setShowFiles(true)} />
-          <button
-            onClick={() => setShowFiles(!showFiles)}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs transition-colors ${
-              showFiles
-                ? 'bg-primary-600/20 text-primary-400'
-                : 'text-surface-400 hover:bg-surface-800 hover:text-surface-200'
-            }`}
-          >
-            <FileText size={14} />
-            Files
-          </button>
-          <button
-            onClick={() => setShowAiSummary(!showAiSummary)}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-200"
-          >
-            <Sparkles size={14} />
-            Summarize
-          </button>
-          <button
-            onClick={() => setShowAiIdeas(true)}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-200"
-          >
-            <Sparkles size={14} />
-            Ideas
-          </button>
-          <Link
-            href={`/workspaces/${workspaceId}/boards/${boardId}/canvas`}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-200"
-          >
-            <Layout size={14} />
-            Canvas
-          </Link>
-          <button
-            onClick={() => setShowCalendar(!showCalendar)}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs transition-colors ${
-              showCalendar
-                ? 'bg-primary-600/20 text-primary-400'
-                : 'text-surface-400 hover:bg-surface-800 hover:text-surface-200'
-            }`}
-          >
-            <Calendar size={14} />
-            Calendar
-          </button>
-          <button
-            onClick={() => setShowComments(!showComments)}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs transition-colors ${
-              showComments
-                ? 'bg-primary-600/20 text-primary-400'
-                : 'text-surface-400 hover:bg-surface-800 hover:text-surface-200'
-            }`}
-          >
-            <MessageSquare size={14} />
-            Comments
-          </button>
-          <div className="relative">
-            <button
-              onClick={() => setShowSettings(!showSettings)}
-              title="Board settings"
-              aria-label="Board settings"
-              aria-expanded={showSettings}
-              className="rounded-lg p-1.5 text-surface-400 hover:bg-surface-800 hover:text-surface-200"
-            >
-              <Settings size={16} />
-            </button>
-            {showSettings && (
-              <div className="absolute right-0 top-full z-40 mt-1 w-48 rounded-xl border border-surface-800 bg-surface-900 py-1 shadow-xl" onClick={() => setShowSettings(false)}>
-                <button
-                  onClick={() => { setEditingBoard(true); setBoardName(board.name); setBoardDesc(board.description || ''); }}
-                  className="flex w-full items-center gap-2 px-4 py-2 text-xs text-surface-300 hover:bg-surface-800"
-                >
-                  <Pencil size={12} /> Edit board
-                </button>
-                {board.archivedAt ? (
-                  <button onClick={handleUnarchiveBoard} className="flex w-full items-center gap-2 px-4 py-2 text-xs text-surface-300 hover:bg-surface-800">
-                    <Archive size={12} /> Unarchive
-                  </button>
-                ) : (
-                  <button onClick={handleArchiveBoard} className="flex w-full items-center gap-2 px-4 py-2 text-xs text-surface-300 hover:bg-surface-800">
-                    <Archive size={12} /> Archive
-                  </button>
-                )}
-                <button onClick={() => setConfirmDelete(true)} className="flex w-full items-center gap-2 px-4 py-2 text-xs text-red-400 hover:bg-red-500/10">
-                  <Trash2 size={12} /> Delete
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-        </div>
-      </header>
+    <div className="flex min-w-0 flex-1 flex-col bg-surface-950">
+      <BoardToolbar
+        board={board} workspaceId={workspaceId} workspaceName={workspace?.name || 'Workspace'}
+        calendar={showCalendar} comments={showComments} search={search} onSearch={setSearch} onView={setShowCalendar}
+        onComments={() => { setShowComments(!showComments); setShowFiles(false); }}
+        onFiles={() => { setShowFiles(true); setShowComments(false); }}
+        onSummary={() => setShowAiSummary(true)} onIdeas={() => setShowAiIdeas(true)}
+        onEdit={() => { setEditingBoard(true); setBoardName(board.name); setBoardDesc(board.description || ''); }}
+        onArchive={board.archivedAt ? handleUnarchiveBoard : handleArchiveBoard} onDelete={() => setConfirmDelete(true)}
+      />
+      {search.trim() && <p role="status" className="border-b border-surface-800 px-4 py-2 text-xs text-surface-500 sm:px-6">{visibleTasks.length} matching task{visibleTasks.length !== 1 ? 's' : ''} · Clear search to drag tasks between lists.</p>}
+      {editingBoard && (
+        <form onSubmit={(event) => { event.preventDefault(); void handleUpdateBoard(); }} className="space-y-3 border-b border-surface-800 bg-surface-900 px-4 py-4 sm:px-6">
+          <label className="block text-xs text-surface-400">Board name<input autoFocus required maxLength={128} value={boardName} onChange={(event) => setBoardName(event.target.value)} className="mt-1 block w-full max-w-lg rounded-lg border border-surface-700 bg-surface-950 p-2 text-sm text-surface-200" /></label>
+          <label className="block text-xs text-surface-400">Description<textarea value={boardDesc} onChange={(event) => setBoardDesc(event.target.value)} className="mt-1 block w-full max-w-lg rounded-lg border border-surface-700 bg-surface-950 p-2 text-sm text-surface-200" /></label>
+          <div className="flex gap-2"><button className="rounded-lg bg-primary-600 px-3 py-2 text-xs text-white">Save changes</button><button type="button" onClick={() => setEditingBoard(false)} className="rounded-lg px-3 py-2 text-xs text-surface-400 hover:bg-surface-800">Cancel</button></div>
+        </form>
+      )}
 
-      <div className="flex flex-1">
+      <div className="relative flex min-w-0 flex-1 flex-col lg:flex-row">
         {showCalendar ? (
           <div className="flex-1 overflow-y-auto p-6">
             <CalendarView
-              tasks={tasks}
+              tasks={visibleTasks}
               columns={columns}
               onEditTask={(task) => setModal({ type: 'edit', task })}
             />
           </div>
         ) : (
         <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-        <div className="flex flex-1 gap-4 overflow-x-auto p-6 scroll-smooth">
+        <div aria-label="Board task lists" className="flex min-w-0 flex-1 items-start gap-3 overflow-x-auto p-4 pb-8 scroll-smooth sm:p-6">
           {sortedColumns.map((col) => {
-            const colTasks = tasks
+            const colTasks = visibleTasks
               .filter((t) => t.columnId === col.id)
               .sort((a, b) => a.position - b.position);
 
-            const colorIndex = col.name
-              .split('')
-              .reduce((acc, c) => acc + c.charCodeAt(0), 0) % COLUMN_COLORS.length;
-
             return (
-              <div key={col.id} className="flex w-72 shrink-0 flex-col rounded-xl bg-surface-900">
-                <div className={`h-1 rounded-t-xl ${COLUMN_COLORS[colorIndex]}`} />
-                <div className="flex items-center justify-between px-4 py-3">
+              <BoardListSurface key={col.id} id={col.id} name={col.name}>
+                <div className="flex items-center justify-between gap-2 px-3 py-3">
                   {editingColId === col.id ? (
                     <div className="flex items-center gap-1">
                       <input
@@ -464,51 +346,44 @@ export default function BoardDetailPage() {
                         className="w-28 rounded border border-surface-700 bg-surface-800 px-1.5 py-0.5 text-xs outline-none focus:border-primary-500/50"
                         autoFocus
                       />
-                      <button onClick={() => handleUpdateColumn(col.id)} className="text-emerald-400">
+                      <button aria-label="Save list name" onClick={() => handleUpdateColumn(col.id)} className="text-emerald-400">
                         <Check size={12} />
                       </button>
-                      <button onClick={() => setEditingColId(null)} className="text-surface-500">
+                      <button aria-label="Cancel renaming list" onClick={() => setEditingColId(null)} className="text-surface-500">
                         <X size={12} />
                       </button>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-medium text-surface-300">{col.name}</h3>
-                      <span key={colTasks.length} className="rounded-md bg-surface-800 px-2 py-0.5 text-xs text-surface-500 animate-countUp">
+                      <h2 className="break-words text-[13px] font-semibold text-surface-300">{col.name}</h2>
+                      <span className="text-xs text-surface-500">
                         {colTasks.length}
                       </span>
                     </div>
                   )}
                   <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => { setEditingColId(col.id); setEditingColName(col.name); }}
-                      className="rounded p-0.5 text-surface-500 hover:text-surface-300"
-                    >
-                      <Pencil size={10} />
-                    </button>
-                    <button
-                      onClick={() => handleArchiveColumn(col.id)}
-                      className="rounded p-0.5 text-surface-500 hover:text-red-400"
-                    >
-                      <X size={10} />
-                    </button>
+                    <details name="board-list-actions" className="relative" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open = false; }} onKeyDown={(event) => { if (event.key === 'Escape') { event.currentTarget.open = false; event.currentTarget.querySelector('summary')?.focus(); } }}>
+                      <summary aria-label={`Actions for ${col.name}`} className="cursor-pointer list-none rounded-md p-1.5 text-surface-500 hover:bg-surface-800 hover:text-surface-200 [&::-webkit-details-marker]:hidden"><MoreHorizontal size={16} /></summary>
+                      <div className="absolute right-0 top-full z-10 mt-1 w-40 rounded-lg border border-surface-700 bg-surface-900 p-1 shadow-xl" onClick={(event) => { const details = event.currentTarget.closest('details'); if (details) details.open = false; }}>
+                        <button onClick={() => { setEditingColId(col.id); setEditingColName(col.name); }} className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-xs text-surface-300 hover:bg-surface-800"><Pencil size={12} />Rename list</button>
+                        <button onClick={() => handleArchiveColumn(col.id)} className="flex w-full items-center gap-2 rounded px-3 py-2 text-left text-xs text-surface-400 hover:bg-surface-800"><X size={12} />Archive list</button>
+                      </div>
+                    </details>
                   </div>
                 </div>
 
                 <SortableContext items={colTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
-                  <div className="flex-1 space-y-2 px-3 pb-3">
+                  <div className="min-h-8 space-y-2 px-2 pb-2">
                     {colTasks.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-8 text-center">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-800">
-                          <Plus size={18} className="text-surface-600" />
-                        </div>
-                        <p className="mt-2 text-xs text-surface-500">Add your first task</p>
+                      <div className="px-2 py-4 text-xs text-surface-600">
+                        {search ? 'No matching tasks' : 'Drop a task here'}
                       </div>
                     ) : (
                       colTasks.map((task) => (
                         <SortableTaskCard
                           key={task.id}
                           task={task}
+                          disableDrag={Boolean(search.trim())}
                           onClick={() => setModal({ type: 'edit', task })}
                         />
                       ))
@@ -516,32 +391,32 @@ export default function BoardDetailPage() {
                   </div>
                 </SortableContext>
 
-                <div className="border-t border-surface-800 px-3 py-2">
+                <div className="px-2 pb-2">
                   <button
                     onClick={() => setModal({ type: 'create', columnId: col.id })}
-                    className="flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs text-surface-500 transition-colors hover:bg-surface-800 hover:text-surface-300"
+                    className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-xs text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-200"
                   >
                     <Plus size={12} />
                     Add task
                   </button>
                 </div>
-              </div>
+              </BoardListSurface>
             );
           })}
 
-          <div className="flex w-56 shrink-0 flex-col">
-            <div className="flex items-center gap-2 rounded-xl border border-dashed border-surface-700 p-3">
+          <div className="w-[min(18rem,calc(100vw-3rem))] shrink-0">
+            {addingList ? <form onSubmit={(event) => { event.preventDefault(); void handleCreateColumn(); }} className="rounded-xl border border-surface-700 bg-surface-900 p-3">
               <input
+                aria-label="List name"
+                autoFocus
+                maxLength={128}
                 value={newColName}
                 onChange={(e) => setNewColName(e.target.value)}
-                placeholder="New column name"
-                className="flex-1 rounded bg-transparent text-xs outline-none placeholder:text-surface-600 focus:ring-1 focus:ring-primary-500/50"
-                onKeyDown={(e) => e.key === 'Enter' && handleCreateColumn()}
+                placeholder="Enter list name…"
+                className="w-full rounded-lg border border-surface-700 bg-surface-950 p-2 text-xs outline-none placeholder:text-surface-600 focus:border-primary-500/50"
               />
-              <button onClick={handleCreateColumn} className="text-primary-400 hover:text-primary-300">
-                <Plus size={14} />
-              </button>
-            </div>
+              <div className="mt-2 flex items-center gap-2"><button disabled={!newColName.trim()} className="rounded-lg bg-primary-600 px-3 py-2 text-xs text-white disabled:opacity-40">Add list</button><button type="button" aria-label="Cancel adding list" onClick={() => { setAddingList(false); setNewColName(''); }} className="rounded-lg p-2 text-surface-400 hover:bg-surface-800"><X size={16} /></button></div>
+            </form> : <button onClick={() => setAddingList(true)} className="flex w-full items-center gap-2 rounded-xl border border-dashed border-surface-800 bg-surface-900/40 p-3 text-xs text-surface-400 hover:border-surface-600 hover:bg-surface-900"><Plus size={15} />Add another list</button>}
           </div>
         </div>
         </DndContext>
@@ -550,7 +425,8 @@ export default function BoardDetailPage() {
           <BoardFileSidebar workspaceId={workspaceId} boardId={boardId} onClose={() => setShowFiles(false)} />
         )}
         {showComments && (
-          <div className="w-80 shrink-0">
+          <div className="w-full shrink-0 border-l border-surface-800 lg:w-80">
+            <div className="flex items-center justify-between border-b border-surface-800 px-4 py-3 text-xs text-surface-400">Board comments<button aria-label="Close comments" onClick={() => setShowComments(false)} className="rounded p-1 hover:bg-surface-800"><X size={14} /></button></div>
             <CommentsPanel boardId={boardId} />
           </div>
         )}

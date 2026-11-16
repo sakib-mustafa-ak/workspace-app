@@ -57,6 +57,20 @@
       "when": 1788167845324,
       "tag": "0007_opposite_nextwave",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794854431958,
+      "tag": "0008_handy_timeslip",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794867841332,
+      "tag": "0009_chief_living_tribunal",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { boardVisibleTo } from '../../../common/board-access/board-visibility';
 
 import {
   and,
@@ -34,14 +35,19 @@ export class BoardsRepository {
     return row;
   }
 
-  public async listByWorkspace(workspaceId: string): Promise<BoardRow[]> {
-    return this.db
+  public async listByWorkspace(
+    workspaceId: string,
+    userId?: string,
+    tx?: DbExecutor,
+  ): Promise<BoardRow[]> {
+    return (tx ?? this.db)
       .select()
       .from(boards)
       .where(
         and(
           eq(boards.workspaceId, workspaceId),
           sql`${boards.deletedAt} IS NULL`,
+          userId ? boardVisibleTo(userId, boards.id) : undefined,
         ),
       )
       .orderBy(desc(boards.position), desc(boards.createdAt));
@@ -64,6 +70,7 @@ export class BoardsRepository {
     workspaceIds: string[],
     query: string,
     limit = 20,
+    userId?: string,
   ): Promise<Array<{ id: string; name: string; workspaceId: string }>> {
     if (workspaceIds.length === 0) return [];
     const rank = sql`ts_rank(${boards.searchVector}, websearch_to_tsquery(${query}))`;
@@ -77,6 +84,7 @@ export class BoardsRepository {
       .where(
         and(
           inArray(boards.workspaceId, workspaceIds),
+          userId ? boardVisibleTo(userId, boards.id) : undefined,
           sql`${boards.deletedAt} IS NULL`,
           sql`${boards.searchVector} @@ websearch_to_tsquery(${query})`,
         ),

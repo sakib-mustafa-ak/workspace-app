@@ -2,16 +2,12 @@
 
 import { Suspense, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import {
   Plus,
-  ExternalLink,
   LayoutDashboard,
   Loader2,
-  Users,
-  LayoutGrid,
-  CheckSquare,
   ArrowRight,
+  Columns3,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { workspacesApi, type Invitation, type Workspace } from '@/lib/workspaces';
@@ -20,8 +16,9 @@ import { boardsApi, type Board } from '@/lib/boards';
 import { EmailVerificationBanner } from '@/components/email-verification-banner';
 import { getRecentBoards, type RecentBoard } from '@/lib/recent-activity';
 import { getLastActiveWorkspace } from '@/lib/active-workspace';
-import { CalendarDropdown } from '@/components/calendar-dropdown';
+import { DashboardEvents } from '@/components/dashboard-events';
 import { SkeletonCard } from '@/components/skeleton';
+import { DashboardWorkspaceCard } from '@/components/dashboard-workspace-card';
 import { useToast } from '@/contexts/toast-context';
 
 function CreateWorkspaceForm({
@@ -43,8 +40,8 @@ function CreateWorkspaceForm({
     try {
       const ws = await workspacesApi.create({ name, slug });
       onCreated(ws);
-    } catch {
-      toast.error('Failed to create workspace. Please try again.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to create workspace. Please try again.');
     } finally {
       setCreating(false);
     }
@@ -58,13 +55,20 @@ function CreateWorkspaceForm({
       <h2 className="mb-4 text-sm font-semibold text-surface-200">Create workspace</h2>
       <div className="space-y-3">
         <input
+          aria-label="Workspace name"
+          autoFocus
+          maxLength={128}
           placeholder="Workspace name"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => {
+            setName(e.target.value);
+            if (!slugModified.current) setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''));
+          }}
           className="w-full rounded-lg border border-surface-700 bg-surface-900/50 px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-surface-500 focus:border-primary-500/50"
           required
         />
         <input
+          aria-label="Workspace URL slug"
           placeholder="slug (my-team)"
           value={slug}
           onChange={(e) => {
@@ -78,14 +82,14 @@ function CreateWorkspaceForm({
           <button
             type="submit"
             disabled={creating}
-            className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-primary-500 hover:shadow-lg hover:shadow-primary-600/25 disabled:opacity-50"
+            className="rounded-lg bg-primary-600 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-primary-500 disabled:opacity-50"
           >
             {creating ? 'Creating\u2026' : 'Create'}
           </button>
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-lg border border-surface-700 px-4 py-2 text-sm text-surface-400 transition-colors hover:text-white"
+            className="rounded-lg border border-surface-700 px-4 py-2 text-xs text-surface-400 transition-colors hover:bg-surface-800"
           >
             Cancel
           </button>
@@ -99,6 +103,7 @@ function TodoList() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [boards, setBoards] = useState<Record<string, Board>>({});
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -134,8 +139,8 @@ function TodoList() {
           }
         });
         setBoards(boardMap);
-      } catch (err) {
-        console.error('Failed to fetch tasks', err);
+      } catch {
+        setError(true);
       } finally {
         setLoading(false);
       }
@@ -160,28 +165,31 @@ function TodoList() {
   };
 
   return (
-    <div className="rounded-xl border border-surface-800 bg-surface-900 p-4">
-      <div className="mb-3 flex items-center gap-2">
-        <CheckSquare size={16} className="text-primary-400" />
-        <h3 className="text-sm font-medium text-surface-200">To Do</h3>
+    <section aria-labelledby="dashboard-tasks-title" className="rounded-xl border border-surface-800 bg-surface-900/40 p-4">
+      <div className="mb-1 flex items-center justify-between gap-2">
+        <h3 id="dashboard-tasks-title" className="text-sm font-semibold text-surface-200">Tasks</h3>
+        {!loading && !error && <span className="text-xs text-surface-500">{tasks.length}</span>}
       </div>
+      <p className="mb-4 text-xs text-surface-500">Across your workspaces</p>
 
       {loading ? (
         <div className="flex items-center justify-center py-6">
           <Loader2 size={16} className="animate-spin text-primary-500" />
         </div>
+      ) : error ? (
+        <p role="alert" className="py-4 text-xs text-surface-400">Could not load tasks. Refresh to try again.</p>
       ) : tasks.length === 0 ? (
-        <p className="py-4 text-center text-xs text-surface-500">No upcoming tasks</p>
+        <div className="rounded-lg border border-dashed border-surface-800 px-4 py-6"><p className="text-xs text-surface-400">Nothing to catch up on.</p><p className="mt-2 text-xs leading-relaxed text-surface-500">Open a board to plan your next task.</p></div>
       ) : (
-        <div className="space-y-2">
+        <div className="divide-y divide-surface-800">
           {tasks.slice(0, 8).map((task) => (
             <Link
               key={task.id}
               href={`/workspaces/${task.workspaceId}/boards/${task.boardId}`}
-              className="block rounded-lg border border-surface-800 bg-surface-800/50 p-3 transition-colors hover:border-surface-700 hover:bg-surface-800"
+              className="block rounded-md px-1 py-3 transition-colors hover:bg-surface-800/50 focus-visible:outline-primary-400"
             >
-              <p className="text-sm text-surface-200">{task.title}</p>
-              <div className="mt-1.5 flex items-center gap-2">
+              <p className="line-clamp-2 text-xs font-medium leading-relaxed text-surface-200">{task.title}</p>
+              <div className="mt-1.5 flex flex-wrap items-center gap-2">
                 <span
                   className={`text-caption font-medium ${
                     task.dueDate && isOverdue(task.dueDate)
@@ -194,7 +202,7 @@ function TodoList() {
                 {(() => {
                   const board = boards[task.boardId];
                   return board ? (
-                    <span className="rounded bg-surface-700 px-1.5 py-0.5 text-caption text-surface-300">
+                    <span className="max-w-36 truncate text-caption text-surface-500">
                       {board.name}
                     </span>
                   ) : null;
@@ -205,14 +213,14 @@ function TodoList() {
           {tasks.length > 8 && (
             <Link
               href="/calendar"
-              className="block py-2 text-center text-xs text-primary-400 hover:text-primary-300"
+              className="block py-3 text-xs text-surface-400 hover:underline"
             >
               View all {tasks.length} tasks
             </Link>
           )}
         </div>
       )}
-    </div>
+    </section>
   );
 }
 
@@ -259,56 +267,29 @@ function DashboardContent() {
   }, []);
 
   return (
-    <div className="relative min-h-screen">
-      {/* Desktop background */}
-      <div className="relative inset-0">
-        <Image
-          src="/bg-desktop.webp"
-          alt=""
-          fill
-          className="object-cover"
-          priority
-          sizes="100vw"
-        />
-      </div>
-      <div className="pointer-events-none absolute inset-0 bg-surface-950/87" />
-      {/* Mobile background */}
-      <div className="relative inset-0 sm:hidden">
-        <Image
-          src="/bg-mobile.webp"
-          alt=""
-          fill
-          className="object-cover"
-          priority
-          sizes="100vw"
-        />
-      </div>
-      <div className="pointer-events-none absolute inset-0 bg-surface-950/87 sm:hidden" />
-
-      <div className="relative mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+    <div className="flex-1 shrink-0 bg-surface-950">
+      <div className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 lg:py-12">
         <EmailVerificationBanner />
 
-      {/* Welcome card */}
-      <div className="mb-8 rounded-xl border border-surface-800/50 bg-surface-900/60 p-4 backdrop-blur-sm">
+      <header className="mb-8 border-b border-surface-800 pb-7">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-surface-500">Workspace OS</p>
-            <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
-              Hello, <span className="text-warm-300">{user?.displayName || 'there'}</span>
+            <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.2em] text-surface-500">Your overview</p>
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              Hello, {user?.displayName || 'there'}
             </h1>
-            <p className="mt-2 text-sm text-surface-400">
-              {workspaces.length} workspace{workspaces.length !== 1 ? 's' : ''} · {user?.email}
-            </p>
+            <p className="mt-2 text-sm text-surface-500">Pick up where you left off.</p>
           </div>
           <button
             onClick={() => setShowCreate(true)}
-            className="flex shrink-0 items-center gap-2 rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-500 hover:shadow-primary-500/30 active:scale-[0.98]"
+            aria-expanded={showCreate}
+            className="flex w-fit shrink-0 items-center gap-2 rounded-lg border border-surface-700 bg-surface-900 px-4 py-2.5 text-xs font-medium text-surface-200 transition-colors hover:border-surface-500 focus-visible:outline-primary-400"
           >
             <Plus size={16} />
             New workspace
           </button>
         </div>
-      </div>
+      </header>
 
       {/* Invitations banner */}
       {pendingInvites.length > 0 && (
@@ -321,17 +302,17 @@ function DashboardContent() {
       {lastActiveWs && (
         <Link
           href={`/workspaces/${lastActiveWs.id}`}
-          className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-primary-500/20 bg-primary-500/10 px-4 py-3 transition-colors hover:bg-primary-500/20"
+          className="mb-8 flex items-center justify-between gap-3 rounded-xl border border-surface-800 bg-surface-900/40 px-4 py-3 transition-colors hover:border-surface-600"
         >
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-600/20 text-xs font-bold text-primary-400">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-800 text-xs font-semibold text-surface-400">
               {lastActiveWs.name.charAt(0).toUpperCase()}
             </div>
             <p className="truncate text-sm text-surface-200">
-              Continue in <span className="font-medium text-primary-300">{lastActiveWs.name}</span>
+              Continue in <span className="font-medium text-surface-200">{lastActiveWs.name}</span>
             </p>
           </div>
-          <ArrowRight size={16} className="shrink-0 text-primary-400" />
+          <ArrowRight size={15} className="shrink-0 text-surface-500" />
         </Link>
       )}
 
@@ -347,27 +328,8 @@ function DashboardContent() {
         </div>
       )}
 
-      <div className="flex flex-col gap-8 lg:flex-row">
-        <div className="flex-1">
-          {/* Recent boards */}
-          {recentBoards.length > 0 && (
-            <div className="mb-8">
-              <h2 className="mb-3 text-label text-surface-500">Recent boards</h2>
-              <div className="flex gap-3 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                {recentBoards.map((rb) => (
-                  <Link
-                    key={rb.id}
-                    href={`/workspaces/${rb.workspaceId}/boards/${rb.id}`}
-                    className="group shrink-0 rounded-xl border border-surface-800 bg-surface-900 p-4 transition-all hover:border-surface-700 hover:bg-surface-800/50"
-                  >
-                    <p className="text-sm font-medium text-surface-200">{rb.name}</p>
-                    <p className="mt-0.5 text-xs text-primary-400">{rb.workspaceName}</p>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
-
+      <div className="grid min-w-0 grid-cols-1 items-start gap-8 xl:grid-cols-[minmax(0,1fr)_18rem] xl:gap-10">
+        <div className="flex min-w-0 flex-col gap-8">
           {/* Workspace list */}
           {loadError ? (
             <div className="flex flex-col items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/5 py-24">
@@ -394,51 +356,47 @@ function DashboardContent() {
               </div>
               <h3 className="mt-6 text-lg font-semibold text-surface-300">No workspaces yet</h3>
               <p className="mt-1 text-sm text-surface-500">Create your first workspace to get started</p>
-              <button onClick={() => setShowCreate(true)} className="mt-6 flex items-center gap-2 rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-primary-600/20 hover:bg-primary-500">
+              <button onClick={() => setShowCreate(true)} className="mt-6 flex items-center gap-2 rounded-lg border border-surface-700 bg-surface-900 px-4 py-2.5 text-xs font-medium text-surface-200 hover:border-surface-500">
                 <Plus size={16} />
                 Create workspace
               </button>
             </div>
           ) : (
-            <div>
-              <h2 className="mb-3 text-label text-surface-500">All workspaces</h2>
+            <section aria-labelledby="workspaces-title">
+              <div className="mb-4 flex items-center justify-between gap-3"><h2 id="workspaces-title" className="text-sm font-semibold text-surface-200">Your workspaces <span className="ml-2 text-xs font-normal text-surface-500">{workspaces.length}</span></h2><span className="hidden text-[11px] text-surface-600 sm:inline">Hover to preview boards</span></div>
               <div className="space-y-3">
-                {workspaces.map((ws, i) => (
-                  <Link
-                    key={ws.id}
-                    href={`/workspaces/${ws.id}`}
-                    className="group flex items-center gap-4 rounded-xl border border-surface-800 bg-surface-900 p-4 transition-all hover:border-surface-700 hover:bg-surface-800/50 animate-fadeIn"
-                    style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'backwards' }}
-                  >
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary-600/20 to-primary-600/10 text-sm font-bold text-primary-400 shadow-sm shadow-primary-600/10">
-                      {ws.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-semibold text-surface-200">{ws.name}</h3>
-                      <p className="mt-0.5 line-clamp-1 text-xs text-surface-500">{ws.description || 'No description'}</p>
-                      <div className="mt-1.5 flex items-center gap-3 text-xs text-surface-600">
-                        <span className="flex items-center gap-1"><Users size={11} />{ws.memberCount ?? 1}</span>
-                        <span className="text-surface-700">·</span>
-                        <span className="flex items-center gap-1"><LayoutGrid size={11} />{ws.boardCount ?? 0}</span>
-                        <span className="text-surface-700">·</span>
-                        <span>/{ws.slug}</span>
-                      </div>
-                    </div>
-                    <ExternalLink
-                      size={14}
-                      className="shrink-0 text-surface-600 opacity-0 transition-opacity group-hover:opacity-100"
-                    />
-                  </Link>
+                {workspaces.map((ws) => (
+                  <DashboardWorkspaceCard key={ws.id} workspace={ws} />
                 ))}
               </div>
-            </div>
+            </section>
+          )}
+          {recentBoards.length > 0 && (
+            <section aria-labelledby="recent-boards-title" className="min-w-0">
+              <h2 id="recent-boards-title" className="mb-4 text-sm font-semibold text-surface-300">Recently opened</h2>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {recentBoards.map((rb) => {
+                  const workspaceName = rb.workspaceName || workspaces.find((ws) => ws.id === rb.workspaceId)?.name;
+                  return (
+                    <Link key={rb.id} href={`/workspaces/${rb.workspaceId}/boards/${rb.id}`} className="flex min-w-0 items-center gap-3 rounded-xl border border-surface-800 bg-surface-900/40 p-4 transition-colors hover:border-surface-600">
+                      <Columns3 size={16} className="shrink-0 text-surface-500" />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-medium text-surface-200">{rb.name}</p>
+                        {workspaceName && <p className="mt-1 truncate text-[11px] text-surface-500">{workspaceName}</p>}
+                      </div>
+                      <ArrowRight size={13} className="shrink-0 text-surface-600" />
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
           )}
         </div>
 
-        <div className="w-full space-y-4 lg:w-80">
+        <aside aria-label="Tasks and events" className="min-w-0 space-y-4">
           <TodoList />
-          <CalendarDropdown />
-        </div>
+          <DashboardEvents />
+        </aside>
       </div>
       </div>
     </div>

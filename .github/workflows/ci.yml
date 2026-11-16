@@ -61,12 +61,19 @@ jobs:
       - name: API tests
         run: pnpm --filter api exec jest --ci --runInBand
 
+      - name: API build and integration checks
+        run: |
+          pnpm --filter api build
+          pnpm --filter api test:events
+          pnpm --filter api test:workspace-home
+          pnpm --filter api test:trello-integration
+          pnpm --filter api test:email-integration
+
       - name: Web build
         run: pnpm --filter web build
 
       - name: API smoke test (boot + liveness check)
         run: |
-          pnpm --filter api build
           node apps/api/dist/main.js &
           API_PID=$!
           trap "kill $API_PID 2>/dev/null || true" EXIT

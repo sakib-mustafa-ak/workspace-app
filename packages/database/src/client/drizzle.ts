@@ -20,6 +20,7 @@
  *  barrel boundaries; the package owns the persistence surface.
  */
 export {
+  getTableColumns,
   sql,
   eq,
   ne,

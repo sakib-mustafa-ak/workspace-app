@@ -8,6 +8,7 @@ import { workspacesApi, type WorkspaceMember } from '@/lib/workspaces';
 import { useToast } from '@/contexts/toast-context';
 import { ConfirmModal } from '@/components/confirm-modal';
 import { useFocusTrap } from '@/hooks/use-focus-trap';
+import { boardsApi } from '@/lib/boards';
 
 export type TaskModalMode = 'create' | 'edit';
 
@@ -52,7 +53,7 @@ export function TaskModal({
 
   useEffect(() => {
     Promise.all([
-      workspacesApi.getMembers(workspaceId).then(setMembers).catch(() => {}),
+      Promise.all([workspacesApi.getMembers(workspaceId), boardsApi.getById(workspaceId, boardId)]).then(([list, board]) => setMembers(list.filter((member) => member.status === 'ACTIVE' && (board.accessUserIds == null || ['OWNER', 'ADMIN'].includes(member.role) || board.accessUserIds.includes(member.userId))))).catch(() => {}),
       mode === 'edit' && task ? checklistApi.list(workspaceId, boardId, task.id).then(setChecklist).catch(() => {}) : Promise.resolve(),
     ]);
   }, [workspaceId, boardId, task, mode]);
@@ -79,7 +80,10 @@ export function TaskModal({
           title: title.trim(),
           description: description.trim() || null,
           priority,
-          assigneeId: assigneeId || null,
+          // Preserve an existing assignment when only other fields changed.
+          // Its owner may no longer have board access; new grants must still
+          // pass the server's access check when an assignment is changed.
+          ...(assigneeId !== (task.assigneeId || '') ? { assigneeId: assigneeId || null } : {}),
           dueDate: dueDate || null,
         });
         onSaved(updated);
@@ -228,6 +232,9 @@ export function TaskModal({
               className="w-full rounded-lg border border-surface-700 bg-surface-800 px-3 py-2 text-sm outline-none focus:border-primary-500"
             >
               <option value="">Unassigned</option>
+                {assigneeId && !members.some((member) => member.userId === assigneeId) && (
+                  <option value={assigneeId} disabled>Current assignee (unavailable)</option>
+                )}
               {members.map((m) => (
                 <option key={m.id} value={m.userId}>
                   {m.user?.displayName || m.user?.email || m.userId}

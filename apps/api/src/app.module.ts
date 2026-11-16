@@ -8,6 +8,9 @@ import { DatabaseModule } from './infrastructure/database/database.module.js';
 import { RedisModule } from './infrastructure/redis/redis.module.js';
 import { AppLoggerModule } from './infrastructure/logger/logger.module.js';
 import { WorkspaceMembershipGuard } from './common/guards/workspace-membership.guard.js';
+import { BoardAccessModule } from './common/board-access/board-access.module';
+import { BoardAccessGuard } from './common/board-access/board-access.guard';
+import { EventsModule } from './modules/events/events.module';
 import { HealthModule } from './modules/health/health.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard.js';
@@ -75,6 +78,8 @@ import { BillingModule } from './modules/billing/billing.module.js';
 
     AppLoggerModule,
     DatabaseModule,
+    BoardAccessModule,
+    EventsModule,
     RedisModule,
 
     HealthModule,
@@ -111,6 +116,7 @@ import { BillingModule } from './modules/billing/billing.module.js';
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
+    { provide: APP_GUARD, useClass: BoardAccessGuard },
   ],
 })
 export class AppModule {}

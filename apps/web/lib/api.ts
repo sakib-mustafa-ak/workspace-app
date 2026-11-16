@@ -28,7 +28,7 @@ function assertConfigured(): void {
   if (BASE_URL === 'MISSING_NEXT_PUBLIC_API_URL') {
     throw new Error(
       'NEXT_PUBLIC_API_URL is not set. Add it to the deployment environment ' +
-        '(e.g. https://workspace-api-m9q7.onrender.com/api/v1 on Vercel).',
+        '(e.g. https://workspace-api-8387.onrender.com/api/v1 on Vercel).',
     );
   }
 }

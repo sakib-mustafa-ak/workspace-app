@@ -95,8 +95,14 @@ describe('SearchService', () => {
       ['ws-1'],
       'login',
       20,
+      'user-1',
     );
-    expect(tasksRepo.searchByQuery).toHaveBeenCalledWith(['ws-1'], 'login', 20);
+    expect(tasksRepo.searchByQuery).toHaveBeenCalledWith(
+      ['ws-1'],
+      'login',
+      20,
+      'user-1',
+    );
   });
 
   it('returns empty results when the user has no workspaces', async () => {

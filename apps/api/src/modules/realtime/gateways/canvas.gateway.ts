@@ -9,9 +9,12 @@ import {
 } from '@nestjs/websockets';
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Server, Socket } from 'socket.io';
+import { Server, Socket, type Namespace } from 'socket.io';
 import { jwtVerify } from 'jose';
 import { TextEncoder } from 'node:util';
+import { BoardAccessService } from '../../../common/board-access/board-access.service';
+import { BoardPresenceService } from '../../../common/board-access/board-presence.service';
+import { canUseBoard } from '../../../common/board-access/board-visibility';
 
 import { UsersService } from '../../users/services/users.service';
 import { NotificationsEventBus } from '../../notifications/events/notifications.events';
@@ -36,7 +39,7 @@ export class CanvasGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnModuleInit
 {
   @WebSocketServer()
-  server!: Server;
+  server!: Server | Namespace;
 
   private boardRooms = new Map<string, Map<string, PresenceUser>>();
 
@@ -48,6 +51,7 @@ export class CanvasGateway
    *  real-time stroke segments fast — each object:updated would otherwise
    *  pay 2 DB round-trips on the free tier. */
   private membershipCache = new Map<string, Map<string, boolean>>();
+  private accessEpoch = 0;
 
   private static readonly LOCK_TTL_MS = 30_000;
 
@@ -75,6 +79,8 @@ export class CanvasGateway
     @Inject(WorkspacesEventBus)
     private readonly workspacesEvents: WorkspacesEventBus,
     config: ConfigService,
+    private readonly access: BoardAccessService,
+    private readonly presence: BoardPresenceService,
   ) {
     const secret = config.get<string>('auth.jwt.access.secret');
     if (!secret) {
@@ -84,6 +90,19 @@ export class CanvasGateway
   }
 
   onModuleInit(): void {
+    this.access.onChanged((boardId) => {
+      this.accessEpoch++;
+      this.membershipCache.clear();
+      this.presence.clearBoard(boardId);
+      for (const [socketId, userId] of this.socketUsers) {
+        const socket = this.findSocket(socketId);
+        if (!socket?.rooms.has(`board:${boardId}`)) continue;
+        void socket.leave(`board:${boardId}`);
+        this.removePresence(boardId, userId);
+        this.releaseUserLocks(userId, socketId, boardId);
+        socket.emit('board:join:denied', { boardId, reason: 'access_changed' });
+      }
+    });
     this.notificationsBus.onNotificationCreated((payload) => {
       this.server
         .to(`user:${payload.userId}`)
@@ -101,6 +120,15 @@ export class CanvasGateway
     });
   }
 
+  private findSocket(socketId: string): AuthenticatedSocket | undefined {
+    // Namespaced gateways receive a Namespace; an unnamespaced gateway gets
+    // the root Server. Their socket maps live at different depths.
+    const sockets = this.server?.sockets;
+    return (sockets instanceof Map ? sockets : sockets?.sockets)?.get(
+      socketId,
+    ) as AuthenticatedSocket | undefined;
+  }
+
   /**
    * Drop all cached membership decisions and board-room presence for one
    * user's sockets, and release their object locks. Called on removal or
@@ -110,6 +138,7 @@ export class CanvasGateway
     workspaceId: string,
     userId: string,
   ): Promise<void> {
+    this.accessEpoch++;
     let boards: { id: string }[] = [];
     try {
       boards = await this.boardsRepo.listByWorkspace(workspaceId);
@@ -121,14 +150,13 @@ export class CanvasGateway
       if (trackedUser !== userId) continue;
       this.membershipCache.delete(socketId);
 
-      const socket = this.server?.sockets?.sockets.get(socketId) as
-        | AuthenticatedSocket
-        | undefined;
+      const socket = this.findSocket(socketId);
       if (!socket) {
         this.socketUsers.delete(socketId);
         continue;
       }
       for (const board of boards) {
+        this.presence.leave(socketId, board.id);
         await socket.leave(`board:${board.id}`);
         this.removePresence(board.id, userId);
         socket.emit('board:join:denied', {
@@ -151,6 +179,8 @@ export class CanvasGateway
   private removePresence(boardId: string, userId?: string): void {
     const users = this.boardRooms.get(boardId);
     if (!users || !userId) return;
+    if (this.presence.list(boardId).some((user) => user.userId === userId))
+      return;
     if (users.delete(userId)) {
       if (users.size === 0) this.boardRooms.delete(boardId);
       else this.boardRooms.set(boardId, users);
@@ -212,6 +242,7 @@ export class CanvasGateway
     const boardCache = this.membershipCache.get(socketId);
     const cached = boardCache?.get(boardId);
     if (cached !== undefined) return cached;
+    const epoch = this.accessEpoch;
 
     let allowed = false;
     try {
@@ -221,12 +252,17 @@ export class CanvasGateway
           board.workspaceId,
           userId,
         );
-        allowed = Boolean(membership);
+        allowed = Boolean(
+          membership &&
+          membership.status === 'ACTIVE' &&
+          canUseBoard(membership.role, userId, board.accessUserIds),
+        );
       }
     } catch {
       allowed = false;
     }
 
+    if (epoch !== this.accessEpoch) return false;
     if (!this.membershipCache.has(socketId)) {
       this.membershipCache.set(socketId, new Map());
     }
@@ -249,9 +285,17 @@ export class CanvasGateway
   }
 
   handleDisconnect(client: AuthenticatedSocket): void {
+    this.presence.leave(client.id);
+    this.socketUsers.delete(client.id);
     this.membershipCache.delete(client.id);
     if (client.userId) {
       for (const [boardId, users] of this.boardRooms) {
+        if (
+          this.presence
+            .list(boardId)
+            .some((user) => user.userId === client.userId)
+        )
+          continue;
         if (users.delete(client.userId)) {
           this.boardRooms.set(boardId, users);
           this.server
@@ -279,6 +323,12 @@ export class CanvasGateway
         client.displayName = await this.resolveDisplayName(userId);
       }
       await client.join(`board:${data.boardId}`);
+      this.presence.join(
+        client.id,
+        userId,
+        client.displayName || 'Unknown',
+        data.boardId,
+      );
       if (!this.boardRooms.has(data.boardId)) {
         if (this.boardRooms.size >= CanvasGateway.MAX_BOARDS) {
           const oldest = [...this.boardRooms.keys()][0];
@@ -305,9 +355,16 @@ export class CanvasGateway
     @MessageBody() data: { boardId: string },
   ): void {
     if (!client.userId) return;
+    this.presence.leave(client.id, data.boardId);
     void client.leave(`board:${data.boardId}`);
     const users = this.boardRooms.get(data.boardId);
     if (users) {
+      if (
+        this.presence
+          .list(data.boardId)
+          .some((user) => user.userId === client.userId)
+      )
+        return;
       users.delete(client.userId);
       client
         .to(`board:${data.boardId}`)
@@ -389,8 +446,13 @@ export class CanvasGateway
     return locks;
   }
 
-  private releaseUserLocks(userId: string, socketId: string): void {
+  private releaseUserLocks(
+    userId: string,
+    socketId: string,
+    onlyBoardId?: string,
+  ): void {
     for (const [boardId, locks] of this.objectLocks) {
+      if (onlyBoardId && boardId !== onlyBoardId) continue;
       for (const [objectId, lock] of locks) {
         // Only release locks held by THIS socket — a user with multiple
         // tabs must keep the locks owned by their other connections.

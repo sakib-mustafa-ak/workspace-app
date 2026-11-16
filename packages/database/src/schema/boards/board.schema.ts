@@ -3,6 +3,7 @@ import {
   check,
   index,
   integer,
+  jsonb,
   pgTable,
   text,
   uniqueIndex,
@@ -38,6 +39,8 @@ export const boards = pgTable(
 
     name: text('name').notNull(),
     description: text('description'),
+    // null = all active workspace members; [] = workspace admins/owner only.
+    accessUserIds: jsonb('access_user_ids').$type<string[] | null>(),
     position: integer('position').notNull().default(0),
     searchVector: tsvector('search_vector').generatedAlwaysAs(
       sql`to_tsvector('english', name || ' ' || COALESCE(description, ''))`,

@@ -13,6 +13,7 @@ import { CommentsEventBus } from '../events/comments.events';
 import { CommentsService } from './comments.service';
 
 const mockBoard: BoardRow = {
+  accessUserIds: null,
   searchVector: null,
   id: 'b1',
   workspaceId: 'w1',

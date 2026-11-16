@@ -6,6 +6,7 @@ import { MockAiProvider } from '../providers/mock-ai.provider';
 import { type BoardRow } from '@repo/database';
 
 const makeBoard = (overrides: Partial<BoardRow> = {}): BoardRow => ({
+  accessUserIds: null,
   id: 'b-1',
   workspaceId: 'ws-1',
   name: 'Sprint 1',

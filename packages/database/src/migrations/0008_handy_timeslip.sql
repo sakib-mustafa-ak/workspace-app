@@ -1,0 +1,1 @@
+ALTER TABLE "boards" ADD COLUMN "access_user_ids" jsonb;

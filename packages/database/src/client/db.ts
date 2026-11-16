@@ -19,9 +19,19 @@ const connectionString =
   process.env.DATABASE_URL ??
   'postgresql://workspace:workspace123@localhost:5433/workspace';
 
+// PGlite's socket adapter shares one PostgreSQL session. Concurrent pooled
+// connections can overwrite its unnamed prepared statements. Opt in only for
+// the loopback development server; hosted/production databases stay unchanged.
+const databaseUrl = new URL(connectionString);
+const localPglite =
+  process.env.LOCAL_PGLITE === 'true' &&
+  process.env.NODE_ENV === 'development' &&
+  ['localhost', '127.0.0.1', '[::1]'].includes(databaseUrl.hostname) &&
+  databaseUrl.port === '5433';
+
 const client = postgres(connectionString, {
   // Keep pool small by default — workers scale horizontally.
-  max: 10,
+  max: localPglite ? 1 : 10,
 });
 
 export const db: Db = drizzle(client);

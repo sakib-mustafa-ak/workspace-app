@@ -262,6 +262,12 @@ export function CanvasSyncProvider({ boardId, children }: Props) {
   useEffect(() => {
     const socket = createCanvasSocket(boardIdRef.current);
     socketRef.current = socket;
+    socket.on('board:join:denied', ({ boardId }: { boardId: string }) => {
+      if (boardId !== boardIdRef.current) return;
+      socket.disconnect();
+      setPresence([]);
+      setLoadError('Board access changed or is no longer available. Reload this page to check access again.');
+    });
 
     socket.on('presence:update', (users: unknown) => {
       const list = (Array.isArray(users) ? users : []) as Array<{

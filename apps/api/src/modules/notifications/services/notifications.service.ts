@@ -33,6 +33,14 @@ export class NotificationsService {
       resourceId?: string;
     },
   ): Promise<NotificationRow | null> {
+    if (
+      !(await this.notificationsRepo.canReceive(
+        userId,
+        input.resourceType,
+        input.resourceId,
+      ))
+    )
+      return null;
     const inAppEnabled = await this.preferences.isInAppEnabled(
       userId,
       input.type,

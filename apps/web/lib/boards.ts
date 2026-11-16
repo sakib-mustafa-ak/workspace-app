@@ -5,6 +5,7 @@ export type Board = {
   workspaceId: string;
   name: string;
   description: string | null;
+  accessUserIds?: string[] | null;
   position: number;
   status: string;
   archivedAt: string | null;

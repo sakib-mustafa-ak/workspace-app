@@ -28,7 +28,7 @@ import { WorkspaceAccess } from '../../../common/decorators/workspace-access.dec
 
 @ApiTags('Audit')
 @ApiBearerAuth()
-@WorkspaceAccess('VIEWER', { param: 'id' })
+@WorkspaceAccess('ADMIN', { param: 'id' })
 @Controller({ path: 'workspaces/:id/activity', version: '1' })
 export class AuditController {
   constructor(

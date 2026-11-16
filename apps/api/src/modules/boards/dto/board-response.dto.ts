@@ -14,6 +14,9 @@ export class BoardResponseDto {
   @ApiProperty({ nullable: true })
   description!: string | null;
 
+  @ApiProperty({ nullable: true, type: [String] })
+  accessUserIds!: string[] | null;
+
   @ApiProperty()
   position!: number;
 

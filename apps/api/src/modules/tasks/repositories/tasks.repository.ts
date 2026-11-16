@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { boardVisibleTo } from '../../../common/board-access/board-visibility';
 
 import {
   and,
@@ -84,6 +85,7 @@ export class TasksRepository {
     workspaceIds: string[],
     query: string,
     limit = 20,
+    userId?: string,
   ): Promise<
     Array<{ id: string; boardId: string; workspaceId: string; title: string }>
   > {
@@ -100,6 +102,7 @@ export class TasksRepository {
       .where(
         and(
           inArray(tasks.workspaceId, workspaceIds),
+          userId ? boardVisibleTo(userId, tasks.boardId) : undefined,
           sql`${tasks.deletedAt} IS NULL`,
           sql`${tasks.searchVector} @@ websearch_to_tsquery(${query})`,
         ),

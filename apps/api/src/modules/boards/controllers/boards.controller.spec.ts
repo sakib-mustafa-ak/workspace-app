@@ -5,6 +5,7 @@ import { BoardsService } from '../services/boards.service';
 import { BoardsController } from './boards.controller';
 
 const mockBoard: BoardRow = {
+  accessUserIds: null,
   searchVector: null,
   id: 'b1',
   workspaceId: 'w1',

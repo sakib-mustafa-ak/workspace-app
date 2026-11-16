@@ -215,6 +215,7 @@ export class BoardsController {
 }
 
 function toBoardResponse(b: {
+  accessUserIds?: string[] | null;
   id: string;
   workspaceId: string;
   name: string;
@@ -226,6 +227,7 @@ function toBoardResponse(b: {
   updatedAt: Date;
 }): BoardResponseDto {
   return {
+    accessUserIds: b.accessUserIds ?? null,
     id: b.id,
     workspaceId: b.workspaceId,
     name: b.name,

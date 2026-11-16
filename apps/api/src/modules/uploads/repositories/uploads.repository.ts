@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { boardVisibleTo } from '../../../common/board-access/board-visibility';
 
 import {
   DATABASE,
@@ -36,12 +37,15 @@ export class UploadsRepository {
       .orderBy(desc(uploadedFiles.createdAt));
   }
 
-  async findByWorkspace(workspaceId: string): Promise<UploadedFileRow[]> {
+  async findByWorkspace(
+    workspaceId: string,
+    userId?: string,
+  ): Promise<UploadedFileRow[]> {
     return this.db
       .select()
       .from(uploadedFiles)
       .where(
-        sql`${uploadedFiles.workspaceId} = ${workspaceId} AND ${uploadedFiles.deletedAt} IS NULL`,
+        sql`${uploadedFiles.workspaceId} = ${workspaceId} AND ${uploadedFiles.deletedAt} IS NULL AND (${uploadedFiles.boardId} IS NULL OR ${userId ? boardVisibleTo(userId, uploadedFiles.boardId) : sql`true`})`,
       )
       .orderBy(desc(uploadedFiles.createdAt));
   }

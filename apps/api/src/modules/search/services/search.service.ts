@@ -25,8 +25,8 @@ export class SearchService {
     }
 
     const [boards, tasks] = await Promise.all([
-      this.boardsRepo.searchByQuery(workspaceIds, cleanQuery, 20),
-      this.tasksRepo.searchByQuery(workspaceIds, cleanQuery, 20),
+      this.boardsRepo.searchByQuery(workspaceIds, cleanQuery, 20, userId),
+      this.tasksRepo.searchByQuery(workspaceIds, cleanQuery, 20, userId),
     ]);
 
     return {

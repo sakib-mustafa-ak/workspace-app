@@ -8,12 +8,15 @@ import { BoardsRepository } from '../../boards/repositories/boards.repository';
 import { WorkspaceMembersRepository } from '../../workspaces/repositories/workspace-members.repository';
 import { WorkspacesEventBus } from '../../workspaces/events/workspaces.events';
 import { SignJWT } from 'jose';
+import { BoardAccessService } from '../../../common/board-access/board-access.service';
+import { BoardPresenceService } from '../../../common/board-access/board-presence.service';
 
 describe('CanvasGateway', () => {
   let gateway: CanvasGateway;
   let membersRepo: { findByWorkspaceAndUser: jest.Mock };
   let boardsRepo: { findById: jest.Mock; listByWorkspace: jest.Mock };
   let users: { getProfile: jest.Mock };
+  let accessChanged: (boardId: string) => void;
 
   beforeEach(async () => {
     boardsRepo = {
@@ -21,7 +24,9 @@ describe('CanvasGateway', () => {
       listByWorkspace: jest.fn().mockResolvedValue([]),
     };
     membersRepo = {
-      findByWorkspaceAndUser: jest.fn().mockResolvedValue({ id: 'm-1' }),
+      findByWorkspaceAndUser: jest
+        .fn()
+        .mockResolvedValue({ id: 'm-1', role: 'EDITOR', status: 'ACTIVE' }),
     };
     users = {
       getProfile: jest.fn().mockResolvedValue({
@@ -33,6 +38,15 @@ describe('CanvasGateway', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        {
+          provide: BoardAccessService,
+          useValue: {
+            onChanged: jest.fn((listener: (boardId: string) => void) => {
+              accessChanged = listener;
+            }),
+          },
+        },
+        BoardPresenceService,
         CanvasGateway,
         {
           provide: UsersService,
@@ -66,6 +80,124 @@ describe('CanvasGateway', () => {
   it('should be defined', () => {
     expect(gateway).toBeDefined();
   });
+  it('denies restricted board joins even for an active workspace member', async () => {
+    boardsRepo.findById.mockResolvedValue({
+      id: 'b-1',
+      workspaceId: 'w-1',
+      accessUserIds: ['u-2'],
+    });
+    const client = {
+      id: 'socket',
+      userId: 'u-1',
+      emit: jest.fn(),
+      join: jest.fn(),
+    } as unknown as AuthenticatedSocket;
+    gateway.handleJoinBoard(client, { boardId: 'b-1' });
+    await new Promise((resolve) => setImmediate(resolve));
+    expect(client.join).not.toHaveBeenCalled();
+    expect(client.emit).toHaveBeenCalledWith('board:join:denied', {
+      boardId: 'b-1',
+    });
+  });
+  it('revokes cached realtime access when board grants change', async () => {
+    gateway.onModuleInit();
+    const token = await new SignJWT({})
+      .setProtectedHeader({ alg: 'HS256' })
+      .setSubject('u-1')
+      .setExpirationTime('5m')
+      .sign(new TextEncoder().encode('test-secret'));
+    const client = {
+      id: 'socket',
+      handshake: { auth: { token } },
+      rooms: new Set(['board:b-1']),
+      disconnect: jest.fn(),
+      join: jest.fn().mockResolvedValue(undefined),
+      leave: jest.fn(),
+      emit: jest.fn(),
+      to: jest.fn().mockReturnValue({ emit: jest.fn() }),
+    } as unknown as AuthenticatedSocket;
+    await gateway.handleConnection(client);
+    gateway.server = {
+      sockets: { sockets: new Map([['socket', client]]) },
+      to: jest.fn().mockReturnValue({ emit: jest.fn() }),
+    } as unknown as CanvasGateway['server'];
+    gateway.handleJoinBoard(client, { boardId: 'b-1' });
+    await new Promise((resolve) => setImmediate(resolve));
+    boardsRepo.findById.mockResolvedValue({
+      id: 'b-1',
+      workspaceId: 'w-1',
+      accessUserIds: [],
+    });
+    accessChanged('b-1');
+    expect(client.leave).toHaveBeenCalledWith('board:b-1');
+    client.emit = jest.fn();
+    gateway.handleJoinBoard(client, { boardId: 'b-1' });
+    await new Promise((resolve) => setImmediate(resolve));
+    expect(client.emit).toHaveBeenCalledWith('board:join:denied', {
+      boardId: 'b-1',
+    });
+  });
+
+  it.each(['namespace', 'server'])(
+    'does not evict unrelated boards using a %s socket map',
+    (shape) => {
+      gateway.onModuleInit();
+      const affected = {
+        rooms: new Set(['board:b-1', 'board:b-2']),
+        leave: jest.fn(),
+        emit: jest.fn(),
+      };
+      const unrelated = {
+        rooms: new Set(['board:b-2']),
+        leave: jest.fn(),
+        emit: jest.fn(),
+      };
+      gateway.server = {
+        sockets:
+          shape === 'namespace'
+            ? new Map([
+                ['affected', affected],
+                ['unrelated', unrelated],
+              ])
+            : {
+                sockets: new Map([
+                  ['affected', affected],
+                  ['unrelated', unrelated],
+                ]),
+              },
+        to: jest.fn().mockReturnValue({ emit: jest.fn() }),
+      } as unknown as CanvasGateway['server'];
+      const internals = gateway as unknown as {
+        socketUsers: Map<string, string>;
+        objectLocks: Map<
+          string,
+          Map<string, { userId: string; socketId: string }>
+        >;
+      };
+      internals.socketUsers.set('affected', 'u-1');
+      internals.socketUsers.set('unrelated', 'u-2');
+      internals.objectLocks.set(
+        'b-1',
+        new Map([['a', { userId: 'u-1', socketId: 'affected' }]]),
+      );
+      internals.objectLocks.set(
+        'b-2',
+        new Map([['b', { userId: 'u-1', socketId: 'affected' }]]),
+      );
+
+      accessChanged('b-1');
+
+      expect(affected.leave).toHaveBeenCalledWith('board:b-1');
+      expect(affected.emit).toHaveBeenCalledWith('board:join:denied', {
+        boardId: 'b-1',
+        reason: 'access_changed',
+      });
+      expect(unrelated.leave).not.toHaveBeenCalled();
+      expect(unrelated.emit).not.toHaveBeenCalled();
+      expect(internals.objectLocks.has('b-1')).toBe(false);
+      expect(internals.objectLocks.get('b-2')?.has('b')).toBe(true);
+    },
+  );
 
   it.each([false, true])(
     'requires verified email for realtime connections: verified=%s',

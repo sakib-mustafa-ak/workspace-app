@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useId } from 'react';
 import { tasksApi, type Task } from '@/lib/tasks';
-import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 type CalendarDay = {
   date: Date;
@@ -17,6 +17,38 @@ export function CalendarDropdown() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const hovered = useRef(false);
+  const pinned = useRef(false);
+  const calendarId = useId();
+  const [placement, setPlacement] = useState({ above: false, maxHeight: 360 });
+
+  const positionCalendar = useCallback(() => {
+    const trigger = triggerRef.current;
+    if (!trigger) return;
+    const rect = trigger.getBoundingClientRect();
+    // Leave room for dashboard's fixed mobile navigation.
+    const bottomInset = window.matchMedia('(max-width: 1023px)').matches ? 76 : 16;
+    const below = window.innerHeight - rect.bottom - bottomInset;
+    const above = rect.top - 16;
+    const opensAbove = below < 360 && above > below;
+    setPlacement({ above: opensAbove, maxHeight: Math.max(100, Math.min(400, (opensAbove ? above : below) - 8)) });
+  }, []);
+
+  function openCalendar() {
+    positionCalendar();
+    setIsOpen(true);
+  }
+
+  useEffect(() => {
+    if (!isOpen) return;
+    window.addEventListener('resize', positionCalendar);
+    window.addEventListener('scroll', positionCalendar, true);
+    return () => {
+      window.removeEventListener('resize', positionCalendar);
+      window.removeEventListener('scroll', positionCalendar, true);
+    };
+  }, [isOpen, positionCalendar]);
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -36,6 +68,7 @@ export function CalendarDropdown() {
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        pinned.current = false;
         setIsOpen(false);
       }
     }
@@ -96,6 +129,7 @@ export function CalendarDropdown() {
 
   const navigateMonth = (direction: number) => {
     const newDate = new Date(currentDate);
+    newDate.setDate(1);
     newDate.setMonth(newDate.getMonth() + direction);
     setCurrentDate(newDate);
   };
@@ -105,19 +139,59 @@ export function CalendarDropdown() {
   const selectedDateTasks = selectedDate ? getTasksForDate(selectedDate) : [];
 
   return (
-    <div ref={dropdownRef} className="relative">
+    <div
+      ref={dropdownRef}
+      className="relative"
+      onPointerEnter={(event) => {
+        if (event.pointerType !== 'mouse') return;
+        hovered.current = true;
+        openCalendar();
+      }}
+      onPointerLeave={(event) => {
+        hovered.current = false;
+        if (!pinned.current && !event.currentTarget.contains(document.activeElement)) setIsOpen(false);
+      }}
+      onBlurCapture={(event) => {
+        if (!pinned.current && !hovered.current && !event.currentTarget.contains(event.relatedTarget)) setIsOpen(false);
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape' && isOpen) {
+          pinned.current = false;
+          setIsOpen(false);
+          triggerRef.current?.focus();
+          event.stopPropagation();
+        }
+      }}
+    >
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center gap-2 rounded-xl border border-surface-800 bg-surface-900 p-4 text-sm text-surface-400 transition-colors hover:border-surface-700 hover:text-surface-200"
+        ref={triggerRef}
+        type="button"
+        aria-expanded={isOpen}
+        aria-controls={calendarId}
+        onClick={() => {
+          // Clicking a hover preview pins it rather than immediately closing it.
+          if (isOpen && (!hovered.current || pinned.current)) {
+            pinned.current = false;
+            setIsOpen(false);
+          } else {
+            pinned.current = true;
+            openCalendar();
+          }
+        }}
+        className="flex w-full items-center gap-2 rounded-xl border border-surface-800 bg-surface-900/40 p-4 text-xs font-medium text-surface-300 transition-colors hover:border-surface-600"
       >
         <Calendar size={16} />
         Calendar
+        <ChevronDown size={14} aria-hidden="true" className={`ml-auto text-surface-500 transition-transform motion-reduce:transition-none ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-xl border border-surface-800 bg-surface-900 p-4 shadow-xl">
+        <div className={`absolute right-0 z-50 w-80 max-w-[calc(100vw-2rem)] ${placement.above ? 'bottom-full pb-2' : 'top-full pt-2'}`}>
+        <div id={calendarId} role="region" aria-label="Calendar preview" style={{ maxHeight: placement.maxHeight }} className="overflow-y-auto overscroll-contain rounded-xl border border-surface-700 bg-surface-900 p-4 shadow-xl">
           <div className="mb-3 flex items-center justify-between">
             <button
+              type="button"
+              aria-label="Previous month"
               onClick={() => navigateMonth(-1)}
               className="rounded-lg p-1 text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-200"
             >
@@ -127,6 +201,8 @@ export function CalendarDropdown() {
               {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
             </h3>
             <button
+              type="button"
+              aria-label="Next month"
               onClick={() => navigateMonth(1)}
               className="rounded-lg p-1 text-surface-400 transition-colors hover:bg-surface-800 hover:text-surface-200"
             >
@@ -152,6 +228,9 @@ export function CalendarDropdown() {
                 {days.map((day, index) => (
                   <button
                     key={index}
+                    type="button"
+                    aria-label={day.date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                    aria-pressed={selectedDate?.getTime() === day.date.getTime()}
                     onClick={() => setSelectedDate(day.date)}
                     className={`relative flex h-8 items-center justify-center rounded text-xs transition-colors hover:bg-surface-800 ${
                       !day.isCurrentMonth ? 'text-surface-600' : 'text-surface-300'
@@ -188,6 +267,7 @@ export function CalendarDropdown() {
               )}
             </>
           )}
+        </div>
         </div>
       )}
     </div>

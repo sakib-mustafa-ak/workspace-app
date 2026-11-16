@@ -14,6 +14,7 @@ import {
 } from '@repo/database';
 
 const makeBoard = (overrides: Partial<BoardRow> = {}): BoardRow => ({
+  accessUserIds: null,
   id: 'b-1',
   workspaceId: 'ws-1',
   name: 'Board 1',

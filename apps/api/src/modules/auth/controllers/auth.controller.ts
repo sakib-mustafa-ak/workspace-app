@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Inject,
+  Logger,
   Post,
   Req,
 } from '@nestjs/common';
@@ -26,6 +27,7 @@ import type { Request } from 'express';
 
 import { CurrentUser } from '../decorators/current-user.decorator';
 import { Public } from '../decorators/public.decorator';
+import { AllowUnverified } from '../decorators/allow-unverified.decorator';
 import { Throttle } from '@nestjs/throttler';
 import type { CurrentUser as CurrentUserModel } from '../interfaces/current-user.interface';
 import { AuthResponseDto, UserProfileDto } from '../dto/auth-response.dto';
@@ -59,6 +61,7 @@ import { PasswordResetService } from '../services/password-reset.service';
   version: '1',
 })
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
   constructor(
     @Inject(AuthService) private readonly auth: AuthService,
     @Inject(EmailVerificationService)
@@ -97,6 +100,18 @@ export class AuthController {
       password: body.password,
       meta: clientMetaFrom(request),
     });
+    // The account already committed. A mail outage must not report account
+    // creation as failed or make a second signup create a confusing conflict.
+    try {
+      await this.emailVerification.requestVerification({
+        userId: result.user.id,
+        email: result.user.email,
+      });
+    } catch {
+      this.logger.error(
+        'Signup verification delivery failed; the user can request a fresh link.',
+      );
+    }
     return toAuthResponse(result);
   }
 
@@ -314,6 +329,7 @@ export class AuthController {
    * reads that context, so no per-method `@UseGuards()` is required.
    */
   @Get('me')
+  @AllowUnverified()
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Current authenticated user' })

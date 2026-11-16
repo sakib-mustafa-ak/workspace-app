@@ -39,8 +39,7 @@ export function renderVerificationMail(
     template.verifyPath,
     ensureTrailingSlash(template.appBaseUrl),
   );
-  url.searchParams.set('selector', template.selector);
-  url.searchParams.set('verifier', template.verifier);
+  url.searchParams.set('token', `${template.selector}.${template.verifier}`);
 
   const subject = 'Verify your Workspace OS email';
 

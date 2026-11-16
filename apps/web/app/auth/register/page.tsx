@@ -149,6 +149,8 @@ export default function RegisterPage() {
                 id="register-email"
                 autoComplete="email"
                 type="email"
+                maxLength={254}
+                aria-describedby="register-email-help"
                 required
                 value={email}
                 onChange={(e) => {
@@ -159,6 +161,7 @@ export default function RegisterPage() {
                 className="w-full rounded-lg border border-surface-700 bg-surface-950/50 px-3.5 py-2.5 text-sm outline-none transition-colors placeholder:text-surface-500 focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50"
                 placeholder="you@example.com"
               />
+              <p id="register-email-help" className="mt-1.5 text-xs text-surface-400">Use an inbox you can access. We check the domain and require verification before you can use your workspace.</p>
               {fieldErrors.email && (
                 <p className="mt-1 text-xs text-red-400">{fieldErrors.email}</p>
               )}

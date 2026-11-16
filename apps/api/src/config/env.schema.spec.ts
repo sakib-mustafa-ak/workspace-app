@@ -7,6 +7,106 @@ const base = {
   JWT_REFRESH_SECRET: '0123456789abcdef0123456789abc',
 };
 
+describe('production email configuration', () => {
+  const gmail = {
+    ...base,
+    NODE_ENV: 'production',
+    MAIL_PROVIDER: 'gmail',
+    GMAIL_USER: 'workspace.os.verify@gmail.com',
+    GMAIL_CLIENT_ID: 'client-test',
+    GMAIL_CLIENT_SECRET: 'secret-test',
+    GMAIL_REFRESH_TOKEN: 'refresh-test',
+    APP_PUBLIC_BASE_URL: 'https://app.example.com',
+  };
+  it('accepts Gmail without Resend or a custom domain', () => {
+    expect(envSchemaWithRefinements.safeParse(gmail).success).toBe(true);
+  });
+  it.each([
+    'GMAIL_USER',
+    'GMAIL_CLIENT_ID',
+    'GMAIL_CLIENT_SECRET',
+    'GMAIL_REFRESH_TOKEN',
+  ])('rejects missing Gmail %s', (key) => {
+    expect(
+      envSchemaWithRefinements.safeParse({ ...gmail, [key]: '' }).success,
+    ).toBe(false);
+  });
+  it('rejects sender mismatch, malformed users, and local inbox with Gmail', () => {
+    for (const override of [
+      { MAIL_FROM: 'other@gmail.com' },
+      { GMAIL_USER: 'invalid' },
+      { NODE_ENV: 'development', DEV_MAIL_INBOX_ENABLED: 'true' },
+    ]) {
+      expect(
+        envSchemaWithRefinements.safeParse({ ...gmail, ...override }).success,
+      ).toBe(false);
+    }
+  });
+  const production = {
+    ...base,
+    NODE_ENV: 'production',
+    RESEND_API_KEY: 're_test_only',
+    MAIL_FROM: 'Workspace OS <accounts@example.com>',
+    APP_PUBLIC_BASE_URL: 'https://workspace.example.com',
+  };
+  it('accepts a configured production sender and public HTTPS URL', () => {
+    expect(envSchemaWithRefinements.safeParse(production).success).toBe(true);
+  });
+  it.each([
+    { RESEND_API_KEY: '' },
+    { MAIL_FROM: '' },
+    { MAIL_FROM: 'onboarding@resend.dev' },
+    { MAIL_FROM: 'Workspace <accounts@example.com' },
+    { APP_PUBLIC_BASE_URL: 'http://localhost:3000' },
+    { APP_PUBLIC_BASE_URL: 'https://localhost' },
+    { APP_PUBLIC_BASE_URL: 'not a url' },
+    { APP_PUBLIC_BASE_URL: 'https://app.example.com?token=bad' },
+  ])('rejects incomplete or unsafe configuration %j', (override) => {
+    expect(
+      envSchemaWithRefinements.safeParse({ ...production, ...override })
+        .success,
+    ).toBe(false);
+  });
+  it('keeps offline recording available for development and tests', () => {
+    expect(envSchemaWithRefinements.safeParse(base).success).toBe(true);
+  });
+});
+
+describe('development inbox configuration', () => {
+  it('defaults to disabled', () => {
+    const result = envSchemaWithRefinements.parse(base);
+    expect(result.DEV_MAIL_INBOX_ENABLED).toBe('false');
+  });
+  it('permits explicit development-only recording', () => {
+    expect(
+      envSchemaWithRefinements.safeParse({
+        ...base,
+        NODE_ENV: 'development',
+        DEV_MAIL_INBOX_ENABLED: 'true',
+      }).success,
+    ).toBe(true);
+  });
+  it.each(['test', 'production'])('rejects a local inbox in %s', (NODE_ENV) => {
+    expect(
+      envSchemaWithRefinements.safeParse({
+        ...base,
+        NODE_ENV,
+        DEV_MAIL_INBOX_ENABLED: 'true',
+      }).success,
+    ).toBe(false);
+  });
+  it('rejects mixing real delivery with a local inbox', () => {
+    expect(
+      envSchemaWithRefinements.safeParse({
+        ...base,
+        NODE_ENV: 'development',
+        RESEND_API_KEY: 're_test_only',
+        DEV_MAIL_INBOX_ENABLED: 'true',
+      }).success,
+    ).toBe(false);
+  });
+});
+
 describe('env schema billing', () => {
   it('accepts a fully-configured Stripe environment', () => {
     const res = envSchemaWithRefinements.safeParse({

@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Local verification lab</title><link rel="stylesheet" href="/prototype.css"><script src="/prototype.js" defer></script></head>
+<body><main>
+<header><span class="eyebrow">Workspace OS · local prototype</span><h1>Email verification lab</h1><p>Try the real signup and verification workflow without a paid domain or email provider.</p></header>
+<aside><strong>Simulated delivery—not mailbox ownership.</strong> This process uses a disposable database and local inbox. No email leaves your computer, and no production accounts are touched. Domain checks run normally; opening a captured link only simulates access to an inbox.</aside>
+<section><h2>1. Create a test account</h2><form id="account"><label for="name">Name</label><input id="name" autocomplete="name" minlength="2" maxlength="60" value="Local test" required><label for="email">Email address</label><input id="email" type="email" autocomplete="email" maxlength="254" placeholder="An address on a mail-capable domain" required><small>Made-up domains are rejected. A real domain alone does not prove that a mailbox exists.</small><label for="password">Password</label><input id="password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required><small>Use 12+ characters with uppercase, lowercase, a number and a symbol. Do not reuse a real password.</small><div class="actions"><button id="signup" type="submit">Create account</button><button id="signin" type="button" class="secondary">Sign in</button></div></form></section>
+<section><h2>2. Open the local email</h2><button id="refresh" class="secondary">Refresh inbox</button><div id="inbox"><p class="muted">No messages loaded yet.</p></div><button id="verify" hidden>Verify selected email link</button></section>
+<section><h2>3. Check the access boundary</h2><p>The same authenticated request is blocked before verification and allowed afterward.</p><button id="protected" class="secondary">Check protected access</button></section>
+<p id="status" role="status" aria-live="polite">Ready. All data disappears when this process stops.</p>
+</main></body></html>

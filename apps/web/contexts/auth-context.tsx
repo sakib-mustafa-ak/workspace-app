@@ -69,6 +69,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(res.user);
       storeUser(res.user);
 
+      if (!res.user.emailVerifiedAt) {
+        router.push('/auth/check-email');
+        return;
+      }
       const workspaces = await workspacesApi.list().catch(() => []);
       router.push(workspaces.length === 0 ? '/onboarding' : '/dashboard');
     },
@@ -90,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await apiRegister(email, password, name);
       setUser(res.user);
       storeUser(res.user);
-      router.push('/onboarding');
+      router.push('/auth/check-email');
     },
     [router],
   );

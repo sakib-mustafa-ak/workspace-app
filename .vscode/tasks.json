@@ -1,0 +1,18 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Local email verification prototype",
+			"type": "shell",
+			"command": "corepack",
+			"args": [
+				"pnpm",
+				"--filter",
+				"api",
+				"dev:verification"
+			],
+			"isBackground": true,
+			"problemMatcher": []
+		}
+	]
+}

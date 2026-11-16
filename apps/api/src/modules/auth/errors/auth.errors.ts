@@ -10,6 +10,8 @@ import { HttpException } from '@nestjs/common';
  */
 export const AuthErrorCode = {
   EMAIL_ALREADY_EXISTS: 'AUTH.EMAIL_ALREADY_EXISTS',
+  INVALID_EMAIL_DOMAIN: 'AUTH.INVALID_EMAIL_DOMAIN',
+  EMAIL_CHECK_UNAVAILABLE: 'AUTH.EMAIL_CHECK_UNAVAILABLE',
   INVALID_CREDENTIALS: 'AUTH.INVALID_CREDENTIALS',
   ACCOUNT_SUSPENDED: 'AUTH.ACCOUNT_SUSPENDED',
   ACCOUNT_DELETED: 'AUTH.ACCOUNT_DELETED',
@@ -23,6 +25,7 @@ export const AuthErrorCode = {
   VERIFICATION_TOKEN_EXPIRED: 'AUTH.VERIFICATION_TOKEN_EXPIRED',
   VERIFICATION_TOKEN_CONSUMED: 'AUTH.VERIFICATION_TOKEN_CONSUMED',
   EMAIL_ALREADY_VERIFIED: 'AUTH.EMAIL_ALREADY_VERIFIED',
+  EMAIL_NOT_VERIFIED: 'AUTH.EMAIL_NOT_VERIFIED',
   // ── Password reset (Part V-A) ───────────────────────────────────
   INVALID_RESET_TOKEN: 'AUTH.INVALID_RESET_TOKEN',
   RESET_TOKEN_EXPIRED: 'AUTH.RESET_TOKEN_EXPIRED',
@@ -33,6 +36,8 @@ export type AuthErrorCode = (typeof AuthErrorCode)[keyof typeof AuthErrorCode];
 
 const STATUS_BY_CODE: Readonly<Record<AuthErrorCode, number>> = {
   [AuthErrorCode.EMAIL_ALREADY_EXISTS]: 409,
+  [AuthErrorCode.INVALID_EMAIL_DOMAIN]: 400,
+  [AuthErrorCode.EMAIL_CHECK_UNAVAILABLE]: 503,
   [AuthErrorCode.INVALID_CREDENTIALS]: 401,
   [AuthErrorCode.ACCOUNT_SUSPENDED]: 403,
   [AuthErrorCode.ACCOUNT_DELETED]: 403,
@@ -50,6 +55,7 @@ const STATUS_BY_CODE: Readonly<Record<AuthErrorCode, number>> = {
   [AuthErrorCode.VERIFICATION_TOKEN_EXPIRED]: 410,
   [AuthErrorCode.VERIFICATION_TOKEN_CONSUMED]: 410,
   [AuthErrorCode.EMAIL_ALREADY_VERIFIED]: 409,
+  [AuthErrorCode.EMAIL_NOT_VERIFIED]: 403,
   // Same status taxonomy for password reset — public endpoint,
   // token-mismatch is 400, consumption/expiry is 410.
   [AuthErrorCode.INVALID_RESET_TOKEN]: 400,

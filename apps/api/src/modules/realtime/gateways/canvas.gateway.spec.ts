@@ -7,11 +7,13 @@ import { NotificationsEventBus } from '../../notifications/events/notifications.
 import { BoardsRepository } from '../../boards/repositories/boards.repository';
 import { WorkspaceMembersRepository } from '../../workspaces/repositories/workspace-members.repository';
 import { WorkspacesEventBus } from '../../workspaces/events/workspaces.events';
+import { SignJWT } from 'jose';
 
 describe('CanvasGateway', () => {
   let gateway: CanvasGateway;
   let membersRepo: { findByWorkspaceAndUser: jest.Mock };
   let boardsRepo: { findById: jest.Mock; listByWorkspace: jest.Mock };
+  let users: { getProfile: jest.Mock };
 
   beforeEach(async () => {
     boardsRepo = {
@@ -21,17 +23,20 @@ describe('CanvasGateway', () => {
     membersRepo = {
       findByWorkspaceAndUser: jest.fn().mockResolvedValue({ id: 'm-1' }),
     };
+    users = {
+      getProfile: jest.fn().mockResolvedValue({
+        displayName: 'Test User',
+        status: 'ACTIVE',
+        emailVerifiedAt: new Date(),
+      }),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CanvasGateway,
         {
           provide: UsersService,
-          useValue: {
-            getProfile: jest
-              .fn()
-              .mockResolvedValue({ displayName: 'Test User' }),
-          },
+          useValue: users,
         },
         {
           provide: NotificationsEventBus,
@@ -61,6 +66,36 @@ describe('CanvasGateway', () => {
   it('should be defined', () => {
     expect(gateway).toBeDefined();
   });
+
+  it.each([false, true])(
+    'requires verified email for realtime connections: verified=%s',
+    async (verified) => {
+      users.getProfile.mockResolvedValue({
+        displayName: 'Test User',
+        status: 'ACTIVE',
+        emailVerifiedAt: verified ? new Date() : null,
+      });
+      const token = await new SignJWT({})
+        .setProtectedHeader({ alg: 'HS256' })
+        .setSubject('user')
+        .setExpirationTime('5m')
+        .sign(new TextEncoder().encode('test-secret'));
+      const client = {
+        id: 'socket-test',
+        handshake: { auth: { token } },
+        disconnect: jest.fn(),
+        join: jest.fn().mockResolvedValue(undefined),
+      };
+      await gateway.handleConnection(client as unknown as AuthenticatedSocket);
+      if (verified) {
+        expect(client.join).toHaveBeenCalledWith('user:user');
+        expect(client.disconnect).not.toHaveBeenCalled();
+      } else {
+        expect(client.disconnect).toHaveBeenCalled();
+        expect(client.join).not.toHaveBeenCalled();
+      }
+    },
+  );
 
   it('relays object:created to the board room when the user is a member', async () => {
     const emit = jest.fn();

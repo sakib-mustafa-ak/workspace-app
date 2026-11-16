@@ -27,7 +27,7 @@ function getPasswordStrength(password: string): {
 function ResetPasswordInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const token = searchParams.get('token') || '';
+  const token = searchParams.get('token') || (searchParams.get('selector') && searchParams.get('verifier') ? `${searchParams.get('selector')}.${searchParams.get('verifier')}` : '');
 
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');

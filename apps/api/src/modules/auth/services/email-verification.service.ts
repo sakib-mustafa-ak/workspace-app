@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import {
   DATABASE,
   emailVerificationTokens,
-  eq,
   sql,
   type Db,
   users,
@@ -14,13 +13,14 @@ import { AuthException, AuthErrorCode } from '../errors/auth.errors';
 import { AuthEventBus } from '../events/auth.events';
 import {
   MAIL_PROVIDER,
-  RecordingMailProvider,
+  type MailProvider,
   type MailMessage,
 } from '../mail/mail.provider';
 import { renderVerificationMail } from '../mail/verification.template';
 import { EmailVerificationTokenRepository } from '../repositories/email-verification-token.repository';
 
 import { TokenHashService } from './token-hash.service';
+import { normalizeEmailAddress } from './email-domain.service';
 
 /**
  * Email-verification workflow (Part V-A "Email Verification").
@@ -51,7 +51,7 @@ export class EmailVerificationService {
 
   constructor(
     @Inject(DATABASE) private readonly db: Db,
-    @Inject(MAIL_PROVIDER) private readonly mail: RecordingMailProvider,
+    @Inject(MAIL_PROVIDER) private readonly mail: MailProvider,
     @Inject(AuthEventBus) private readonly eventBus: AuthEventBus,
     @Inject(TokenHashService) private readonly tokenHash: TokenHashService,
     @Inject(EmailVerificationTokenRepository)
@@ -68,22 +68,35 @@ export class EmailVerificationService {
    * "Ada typed ADa@…" trap.
    */
   public async requestVerificationForEmail(email: string): Promise<void> {
-    const normalized = email.trim().toLowerCase();
+    const normalized = normalizeEmailAddress(email);
     const found = await this.db
-      .select({ id: users.id, email: users.email })
+      .select({
+        id: users.id,
+        email: users.email,
+        verifiedAt: users.emailVerifiedAt,
+      })
       .from(users)
-      .where(sql`lower(${users.email}) = ${normalized}`)
+      .where(
+        sql`lower(${users.email}) = ${normalized} AND ${users.deletedAt} IS NULL AND ${users.status} = 'ACTIVE'`,
+      )
       .limit(1);
     const target = found[0];
-    if (!target) {
+    if (!target || target.verifiedAt) {
       // No-op for non-existing emails. We still publish the requested
       // event shape upstream is informed later — auth never reveals it.
       return;
     }
-    await this.requestVerification({
-      userId: target.id,
-      email: target.email,
-    });
+    try {
+      await this.requestVerification({
+        userId: target.id,
+        email: target.email,
+      });
+    } catch {
+      // A public resend must not reveal account existence during an outage.
+      this.logger.error(
+        'Verification delivery failed; a fresh link can be requested later.',
+      );
+    }
   }
 
   /**
@@ -192,7 +205,7 @@ export class EmailVerificationService {
       );
     }
 
-    return this.db.transaction(async (tx) => {
+    const verified = await this.db.transaction(async (tx) => {
       // The guard on consumedAt makes this a compare-and-swap: only the
       // first concurrent request wins. Check affected rows so a lost race
       // doesn't double-verify or double-fire the event.
@@ -211,15 +224,23 @@ export class EmailVerificationService {
         );
       }
 
-      await tx
+      const updated = await tx
         .update(users)
         .set({ emailVerifiedAt: new Date() })
-        .where(eq(users.id, row.userId));
-
-      this.eventBus.publishEmailVerified(row.userId, row.email);
+        .where(
+          sql`${users.id} = ${row.userId} AND ${users.email} = ${row.email} AND ${users.deletedAt} IS NULL AND ${users.status} = 'ACTIVE'`,
+        )
+        .returning({ id: users.id });
+      if (!updated.length)
+        throw new AuthException(
+          AuthErrorCode.INVALID_VERIFICATION_TOKEN,
+          'This verification link no longer matches an active account.',
+        );
 
       return { userId: row.userId, email: row.email };
     });
+    this.eventBus.publishEmailVerified(verified.userId, verified.email);
+    return verified;
   }
 
   /**

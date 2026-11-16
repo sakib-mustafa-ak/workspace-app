@@ -172,6 +172,11 @@ export class CanvasGateway
       const secret = new TextEncoder().encode(this.jwtSecret);
       const { payload } = await jwtVerify(token, secret);
       const userId = payload.sub as string;
+      const user = await this.users.getProfile(userId);
+      if (!user.emailVerifiedAt || user.status !== 'ACTIVE') {
+        client.disconnect();
+        return;
+      }
       client.userId = userId;
       this.trackSocket(client.id, userId);
       client.displayName = await this.resolveDisplayName(userId);

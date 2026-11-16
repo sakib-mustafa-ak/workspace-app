@@ -70,7 +70,13 @@ export class HealthService {
 
   private checkIntegrations(): IntegrationCheck[] {
     const storageDriver = this.config.get<string>('storage.driver');
-    const resendKey = this.config.get<string>('RESEND_API_KEY');
+    const mailProvider = this.config.get<string>('mail.provider') ?? 'recorder';
+    const mailConfigured =
+      mailProvider === 'gmail'
+        ? ['user', 'clientId', 'clientSecret', 'refreshToken'].every((key) =>
+            Boolean(this.config.get(`mail.gmail.${key}`)),
+          )
+        : mailProvider === 'resend' && Boolean(this.config.get('mail.apiKey'));
     const stripeKey = this.config.get<string>('billing.stripeSecretKey');
 
     return [
@@ -81,8 +87,8 @@ export class HealthService {
       },
       {
         name: 'email',
-        configured: Boolean(resendKey),
-        provider: resendKey ? 'resend' : 'recorder',
+        configured: mailConfigured,
+        provider: mailProvider,
       },
       {
         name: 'billing',

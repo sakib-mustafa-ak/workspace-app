@@ -48,6 +48,24 @@ export function configuration() {
       },
     },
 
+    mail: {
+      provider:
+        env.MAIL_PROVIDER ?? (env.RESEND_API_KEY ? 'resend' : 'recorder'),
+      apiKey: env.RESEND_API_KEY,
+      from:
+        env.MAIL_FROM ||
+        (env.MAIL_PROVIDER === 'gmail'
+          ? env.GMAIL_USER
+          : 'onboarding@resend.dev'),
+      gmail: {
+        user: env.GMAIL_USER,
+        clientId: env.GMAIL_CLIENT_ID,
+        clientSecret: env.GMAIL_CLIENT_SECRET,
+        refreshToken: env.GMAIL_REFRESH_TOKEN,
+      },
+      devInbox: env.DEV_MAIL_INBOX_ENABLED === 'true',
+    },
+
     storage: {
       driver: env.STORAGE_DRIVER,
       s3:

@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 
 import {
   WORKSPACE_ROLE_RANK,
+  type DbExecutor,
   type SubscriptionStatus,
   type WorkspaceRole,
 } from '@repo/database';
@@ -48,9 +49,12 @@ export class UsageService {
     };
   }
 
-  public async assertCanCreateBoard(workspaceId: string): Promise<void> {
-    const plan = await this.planOf(workspaceId);
-    const current = await this.repo.countBoards(workspaceId);
+  public async assertCanCreateBoard(
+    workspaceId: string,
+    tx?: DbExecutor,
+  ): Promise<void> {
+    const plan = await this.planOf(workspaceId, tx);
+    const current = await this.repo.countBoards(workspaceId, tx);
     if (!this.policy.canCreateBoard(plan, current)) {
       throw new LimitReachedException({
         feature: 'boards',
@@ -102,8 +106,9 @@ export class UsageService {
     workspaceId: string,
     userId: string,
     minRole: WorkspaceRole,
+    tx?: DbExecutor,
   ): Promise<void> {
-    const role = await this.repo.findActiveMemberRole(workspaceId, userId);
+    const role = await this.repo.findActiveMemberRole(workspaceId, userId, tx);
     if (!role || WORKSPACE_ROLE_RANK[role] < WORKSPACE_ROLE_RANK[minRole]) {
       throw new BillingException(
         BillingErrorCode.FORBIDDEN,
@@ -121,8 +126,11 @@ export class UsageService {
     return this.repo.findOwnerId(workspaceId);
   }
 
-  private async planOf(workspaceId: string): Promise<BillingPlan> {
-    const row = await this.subs.findByWorkspace(workspaceId);
+  private async planOf(
+    workspaceId: string,
+    tx?: DbExecutor,
+  ): Promise<BillingPlan> {
+    const row = await this.subs.findByWorkspace(workspaceId, tx);
     return row?.plan ?? 'FREE';
   }
 }

@@ -34,7 +34,8 @@ describe('HealthService', () => {
     config.get.mockImplementation((key: string) => {
       if (key === 'storage.driver') return 's3';
       if (key === 'billing.stripeSecretKey') return 'secret';
-      if (key === 'RESEND_API_KEY') return 'key';
+      if (key === 'mail.provider') return 'resend';
+      if (key === 'mail.apiKey') return 'key';
       return undefined;
     });
     await createService();
@@ -73,7 +74,8 @@ describe('HealthService', () => {
   it('reports billing and email as configured vs fallback', async () => {
     config.get.mockImplementation((key: string) => {
       if (key === 'storage.driver') return 'vercel-blob';
-      if (key === 'RESEND_API_KEY') return 'key';
+      if (key === 'mail.provider') return 'resend';
+      if (key === 'mail.apiKey') return 'key';
       if (key === 'billing.stripeSecretKey') return undefined;
       return undefined;
     });
@@ -88,4 +90,21 @@ describe('HealthService', () => {
     expect(byName.billing.configured).toBe(false);
     expect(byName.billing.provider).toBe('not configured');
   });
+  it.each([true, false])(
+    'reports Gmail credential presence without exposing secrets (%s)',
+    async (complete) => {
+      db.execute.mockResolvedValueOnce([]);
+      config.get.mockImplementation((key: string) => {
+        if (key === 'mail.provider') return 'gmail';
+        if (key === 'mail.gmail.refreshToken' && !complete) return undefined;
+        return key.startsWith('mail.gmail.') ? 'private-test-value' : undefined;
+      });
+      await createService();
+      const health = await service.getHealth();
+      expect(
+        health.checks.integrations.find((item) => item.name === 'email'),
+      ).toEqual({ name: 'email', configured: complete, provider: 'gmail' });
+      expect(JSON.stringify(health)).not.toContain('private-test-value');
+    },
+  );
 });

@@ -32,8 +32,7 @@ export function renderPasswordResetMail(
     template.resetPath,
     ensureTrailingSlash(template.appBaseUrl),
   );
-  url.searchParams.set('selector', template.selector);
-  url.searchParams.set('verifier', template.verifier);
+  url.searchParams.set('token', `${template.selector}.${template.verifier}`);
 
   const subject = 'Reset your Workspace OS password';
 

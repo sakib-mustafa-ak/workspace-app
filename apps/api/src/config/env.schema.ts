@@ -67,11 +67,19 @@ export const envSchema = z.object({
   // enforced in the superRefine below (fail fast at boot, not first upload).
   BLOB_READ_WRITE_TOKEN: z.string().optional(),
 
-  // Mail delivery. When RESEND_API_KEY is set, the Resend provider is used
-  // for transactional email (verification, password reset, invites). When
-  // absent, the in-memory RecordingMailProvider captures messages for dev/test.
-  RESEND_API_KEY: z.string().optional(),
-  MAIL_FROM: z.string().optional(),
+  // Explicit Gmail/Resend selection, with legacy Resend-key auto-selection.
+  // Without either, only development/test may use the in-memory recorder.
+  RESEND_API_KEY: z.string().trim().optional(),
+  MAIL_PROVIDER: z.preprocess(
+    (value) => (value === '' ? undefined : value),
+    z.enum(['recorder', 'resend', 'gmail']).optional(),
+  ),
+  GMAIL_USER: z.string().trim().optional(),
+  GMAIL_CLIENT_ID: z.string().trim().optional(),
+  GMAIL_CLIENT_SECRET: z.string().trim().optional(),
+  GMAIL_REFRESH_TOKEN: z.string().trim().optional(),
+  MAIL_FROM: z.string().trim().optional(),
+  DEV_MAIL_INBOX_ENABLED: z.enum(['true', 'false']).default('false'),
 
   // Error tracking. When SENTRY_DSN is set, runtimes capture exceptions to
   // Sentry; when absent, error tracking is disabled and the app runs normally.
@@ -98,6 +106,96 @@ const s3Fields = [
 ] as const;
 
 export const envSchemaWithRefinements = envSchema.superRefine((env, ctx) => {
+  const provider =
+    env.MAIL_PROVIDER ?? (env.RESEND_API_KEY ? 'resend' : 'recorder');
+  if (provider === 'gmail') {
+    for (const field of [
+      'GMAIL_USER',
+      'GMAIL_CLIENT_ID',
+      'GMAIL_CLIENT_SECRET',
+      'GMAIL_REFRESH_TOKEN',
+    ] as const) {
+      if (!env[field])
+        ctx.addIssue({
+          code: 'custom',
+          path: [field],
+          message: `${field} is required for Gmail API delivery.`,
+        });
+    }
+    if (!z.email().safeParse(env.GMAIL_USER).success)
+      ctx.addIssue({
+        code: 'custom',
+        path: ['GMAIL_USER'],
+        message: 'Set GMAIL_USER to the authorized sender email address.',
+      });
+    const sender =
+      env.MAIL_FROM?.match(/^[^<>\r\n]+<([^<>\r\n]+)>$/)?.[1] ?? env.MAIL_FROM;
+    if (sender && sender.toLowerCase() !== env.GMAIL_USER?.toLowerCase())
+      ctx.addIssue({
+        code: 'custom',
+        path: ['MAIL_FROM'],
+        message: 'Gmail MAIL_FROM must match GMAIL_USER.',
+      });
+  }
+  if (provider === 'resend' && !env.RESEND_API_KEY)
+    ctx.addIssue({
+      code: 'custom',
+      path: ['RESEND_API_KEY'],
+      message: 'Resend requires RESEND_API_KEY.',
+    });
+  if (
+    env.DEV_MAIL_INBOX_ENABLED === 'true' &&
+    (env.NODE_ENV !== 'development' || provider !== 'recorder')
+  ) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['DEV_MAIL_INBOX_ENABLED'],
+      message:
+        'The local inbox is only allowed in development with the recorder provider.',
+    });
+  }
+  if (env.NODE_ENV === 'production') {
+    const sender =
+      env.MAIL_FROM?.match(/^[^<>\r\n]+<([^<>\r\n]+)>$/)?.[1] ?? env.MAIL_FROM;
+    if (provider === 'recorder')
+      ctx.addIssue({
+        code: 'custom',
+        path: ['MAIL_PROVIDER'],
+        message:
+          'Production requires real email delivery. Configure Gmail or Resend.',
+      });
+    if (
+      provider !== 'gmail' &&
+      (!sender ||
+        !z.email().safeParse(sender).success ||
+        /@resend\.dev$/i.test(sender))
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['MAIL_FROM'],
+        message: 'Set MAIL_FROM to an address on your verified sending domain.',
+      });
+    }
+    const publicUrl = URL.canParse(env.APP_PUBLIC_BASE_URL)
+      ? new URL(env.APP_PUBLIC_BASE_URL)
+      : null;
+    if (
+      !publicUrl ||
+      publicUrl.protocol !== 'https:' ||
+      ['localhost', '127.0.0.1', '[::1]'].includes(publicUrl.hostname) ||
+      publicUrl.username ||
+      publicUrl.password ||
+      publicUrl.search ||
+      publicUrl.hash
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['APP_PUBLIC_BASE_URL'],
+        message:
+          'Production verification links require your public HTTPS web URL, without credentials, query or fragment.',
+      });
+    }
+  }
   if (env.STORAGE_DRIVER === 's3') {
     for (const field of s3Fields) {
       if (!env[field]) {

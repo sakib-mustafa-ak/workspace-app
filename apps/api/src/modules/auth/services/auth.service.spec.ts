@@ -11,6 +11,7 @@ import { PasswordService } from './password.service';
 import { TokenHashService } from './token-hash.service';
 import { TokenService } from './token.service';
 import { AuthService } from './auth.service';
+import { EmailDomainService } from './email-domain.service';
 
 const mockUser: UserRow = {
   isAdmin: false,
@@ -85,6 +86,14 @@ describe('AuthService session lifecycle', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
+        {
+          provide: EmailDomainService,
+          useValue: {
+            validateAddress: jest
+              .fn()
+              .mockImplementation((email: string) => Promise.resolve(email)),
+          },
+        },
         { provide: DATABASE, useValue: db },
         {
           provide: UserRepository,
@@ -265,6 +274,14 @@ describe('AuthService session lifecycle', () => {
       const module: TestingModule = await Test.createTestingModule({
         providers: [
           AuthService,
+          {
+            provide: EmailDomainService,
+            useValue: {
+              validateAddress: jest
+                .fn()
+                .mockImplementation((email: string) => Promise.resolve(email)),
+            },
+          },
           { provide: DATABASE, useValue: db },
           {
             provide: UserRepository,
@@ -343,6 +360,14 @@ describe('AuthService session lifecycle', () => {
       const module: TestingModule = await Test.createTestingModule({
         providers: [
           AuthService,
+          {
+            provide: EmailDomainService,
+            useValue: {
+              validateAddress: jest
+                .fn()
+                .mockImplementation((email: string) => Promise.resolve(email)),
+            },
+          },
           { provide: DATABASE, useValue: db },
           {
             provide: UserRepository,

@@ -72,7 +72,9 @@ async function bootstrap(): Promise<void> {
 
   const port = Number(configService.get<number>('app.port') ?? 4000);
 
-  await app.listen(port);
+  // An opted-in development inbox must never bind to the public network.
+  if (configService.get('mail.devInbox')) await app.listen(port, '127.0.0.1');
+  else await app.listen(port);
 
   console.log(`API running at http://localhost:${port}/api/v1`);
 }

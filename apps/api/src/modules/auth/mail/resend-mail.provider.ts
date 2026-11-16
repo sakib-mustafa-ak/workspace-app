@@ -6,7 +6,7 @@ import { type MailMessage, type MailSendResult } from './mail.provider';
 /**
  * Production-ready mail provider backed by Resend (resend.com).
  *
- * Only instantiated when `RESEND_API_KEY` is set; otherwise the
+ * Selected only when `RESEND_API_KEY` is set; otherwise the
  * RecordingMailProvider is used for dev/test. This is controlled
  * in auth.module.ts via the MAIL_PROVIDER token.
  */
@@ -17,8 +17,8 @@ export class ResendMailProvider {
   private readonly logger = new Logger(ResendMailProvider.name);
 
   constructor(config: ConfigService) {
-    const apiKey = config.get<string>('RESEND_API_KEY');
-    this.from = config.get<string>('MAIL_FROM') ?? 'onboarding@resend.dev';
+    const apiKey = config.get<string>('mail.apiKey');
+    this.from = config.get<string>('mail.from') ?? 'onboarding@resend.dev';
     if (apiKey) {
       this.resend = new Resend(apiKey);
     } else {
@@ -42,16 +42,18 @@ export class ResendMailProvider {
       html: message.html,
     });
 
-    if (result.error) {
+    if (result.error || !result.data?.id) {
       this.logger.error(
-        { to: message.to, error: result.error },
+        { code: result.error?.name ?? 'missing_message_id' },
         'Resend delivery failed',
       );
-      throw new Error(`Mail delivery failed: ${result.error.message}`);
+      throw new Error(
+        'Email delivery is temporarily unavailable. Please try again shortly.',
+      );
     }
 
     return {
-      messageId: result.data?.id ?? `resend_${Date.now()}`,
+      messageId: result.data.id,
       acceptedAt: new Date(),
     };
   }

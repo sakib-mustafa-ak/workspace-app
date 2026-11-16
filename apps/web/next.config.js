@@ -3,11 +3,17 @@ import process from 'node:process';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async headers() {
+    return [{ source: '/auth/:path*', headers: [
+      { key: 'Referrer-Policy', value: 'no-referrer' },
+      { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+    ] }];
+  },
   async rewrites() {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:4000/api/v1/:path*',
+        destination: 'http://127.0.0.1:4000/api/:path*',
       },
       {
         source: '/uploads/:path*',

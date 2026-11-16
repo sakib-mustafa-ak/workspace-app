@@ -1,7 +1,7 @@
 const API_ORIGIN =
   typeof window !== 'undefined'
-    ? `${window.location.protocol}//${window.location.hostname}`
-    : 'http://localhost';
+    ? window.location.origin
+    : 'http://localhost:3000';
 
 /**
  * Resolve the API base URL.

@@ -21,6 +21,10 @@ import type { CurrentUser } from '../interfaces/current-user.interface';
 import { PasswordService } from './password.service';
 import { TokenHashService } from './token-hash.service';
 import { TokenService } from './token.service';
+import {
+  EmailDomainService,
+  normalizeEmailAddress,
+} from './email-domain.service';
 
 export interface LoginMetadata {
   ip: string | null;
@@ -64,6 +68,8 @@ export class AuthService {
     @Inject(TokenService) private readonly tokens: TokenService,
     @Inject(TokenHashService) private readonly tokenHash: TokenHashService,
     @Inject(AuthEventBus) private readonly events: AuthEventBus,
+    @Inject(EmailDomainService)
+    private readonly emailDomains: EmailDomainService,
   ) {}
 
   /**
@@ -78,7 +84,9 @@ export class AuthService {
     password: string;
     meta: LoginMetadata;
   }): Promise<AuthenticatedSession> {
-    const existing = await this.users.findByEmailWithPassword(input.email);
+    // Validate before password hashing, account creation or session issuance.
+    const email = await this.emailDomains.validateAddress(input.email);
+    const existing = await this.users.findByEmailWithPassword(email);
     if (existing) {
       throw new AuthException(
         AuthErrorCode.EMAIL_ALREADY_EXISTS,
@@ -94,7 +102,7 @@ export class AuthService {
       const user = await this.users.create(
         {
           displayName: input.displayName,
-          email: input.email,
+          email,
           passwordHash,
         },
         tx,
@@ -124,7 +132,9 @@ export class AuthService {
     password: string;
     meta: LoginMetadata;
   }): Promise<AuthenticatedSession> {
-    const user = await this.users.findByEmailWithPassword(input.email);
+    const user = await this.users.findByEmailWithPassword(
+      normalizeEmailAddress(input.email),
+    );
     if (!user) {
       await this.passwords.hash('dummy-time-anchor');
       throw new AuthException(

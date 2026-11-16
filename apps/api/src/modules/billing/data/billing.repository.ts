@@ -21,8 +21,9 @@ export class BillingRepository {
 
   public async findByWorkspace(
     workspaceId: string,
+    tx?: DbExecutor,
   ): Promise<WorkspaceSubscriptionRow | undefined> {
-    const [row] = await this.db
+    const [row] = await (tx ?? this.db)
       .select()
       .from(workspaceSubscriptions)
       .where(eq(workspaceSubscriptions.workspaceId, workspaceId))

@@ -16,11 +16,21 @@ services:
         value: production
       - key: PORT
         value: "4000"
-      - key: APP_PUBLIC_BASE_URL
-        sync: false
       - key: DATABASE_URL
         sync: false
       - key: JWT_ACCESS_SECRET
         generateValue: true
       - key: JWT_REFRESH_SECRET
         generateValue: true
+      - key: MAIL_PROVIDER
+        value: gmail
+      - key: GMAIL_USER
+        value: workspace.os.verify@gmail.com
+      - key: GMAIL_CLIENT_ID
+        sync: false
+      - key: GMAIL_CLIENT_SECRET
+        sync: false
+      - key: GMAIL_REFRESH_TOKEN
+        sync: false
+      - key: APP_PUBLIC_BASE_URL
+        sync: false

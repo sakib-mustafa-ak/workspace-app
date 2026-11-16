@@ -43,6 +43,10 @@ export interface MailSendResult {
   acceptedAt: Date;
 }
 
+export interface MailProvider {
+  send(message: MailMessage): Promise<MailSendResult>;
+}
+
 /**
  * Recording in-memory `MailProvider` for Phase 1.
  *
@@ -67,6 +71,8 @@ export class RecordingMailProvider {
   // eslint-disable-next-line @typescript-eslint/require-await
   public async send(message: MailMessage): Promise<MailSendResult> {
     this.outbox.push(message);
+    // A local test inbox is deliberately bounded and only lives in memory.
+    if (this.outbox.length > 100) this.outbox.shift();
     const messageId = `mail_local_${Date.now().toString(36)}_${Math.random()
       .toString(36)
       .slice(2, 10)}`;

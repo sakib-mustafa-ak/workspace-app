@@ -8,11 +8,12 @@ import { workspacesApi, type Workspace } from '@/lib/workspaces';
 import { boardsApi } from '@/lib/boards';
 import { setLastActiveWorkspace, getLastActiveWorkspace } from '@/lib/active-workspace';
 import { useToast } from '@/contexts/toast-context';
+import { ApiError } from '@/lib/api';
 
 const STEPS = ['Create workspace', 'Invite teammates', 'Finish up'];
 
 export default function OnboardingPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
   const toast = useToast();
 
@@ -30,7 +31,9 @@ export default function OnboardingPage() {
   const [finishing, setFinishing] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
+    if (loading) return;
+    if (!user) { router.replace('/auth/login'); return; }
+    if (!user.emailVerifiedAt) { router.replace('/auth/check-email'); return; }
     workspacesApi
       .list()
       .then((list) => {
@@ -44,11 +47,11 @@ export default function OnboardingPage() {
         }
       })
       .catch(() => {});
-  }, [user, router]);
+  }, [user, loading, router]);
 
   async function handleCreateWorkspace(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim() || !slug.trim()) return;
+    if (!user?.emailVerifiedAt || !name.trim() || !slug.trim()) return;
     setCreating(true);
     try {
       const ws = await workspacesApi.create({
@@ -57,8 +60,13 @@ export default function OnboardingPage() {
       });
       setWorkspace(ws);
       setStep(1);
-    } catch {
-      toast.error('Failed to create workspace. Please try again.');
+    } catch (error) {
+      if (error instanceof ApiError && error.code === 'AUTH.EMAIL_NOT_VERIFIED') {
+        router.replace('/auth/check-email');
+      }
+      toast.error(error instanceof ApiError && error.status < 500
+        ? error.message
+        : 'Could not create workspace. Check your connection and try again.');
     } finally {
       setCreating(false);
     }
@@ -112,6 +120,10 @@ export default function OnboardingPage() {
   function handleBack() {
     if (step === 1) setStep(0);
     else if (step === 2) setStep(1);
+  }
+
+  if (loading || !user?.emailVerifiedAt) {
+    return <div role="status" className="flex min-h-screen items-center justify-center text-sm text-surface-400">Checking your account...</div>;
   }
 
   return (

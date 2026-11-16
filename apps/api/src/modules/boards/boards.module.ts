@@ -7,12 +7,15 @@ import { BoardsRepository } from './repositories/boards.repository';
 import { BoardColumnsRepository } from './repositories/board-columns.repository';
 import { BoardsService } from './services/boards.service';
 import { TasksModule } from '../tasks/tasks.module';
+import { TrelloImportController } from './trello/trello-import.controller';
+import { TrelloImportService } from './trello/trello-import.service';
 
 @Module({
   imports: [TasksModule],
-  controllers: [BoardsController],
+  controllers: [TrelloImportController, BoardsController],
   providers: [
     BoardsService,
+    TrelloImportService,
     BoardsRepository,
     BoardColumnsRepository,
     BoardPolicy,

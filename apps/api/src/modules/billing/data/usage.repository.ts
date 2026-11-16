@@ -6,6 +6,7 @@ import {
   eq,
   sql,
   type Db,
+  type DbExecutor,
   type WorkspaceRole,
   boards,
   workspaces,
@@ -29,8 +30,11 @@ export class UsageRepository {
     return row?.count ?? 0;
   }
 
-  public async countBoards(workspaceId: string): Promise<number> {
-    const [row] = await this.db
+  public async countBoards(
+    workspaceId: string,
+    tx?: DbExecutor,
+  ): Promise<number> {
+    const [row] = await (tx ?? this.db)
       .select({ count: sql<number>`count(*)::int` })
       .from(boards)
       .where(
@@ -58,8 +62,9 @@ export class UsageRepository {
   public async findActiveMemberRole(
     workspaceId: string,
     userId: string,
+    tx?: DbExecutor,
   ): Promise<WorkspaceRole | undefined> {
-    const [row] = await this.db
+    const [row] = await (tx ?? this.db)
       .select({ role: workspaceMembers.role })
       .from(workspaceMembers)
       .where(

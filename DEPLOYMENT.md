@@ -48,6 +48,8 @@ speaks the same `postgresql://` URL the Drizzle driver already uses.
 4. Deploy. The site comes up at `https://workspace-app.vercel.app`.
 
 ### 5. Smoke test
+- Configure real email using the Gmail API or Resend instructions below before
+  deploying the authentication changes; otherwise production startup will fail.
 - Register a new account in the UI (signup is open; the DB is empty).
 - Create a workspace → board → switch to the Pencil tool and draw on a
   second browser tab; strokes sync in real time.
@@ -59,12 +61,41 @@ speaks the same `postgresql://` URL the Drizzle driver already uses.
 |---|---|---|
 | `DATABASE_URL` | Render | Neon connection string with `?sslmode=require` |
 | `APP_PUBLIC_BASE_URL` | Render | `https://<app>.vercel.app` |
+| `MAIL_PROVIDER` | Render only | `gmail` for Gmail HTTPS API; `resend` for Resend |
+| `GMAIL_USER` | Render only | `workspace.os.verify@gmail.com` (Gmail option) |
+| `GMAIL_CLIENT_ID` / `GMAIL_CLIENT_SECRET` / `GMAIL_REFRESH_TOKEN` | Render only | Private sender OAuth credentials; see Gmail setup below |
+| `RESEND_API_KEY` | Render only | Secret Resend sending API key; never expose through `NEXT_PUBLIC_*` |
+| `MAIL_FROM` | Render only | Resend: verified-domain sender. Gmail: omit or use `Workspace OS <workspace.os.verify@gmail.com>` |
 | `JWT_ACCESS_SECRET` | Render (generated) | random ≥16 chars |
 | `JWT_REFRESH_SECRET` | Render (generated) | random ≥16 chars |
 | `NEXT_PUBLIC_API_URL` | Vercel | `https://workspace-api-m9q7.onrender.com/api/v1` |
 | `REDIS_HOST` / `REDIS_PORT` | optional | defaults `localhost`/`6379`; the Redis module is a no-op placeholder — no client connects yet |
 
 ## Known limits (free-tier demo)
+
+Production requires real email configuration at startup. Configure either Gmail API or Resend **before deploying this change**, or the API will refuse to start instead of silently recording email. Existing unverified accounts must verify before accessing workspace APIs or realtime connections. No database migration is required.
+
+### Activate email and verification
+
+**No domain / Render free:** use the [Gmail HTTPS API setup guide](docs/plans/gmail-api-setup.md).
+It sends through `workspace.os.verify@gmail.com` using sender-only OAuth credentials.
+Your Google App Password is not used. Render free blocks SMTP ports, so Gmail SMTP
+is not suitable for this deployment. OAuth apps left in Testing have refresh tokens
+that normally expire after seven days; follow the publishing/reauthorization guidance.
+
+**Resend alternative (requires a sending domain):**
+
+For a no-cost local prototype and fake-domain signup filtering, see [the local verification lab](docs/plans/local-email-verification.md). This is simulated delivery, not a public Postal/BillionMail server. Do not enable its inbox in production.
+
+1. Add a domain you own in Resend and publish the DNS records Resend provides. Wait for its verified status. See [Resend domain verification](https://resend.com/docs/dashboard/domains/introduction). Prefer a transactional subdomain; keep open/click tracking disabled for authentication links.
+2. Create a sending API key and enter it directly into Render's secret environment settings as `RESEND_API_KEY`. Set `MAIL_FROM` to an address on that verified domain. Do not paste the key into chat, commit it, or put it in Vercel public environment variables.
+3. Set `MAIL_PROVIDER=resend` and `APP_PUBLIC_BASE_URL` to the web application's public HTTPS origin, not the API URL. Redeploy both API and web. The Render blueprint defaults to Gmail; override that selection for Resend. Existing services need their Environment settings updated manually.
+4. Register a fresh account using an inbox you control. Confirm an email arrives, confirm the link opens the correct deployment, click **Verify my email**, and then enter your workspace. An unverified account must receive `AUTH.EMAIL_NOT_VERIFIED` on protected APIs.
+5. Check resend, an expired/used link, and password reset. Resending invalidates previous verification links. The public resend response does not reveal whether an account exists. If signup delivery fails, the account stays created and the user can resend from the check-email page.
+
+Development/test without a configured provider use an in-memory recorder, not real email. Automated transport tests mock Google HTTPS calls or the Resend SDK; they do not prove live inbox delivery. Check actual delivery after configuring the selected provider's credentials.
+
+Verification checks: `corepack pnpm --filter api test -- --runInBand` and, after building the shared database package and API, `corepack pnpm --filter api test:email-integration`. The latter uses an isolated PGlite database and a recording transport; it never sends real email or connects to the configured production database.
 
 - **Uploads are ephemeral.** Files land on Render's local disk
   (`apps/api/uploads`) and vanish on every deploy/restart. Acceptable for a

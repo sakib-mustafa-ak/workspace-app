@@ -9,6 +9,7 @@ import { Reflector } from '@nestjs/core';
 
 import { AuthException, AuthErrorCode } from '../errors/auth.errors';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+import { ALLOW_UNVERIFIED_KEY } from '../decorators/allow-unverified.decorator';
 import { TokenService } from '../services/token.service';
 import { UserRepository } from '../repositories/user.repository';
 import type { CurrentUser } from '../interfaces/current-user.interface';
@@ -93,6 +94,17 @@ export class JwtAuthGuard implements CanActivate {
       throw new AuthException(
         AuthErrorCode.UNAUTHENTICATED,
         'Account is suspended.',
+      );
+    }
+
+    const allowUnverified = this.reflector.getAllAndOverride<boolean>(
+      ALLOW_UNVERIFIED_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+    if (!user.emailVerifiedAt && !allowUnverified) {
+      throw new AuthException(
+        AuthErrorCode.EMAIL_NOT_VERIFIED,
+        'Verify your email before accessing your workspace.',
       );
     }
 

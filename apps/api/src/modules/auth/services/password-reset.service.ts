@@ -17,7 +17,7 @@ import { AuthException, AuthErrorCode } from '../errors/auth.errors';
 import { AuthEventBus } from '../events/auth.events';
 import {
   MAIL_PROVIDER,
-  RecordingMailProvider,
+  type MailProvider,
   type MailMessage,
 } from '../mail/mail.provider';
 import { renderPasswordResetMail } from '../mail/password-reset.template';
@@ -25,6 +25,7 @@ import { PasswordResetTokenRepository } from '../repositories/password-reset-tok
 import { PasswordService } from './password.service';
 import { SessionRepository } from '../repositories/session.repository';
 import { TokenHashService } from './token-hash.service';
+import { normalizeEmailAddress } from './email-domain.service';
 
 /**
  * Password-reset workflow (Part V-A "Password Reset").
@@ -53,7 +54,7 @@ export class PasswordResetService {
 
   constructor(
     @Inject(DATABASE) private readonly db: Db,
-    @Inject(MAIL_PROVIDER) private readonly mail: RecordingMailProvider,
+    @Inject(MAIL_PROVIDER) private readonly mail: MailProvider,
     @Inject(AuthEventBus) private readonly eventBus: AuthEventBus,
     @Inject(TokenHashService) private readonly tokenHash: TokenHashService,
     @Inject(PasswordService) private readonly passwords: PasswordService,
@@ -73,7 +74,7 @@ export class PasswordResetService {
     ip: string | null;
     userAgent: string | null;
   }): Promise<void> {
-    const normalized = input.email.trim().toLowerCase();
+    const normalized = normalizeEmailAddress(input.email);
     const found = await this.db
       .select({ id: users.id, email: users.email })
       .from(users)

@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Plus, Columns, Search, Archive, Trash2 } from 'lucide-react';
+import { Plus, Columns, Search, Archive, Trash2, Upload } from 'lucide-react';
 import { workspacesApi, type Workspace } from '@/lib/workspaces';
 import { boardsApi, type Board } from '@/lib/boards';
 import { SkeletonCard } from '@/components/skeleton';
 import { useToast } from '@/contexts/toast-context';
 import { ConfirmModal } from '@/components/confirm-modal';
 import { Breadcrumbs } from '@/components/breadcrumbs';
+import { TrelloImportDialog } from '@/components/trello-import-dialog';
 
 export default function BoardsPage() {
   const params = useParams();
@@ -20,6 +21,7 @@ export default function BoardsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreate, setShowCreate] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [name, setName] = useState('');
   const [creating, setCreating] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -93,6 +95,10 @@ export default function BoardsPage() {
             {boards.length} board{boards.length !== 1 ? 's' : ''}
           </p>
         </div>
+        <div className="flex flex-wrap items-center gap-3">
+        <button onClick={() => setShowImport(true)} disabled={loading || !!error} className="flex items-center gap-2 rounded-xl border border-surface-700 px-4 py-2.5 text-sm font-medium transition-colors hover:bg-surface-800 disabled:opacity-50">
+          <Upload size={16} /> Import from Trello
+        </button>
         <button
           onClick={() => setShowCreate(true)}
           className="flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-500 hover:shadow-primary-500/30 active:scale-[0.98]"
@@ -100,7 +106,15 @@ export default function BoardsPage() {
           <Plus size={16} />
           New board
         </button>
+        </div>
       </div>
+
+      {showImport && <TrelloImportDialog workspaceId={workspaceId} onClose={() => { setShowImport(false); loadBoards(); }} onImported={(board) => {
+        setBoards((previous) => [...previous, board]);
+        setSearchQuery('');
+        setShowImport(false);
+        toast.success(`Imported "${board.name}" from Trello.`);
+      }} />}
 
       <div className="mb-6 flex items-center gap-2 rounded-lg border border-surface-800 bg-surface-900 px-3 py-2">
         <Search size={16} className="text-surface-500" />

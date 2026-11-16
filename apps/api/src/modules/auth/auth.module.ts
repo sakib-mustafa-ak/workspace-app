@@ -6,6 +6,7 @@ import { AdminGuard } from './guards/admin.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { MAIL_PROVIDER, RecordingMailProvider } from './mail/mail.provider';
 import { ResendMailProvider } from './mail/resend-mail.provider';
+import { GmailMailProvider } from './mail/gmail-mail.provider';
 import { EmailVerificationTokenRepository } from './repositories/email-verification-token.repository';
 import { IdentityRepository } from './repositories/identity.repository';
 import { PasswordResetTokenRepository } from './repositories/password-reset-token.repository';
@@ -18,6 +19,12 @@ import { PasswordService } from './services/password.service';
 import { TokenHashService } from './services/token-hash.service';
 import { TokenService } from './services/token.service';
 import { AuthEventBus } from './events/auth.events';
+import {
+  EmailDomainService,
+  MailDomainDns,
+  EMAIL_DNS,
+} from './services/email-domain.service';
+import { DevMailController } from './controllers/dev-mail.controller';
 
 /**
  * Authentication bounded-context module.
@@ -51,10 +58,12 @@ import { AuthEventBus } from './events/auth.events';
  *     via the `DATABASE` token with `@Inject(DATABASE)`.
  */
 @Module({
-  controllers: [AuthController],
+  controllers: [AuthController, DevMailController],
   providers: [
     // Services
     AuthService,
+    EmailDomainService,
+    { provide: EMAIL_DNS, useClass: MailDomainDns },
     EmailVerificationService,
     PasswordResetService,
     PasswordService,
@@ -71,14 +80,26 @@ import { AuthEventBus } from './events/auth.events';
     // otherwise the in-memory recorder captures messages for dev/test.
     RecordingMailProvider,
     ResendMailProvider,
+    GmailMailProvider,
     {
       provide: MAIL_PROVIDER,
       useFactory: (
         recorder: RecordingMailProvider,
         resend: ResendMailProvider,
+        gmail: GmailMailProvider,
         config: ConfigService,
-      ) => (config.get('RESEND_API_KEY') ? resend : recorder),
-      inject: [RecordingMailProvider, ResendMailProvider, ConfigService],
+      ) =>
+        config.get('mail.provider') === 'gmail'
+          ? gmail
+          : config.get('mail.provider') === 'resend'
+            ? resend
+            : recorder,
+      inject: [
+        RecordingMailProvider,
+        ResendMailProvider,
+        GmailMailProvider,
+        ConfigService,
+      ],
     },
     // Cross-cutting
     AuthEventBus,

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { AuthProvider } from '@/contexts/auth-context';
+import { AuthProvider, useAuth } from '@/contexts/auth-context';
 import { Sidebar } from '@/components/sidebar';
 import { Menu, LayoutDashboard, Bell, Users, Settings } from 'lucide-react';
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -33,6 +33,7 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
 
   return (
     <AuthProvider>
+      <VerifiedAccess>
       <div className="flex h-screen">
         {sidebarOpen && (
           <div
@@ -120,6 +121,19 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
           </div>
         )}
       </div>
+      </VerifiedAccess>
     </AuthProvider>
   );
+}
+
+function VerifiedAccess({ children }: { children: ReactNode }) {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  useEffect(() => {
+    if (loading) return;
+    if (!user) router.replace('/auth/login');
+    else if (!user.emailVerifiedAt) router.replace('/auth/check-email');
+  }, [user, loading, router]);
+  if (loading || !user?.emailVerifiedAt) return <div role="status" className="flex min-h-screen items-center justify-center text-sm text-surface-400">Checking your account...</div>;
+  return children;
 }

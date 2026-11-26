@@ -66,7 +66,7 @@ function AcceptInvitationInner() {
               <p className="mt-2 text-sm text-surface-400">{message}</p>
               <button
                 onClick={() => router.push(`/workspaces/${workspaceId}`)}
-                className="mt-6 inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-primary-500 action-interaction"
+                className="gold-accent mt-6 inline-flex items-center gap-1.5 rounded-lg px-5 py-2.5 text-sm font-medium transition-colors action-interaction"
               >
                 <LogIn size={16} />
                 Go to workspace
@@ -83,7 +83,7 @@ function AcceptInvitationInner() {
               <p className="mt-2 text-sm text-surface-400">{message}</p>
               <Link
                 href="/dashboard"
-                className="mt-6 inline-block rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-primary-500 action-interaction"
+                className="gold-accent mt-6 inline-block rounded-lg px-5 py-2.5 text-sm font-medium transition-colors action-interaction"
               >
                 Go to dashboard
               </Link>

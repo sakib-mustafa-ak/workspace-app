@@ -337,3 +337,19 @@
 .ide-shell[data-density="compact"] .workbench-tabs { height: 30px; }
 .workbench-side-panel { width: 100%; }
 @media (min-width: 1024px) { .workbench-side-panel { width: var(--pane-width); } }
+
+/* One intentional focal point per view; navigation and status colors stay intact. */
+:root { --gold-ink: #dec585; --gold-fill: #302a1e; --gold-hover: #3d3423; --gold-edge: #806a3d; }
+.light { --gold-ink: #735414; --gold-fill: #fbf5e7; --gold-hover: #f3e8ce; --gold-edge: #b3985c; }
+.gold-accent.gold-accent {
+  color: var(--gold-ink);
+  background-color: var(--gold-fill);
+  border-color: var(--gold-edge);
+  box-shadow: inset 0 0 0 1px var(--gold-edge);
+}
+.gold-accent.gold-accent:enabled:hover, a.gold-accent.gold-accent:hover {
+  color: var(--gold-ink);
+  background-color: var(--gold-hover);
+}
+.gold-accent.gold-accent:focus-visible { outline: 2px solid var(--gold-ink); outline-offset: 3px; }
+.gold-accent-text.gold-accent-text { color: var(--gold-ink); }

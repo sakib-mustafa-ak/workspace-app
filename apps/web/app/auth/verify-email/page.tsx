@@ -68,7 +68,7 @@ function VerifyEmailInner() {
           <button
             onClick={() => void confirm()}
             disabled={busy}
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50"
+            className="gold-accent mt-6 flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium disabled:opacity-50"
           >
             {busy && <Loader2 size={16} className="animate-spin" />}
             {busy ? "Verifying..." : "Verify my email"}
@@ -82,7 +82,7 @@ function VerifyEmailInner() {
                 : "/auth/login"
               : "/auth/request-verification"
           }
-          className="mt-5 block text-center text-sm text-primary-400 underline underline-offset-4"
+          className={`mt-5 block text-center text-sm underline underline-offset-4 ${done || !token ? 'gold-accent-text' : 'text-primary-400'}`}
         >
           {done
             ? user?.emailVerifiedAt

@@ -48,7 +48,7 @@ export default function UsersPage() {
           <p className="mt-1 text-sm text-surface-400">{total} total users</p>
         </div>
         <div className="relative w-full sm:w-64">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-500" />
+          <Search size={14} className="gold-accent-text absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -99,7 +99,7 @@ export default function UsersPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-warm-300 transition-colors group-hover:text-warm-200">{u.displayName}</span>
+                      <span className="text-sm font-medium text-surface-200 transition-colors group-hover:text-surface-100">{u.displayName}</span>
                       {u.status !== 'ACTIVE' && (
                         <span className="rounded border border-amber-500/20 bg-amber-500/10 px-1.5 py-0.5 text-caption font-medium text-amber-400">
                           {u.status}

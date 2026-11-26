@@ -91,14 +91,14 @@ export default function PluginCallbackPage() {
         <button
           disabled={busy}
           onClick={() => void complete()}
-          className="mt-6 rounded-lg bg-primary-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+          className="gold-accent mt-6 rounded-lg px-4 py-2 text-sm disabled:opacity-50"
         >
           {busy ? "Connecting…" : "Finish connection"}
         </button>
       )}
       <Link
         href={"/dashboard/plugins"}
-        className="mt-5 block text-sm text-surface-400"
+        className={`mt-5 block text-sm ${pending ? 'text-surface-400' : 'gold-accent-text'}`}
       >
         {pending ? "Back to Plugins" : "Back to dashboard"}
       </Link>

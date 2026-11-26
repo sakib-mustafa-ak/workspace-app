@@ -286,7 +286,7 @@ function DashboardContent() {
           <button
             onClick={() => setShowCreate(true)}
             aria-expanded={showCreate}
-            className="flex w-fit shrink-0 items-center gap-2 rounded-lg border border-surface-700 bg-surface-900 px-4 py-2.5 text-xs font-medium text-surface-200 transition-colors hover:border-surface-500 focus-visible:outline-primary-400"
+            className="gold-accent flex w-fit shrink-0 items-center gap-2 rounded-lg border px-4 py-2.5 text-xs font-medium transition-colors"
           >
             <Plus size={16} />
             New workspace

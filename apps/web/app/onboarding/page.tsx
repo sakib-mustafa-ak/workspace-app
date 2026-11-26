@@ -201,7 +201,7 @@ export default function OnboardingPage() {
                 <button
                   type="submit"
                   disabled={creating || !name.trim() || !slug.trim()}
-                  className="w-full rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-primary-500 hover:shadow-lg hover:shadow-primary-600/25 disabled:opacity-50"
+                  className="gold-accent w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-50"
                 >
                   {creating ? (
                     <span className="flex items-center justify-center gap-2">
@@ -274,7 +274,7 @@ export default function OnboardingPage() {
                   <button
                     type="button"
                     onClick={handleSendInvites}
-                    className="flex-1 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-primary-500 hover:shadow-lg hover:shadow-primary-600/25"
+                    className="gold-accent flex-1 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors"
                   >
                     {invitees.length > 0 ? `Invite ${invitees.length} teammate${invitees.length > 1 ? 's' : ''}` : 'Skip'}
                   </button>
@@ -320,7 +320,7 @@ export default function OnboardingPage() {
                   type="button"
                   onClick={handleFinish}
                   disabled={finishing}
-                  className="w-full rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-primary-500 hover:shadow-lg hover:shadow-primary-600/25 disabled:opacity-50"
+                  className="gold-accent w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-50"
                 >
                   {finishing ? (
                     <span className="flex items-center justify-center gap-2">

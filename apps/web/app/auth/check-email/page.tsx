@@ -98,7 +98,7 @@ export default function CheckEmailPage() {
             <button
               onClick={() => void resend()}
               disabled={busy || cooldown > 0}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-500 disabled:opacity-50"
+              className="gold-accent flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium disabled:opacity-50"
             >
               {busy && <Loader2 size={16} className="animate-spin" />}
               {cooldown
@@ -128,7 +128,7 @@ export default function CheckEmailPage() {
           </div>
         ) : (
           <div className="mt-6 flex flex-col gap-3 text-sm">
-            <Link href="/auth/login" className="text-primary-400 underline">
+            <Link href="/auth/login" className="gold-accent-text underline">
               Sign in to continue
             </Link>
             <Link

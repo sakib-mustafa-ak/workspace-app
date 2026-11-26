@@ -70,7 +70,7 @@ export default function NotificationsPage() {
           <Bell size={20} className="text-primary-500" />
           <h1 className="font-display text-lg font-bold">Notifications</h1>
         </div>
-        <button onClick={handleMarkAllRead} className="flex items-center gap-1.5 rounded-lg border border-surface-700 px-3 py-1.5 text-xs text-surface-400 hover:text-white">
+        <button onClick={handleMarkAllRead} className="gold-accent flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs">
           <CheckCheck size={14} />
           Mark all read
         </button>

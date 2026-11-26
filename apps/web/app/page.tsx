@@ -103,7 +103,7 @@ export default function LandingPage() {
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link
                   href="/auth/register"
-                  className="action-interaction rounded-lg bg-primary-600 px-5 py-3 text-sm font-medium text-white transition-all hover:bg-primary-500"
+                  className="gold-accent action-interaction rounded-lg px-5 py-3 text-sm font-medium transition-colors"
                 >
                   Create your workspace
                 </Link>
@@ -246,7 +246,7 @@ function LayerStack() {
         </div>
         <div className="ml-8 surface-interaction rounded-xl border border-surface-700 bg-surface-900 p-4">
           <div className="mb-3 flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-warm-400" />
+            <span className="h-2.5 w-2.5 rounded-full bg-primary-400" />
             <span className="text-xs font-semibold text-surface-200">Launch plan</span>
           </div>
           <div className="grid grid-cols-1 gap-2">
@@ -256,7 +256,7 @@ function LayerStack() {
             </div>
             <div className="flex items-center justify-between rounded-lg border border-surface-800 bg-surface-950/60 px-3 py-2">
               <span className="text-xs text-surface-300">Confirm pricing</span>
-              <span className="rounded bg-warm-400/15 px-1.5 py-0.5 text-[10px] font-medium text-warm-400">Blocked</span>
+              <span className="rounded bg-red-400/15 px-1.5 py-0.5 text-[10px] font-medium text-red-400">Blocked</span>
             </div>
           </div>
         </div>

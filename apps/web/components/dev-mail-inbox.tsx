@@ -41,7 +41,7 @@ export function DevMailInbox() {
         <button
           onClick={() => void load()}
           disabled={loading}
-          className="rounded-lg bg-primary-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+          className="gold-accent rounded-lg px-4 py-2 text-sm disabled:opacity-50"
         >
           {loading ? "Refreshing..." : "Refresh inbox"}
         </button>

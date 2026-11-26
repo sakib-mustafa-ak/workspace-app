@@ -19,7 +19,7 @@ export function TabNav({ tabs, activeTab, onTabChange }: Props) {
           onClick={() => onTabChange(tab.id)}
           className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
             activeTab === tab.id
-              ? 'bg-surface-800 text-white shadow-sm'
+              ? 'gold-accent'
               : 'text-surface-400 hover:text-surface-200'
           }`}
         >

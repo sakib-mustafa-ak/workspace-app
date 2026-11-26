@@ -38,7 +38,7 @@ export default function RequestPasswordResetPage() {
           </p>
           <Link
             href="/auth/login"
-            className="mt-6 inline-block rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-primary-500 action-interaction"
+            className="gold-accent mt-6 inline-block rounded-lg px-4 py-2.5 text-sm font-medium transition-colors action-interaction"
           >
             Back to login
           </Link>
@@ -86,7 +86,7 @@ export default function RequestPasswordResetPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-primary-500 action-interaction disabled:opacity-50 disabled:shadow-none"
+              className="gold-accent w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-colors action-interaction disabled:opacity-50"
             >
               {submitting ? (
                 <span className="flex items-center gap-2">

@@ -195,7 +195,7 @@ export default function WorkspaceDetailPage() {
               onClick={() => setTab(t.key)}
               className={`flex items-center gap-1.5 rounded-t-lg px-4 py-2 text-xs font-medium transition-colors ${
                 tab === t.key
-                  ? 'bg-surface-900 text-white'
+                  ? 'gold-accent'
                   : 'text-surface-500 hover:text-surface-200'
               }`}
             >

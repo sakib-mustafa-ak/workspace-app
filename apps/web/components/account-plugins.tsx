@@ -344,7 +344,7 @@ export function AccountPlugins() {
             key={value}
             aria-pressed={tab === value}
             onClick={() => setTab(value!)}
-            className={`${buttonClass} ${tab === value ? "bg-surface-800" : ""}`}
+            className={`${buttonClass} ${tab === value ? "gold-accent" : ""}`}
           >
             {title}
           </button>

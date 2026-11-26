@@ -140,6 +140,13 @@ export default function CalendarPage() {
         <div className="flex items-center gap-3">
           <Calendar size={20} className="text-primary-400" />
           <h1 className="text-lg font-semibold text-surface-100">Calendar</h1>
+          <button
+            type="button"
+            onClick={() => { const today = new Date(); setCurrentDate(today); setSelectedDate(today); }}
+            className="gold-accent ml-auto rounded-lg px-3 py-1.5 text-xs font-medium"
+          >
+            Today
+          </button>
         </div>
       </header>
 

@@ -55,7 +55,7 @@ export function BoardToolbar(props: Props) {
           <h1 className="max-w-64 truncate font-semibold text-surface-100" style={{ fontSize: '14px' }} title={board.description || board.name}>{board.name}</h1>
         </div>
         <div className="order-2 flex shrink-0 items-center gap-1">
-          <Link href={`/workspaces/${workspaceId}/boards/${board.id}/canvas`} className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-surface-300 hover:bg-surface-800">
+          <Link href={`/workspaces/${workspaceId}/boards/${board.id}/canvas`} className="gold-accent flex items-center gap-2 rounded-lg px-3 py-2 text-xs">
             <SquarePen size={15} />Canvas
           </Link>
           <button type="button" onClick={props.onComments} aria-pressed={comments} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs ${comments ? 'bg-surface-800 text-surface-100' : 'text-surface-400 hover:bg-surface-800'}`}>

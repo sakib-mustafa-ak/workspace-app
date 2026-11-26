@@ -101,7 +101,7 @@ export default function BoardsPage() {
         </button>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-500 hover:shadow-primary-500/30 active:scale-[0.98]"
+          className="gold-accent flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-medium transition-colors"
         >
           <Plus size={16} />
           New board

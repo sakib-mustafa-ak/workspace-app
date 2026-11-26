@@ -396,7 +396,7 @@ export function WorkspaceHome() {
     <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-14">
         <section aria-labelledby="today-title">
           <div className="mb-5 flex items-center justify-between">
-            <h2 id="today-title" className="text-base font-semibold">
+            <h2 id="today-title" className={`text-base font-semibold ${canEdit ? '' : 'gold-accent-text'}`}>
               My day{" "}
               <span className="ml-2 text-xs font-normal text-surface-500">
                 {data.todayTasks.length}
@@ -563,7 +563,7 @@ export function WorkspaceHome() {
                 </button>
                 <button
                   onClick={() => setCreating(!creating)}
-                  className="flex items-center gap-1.5 rounded-lg bg-surface-200 px-3 py-2 text-xs font-medium text-surface-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-400"
+                  className="gold-accent flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium"
                 >
                   <Plus size={14} />
                   New board

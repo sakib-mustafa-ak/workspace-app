@@ -603,7 +603,7 @@ export function Toolbar() {
           aria-label="Export as PDF"
           onClick={handleExportPdf}
           disabled={state.objects.length === 0}
-          className={iconBtn}
+          className={`${iconBtn} gold-accent`}
         >
           <FileDown size={16} />
         </button>

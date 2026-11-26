@@ -89,7 +89,7 @@ export default function LoginPage() {
                     <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary-600 text-xs font-semibold text-surface-100">
                       {(p.displayName || p.email)[0]?.toUpperCase()}
                     </span>
-                    <span className="text-warm-300">
+                    <span className="text-surface-200">
                       {p.displayName || p.email}
                     </span>
                     <span
@@ -151,7 +151,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-all hover:bg-primary-500 action-interaction disabled:opacity-50 disabled:shadow-none"
+              className="gold-accent w-full rounded-lg px-4 py-2.5 text-sm font-medium transition-colors action-interaction disabled:opacity-50"
             >
               {submitting ? (
                 <span className="flex items-center gap-2">

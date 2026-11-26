@@ -14,6 +14,45 @@ import { workspaces } from "../workspaces/workspace.schema.js";
 import { users } from "../users/user.schema.js";
 import { tasks } from "../tasks/task.schema.js";
 
+// Personal installations apply in every workspace the account can access.
+export const accountPlugins = pgTable(
+  "account_plugins",
+  {
+    id: PRIMARY_ID(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    key: text("key").notNull(),
+    enabled: boolean("enabled").notNull().default(false),
+    credentials: text("credentials"),
+    credentialsContext: text("credentials_context"),
+    createdAt: CREATED_AT(),
+    updatedAt: UPDATED_AT(),
+  },
+  (t) => ({
+    userKey: uniqueIndex("account_plugins_user_key").on(t.userId, t.key),
+  }),
+);
+
+export const accountPluginOauthStates = pgTable(
+  "account_plugin_oauth_states",
+  {
+    hash: text("hash").primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    provider: text("provider").notNull(),
+    verifier: text("verifier").notNull(),
+    expiresAt: timestamp("expires_at", {
+      withTimezone: true,
+      mode: "date",
+    }).notNull(),
+  },
+  (t) => ({
+    expiry: index("account_plugin_oauth_states_expiry").on(t.expiresAt),
+  }),
+);
+
 export const workspacePlugins = pgTable(
   "workspace_plugins",
   {

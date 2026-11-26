@@ -2,12 +2,16 @@
 
 ## Delivered scope
 
-Open a workspace and choose **Plugins** in its header. The hub contains:
+Choose **Plugins** from the dashboard header or navigation. The dashboard hub
+has no workspace selector: installations belong to the signed-in account and
+apply across all current and future workspaces that account can access. Existing
+workspace plugin URLs redirect to the account hub. OAuth returns there as well.
+The hub contains:
 
-- **Time tracking:** owners/admins enable it; editors and above start/stop their
+- **Time tracking:** each person enables it once; editors and above start/stop their
   own task timer. One active timer per person per workspace. The task modal
   displays that person's recorded time, refreshed every 30 seconds. Timers
-  continue while the browser is closed. Disabling tracking stops running timers
+  continue while the browser is closed. Disabling tracking stops your timers in all workspaces
   and preserves entries. Anyone can stop their own timer from the hub, even
   after losing access to its board. Time entry task names are not exposed there.
 - **Task voting:** one vote per person per task, removable and idempotent. Active
@@ -20,18 +24,31 @@ Open a workspace and choose **Plugins** in its header. The hub contains:
   message composer. Bot scopes are `channels:read` and `chat:write`. The bot must
   be invited to the selected channel. No private-channel/message reads, automatic
   task forwarding, mention expansion or link previews.
-- **Google Calendar:** read-only upcoming events from the connecting admin's
+- **Google Calendar:** read-only upcoming events from your connected account's
   primary calendar, up to 30. Uses `calendar.events.readonly`; does not write,
   import or synchronize events with the dashboard's personal events.
 - **Custom extensions:** visible as **Coming soon**, disabled in the UI and
   rejected by the API. No arbitrary scripts, uploaded plugins or embedded apps
   are executed.
 
-Only owners/admins can manage plugins or connect providers. There is one
-connection per provider per workspace. Only the connecting admin may use its
-tools or read its provider data; other admins can disconnect it, not browse it.
-Disconnect before replacing the account. Losing admin membership prevents use.
-Members do not inherit access to a connected admin's personal calendar.
+Every verified user manages their own plugins through `/api/v1/plugins`, with one
+connection per provider per account. No workspace role is required to connect a
+personal provider. Other members, including workspace admins, cannot read,
+modify, or disconnect your connection. Enabling an add-on affects only you, not
+your teammates. Task voting and tracking still enforce active membership and
+actual board access; tracking still requires an editor role. Global installation
+never grants access to another team's tasks, private boards, or provider account.
+The hub can stop your timers across all workspaces even after membership loss.
+
+Migration `0011_account_plugins` creates account settings and OAuth state tables.
+Enabled legacy add-ons are preserved for active members. A single unambiguous
+provider connection migrates to its connecting account if that user is still an
+active owner/admin of the source workspace. The encrypted token's old context is
+preserved until first use, then replaced by account-scoped encryption. Multiple
+legacy connections for the same person/provider require reconnecting in the hub;
+we do not silently choose an account. Legacy rows, recorded time, and votes are
+retained. In-progress old OAuth requests must be restarted. Never roll back only
+the API after migration, since old workspace settings are no longer authoritative.
 
 ## OAuth setup on Render
 
@@ -39,9 +56,9 @@ Existing deployments remain usable without any connector credentials: add-ons
 work and connector buttons say **Server setup required**. No new paid service is
 required by the implementation; provider account/publishing policies still apply.
 
-1. Apply migration `0010_workspace_plugins` through the existing Render build
+1. Apply migrations through `0011_account_plugins` through the existing Render build
    command (`pnpm --filter @repo/database exec drizzle-kit migrate`). Do not reset
-   or schema-push production. This adds four tables and changes no existing rows.
+   or schema-push production. Deploy API and frontend together after migration.
 2. Set `APP_PUBLIC_BASE_URL=https://workspace-app-web.vercel.app` on Render (or
    your actual frontend origin). OAuth redirects point to the frontend, not API.
 3. Generate a 32-byte encryption key locally and save it as
@@ -75,7 +92,7 @@ required by the implementation; provider account/publishing policies still apply
      follow Google's publishing rules before general use.
 5. Redeploy Render, then deploy the matching web build to Vercel. No new frontend
    secret variables are needed; retain the existing `NEXT_PUBLIC_API_URL`.
-6. As a workspace admin, choose Connect, review provider permissions, and finish
+6. From dashboard Plugins, choose Connect, review provider permissions, and finish
    the connection in the **same tab**. Requests expire in ten minutes. Cancelling,
    logging in with another Workspace OS account or reloading a stripped callback
    requires starting the connection again.
@@ -86,10 +103,10 @@ settings to do that. This is stated in the confirmation dialog.
 
 ## Security and persistence
 
-Tokens are stored server-side as AES-256-GCM ciphertext with workspace, provider
-and connecting-user authenticated context. OAuth state is random, hashed in the
+Tokens are stored server-side as AES-256-GCM ciphertext with account and provider
+authenticated context. OAuth state is random, hashed in the
 database, expires and is consumed atomically. The browser also checks the
-same-tab state; completion requires the initiating authenticated admin. GitHub
+same-tab state; completion requires the initiating authenticated user. GitHub
 and Google flows use PKCE. Callback queries are removed, marked no-referrer and
 excluded from callback-page telemetry. Hosting-provider request logs can still
 contain initial callback URLs: restrict log access and retention.

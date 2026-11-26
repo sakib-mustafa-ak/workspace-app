@@ -78,6 +78,13 @@
       "when": 1795653411282,
       "tag": "0010_workspace_plugins",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1795717053360,
+      "tag": "0011_account_plugins",
+      "breakpoints": true
     }
   ]
 }

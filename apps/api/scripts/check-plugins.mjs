@@ -58,7 +58,36 @@ let app;
 try {
   const migrations = new URL('../../../packages/database/src/migrations/', import.meta.url);
   const journal = JSON.parse(await readFile(new URL('meta/_journal.json', migrations), 'utf8'));
-  for (const entry of journal.entries) await database.exec(await readFile(new URL(`${entry.tag}.sql`, migrations), 'utf8'));
+  const migratedUser = randomUUID();
+  let migratedContext, migratedCiphertext;
+  for (const entry of journal.entries) {
+    if (entry.tag === '0011_account_plugins') {
+      // Seed real legacy installations before the upgrade, including ambiguity.
+      await db.insert(schema.users).values({ id: migratedUser, email: 'migration@example.test', displayName: 'Migration', passwordHash: 'test-only', emailVerifiedAt: new Date() });
+      const legacy = await db.insert(schema.workspaces).values([
+        { name: 'Legacy one', slug: 'legacy-one', ownerId: migratedUser },
+        { name: 'Legacy two', slug: 'legacy-two', ownerId: migratedUser },
+      ]).returning();
+      const { encryptTokens } = await import('../dist/modules/plugins/plugin-crypto.js');
+      migratedContext = `${legacy[0].id}:github:${migratedUser}`;
+      migratedCiphertext = encryptTokens({ accessToken: 'legacy-private-token' }, encryptionKey, migratedContext);
+      for (const workspace of legacy) {
+        await db.insert(schema.workspaceMembers).values({ workspaceId: workspace.id, userId: migratedUser, role: 'OWNER', status: 'ACTIVE', joinedAt: new Date() });
+        await db.insert(schema.workspacePlugins).values({ workspaceId: workspace.id, key: 'slack', enabled: true, connectedBy: migratedUser, credentials: 'ambiguous-legacy-ciphertext' });
+      }
+      await db.insert(schema.workspacePlugins).values([
+        { workspaceId: legacy[0].id, key: 'github', enabled: true, connectedBy: migratedUser, credentials: migratedCiphertext },
+        { workspaceId: legacy[0].id, key: 'time-tracking', enabled: true },
+      ]);
+    }
+    await database.exec(await readFile(new URL(`${entry.tag}.sql`, migrations), 'utf8'));
+  }
+  const preserved = await db.select().from(schema.accountPlugins).where(schema.eq(schema.accountPlugins.userId, migratedUser));
+  assert.equal(preserved.find((p) => p.key === 'time-tracking').enabled, true);
+  assert.equal(preserved.find((p) => p.key === 'github').credentials, migratedCiphertext);
+  assert.equal(preserved.find((p) => p.key === 'github').credentialsContext, migratedContext);
+  assert.equal(preserved.some((p) => p.key === 'slack'), false);
+  assert.equal((await db.select().from(schema.workspacePlugins)).length, 4);
   const [owner, admin, editor, viewer, outsider] = Array.from({ length: 5 }, () => randomUUID());
   for (const id of [owner, admin, editor, viewer, outsider]) await db.insert(schema.users).values({ id, email: `${id}@example.test`, displayName: 'Test', passwordHash: 'test-only', emailVerifiedAt: new Date() });
   const [workspace, foreign] = await db.insert(schema.workspaces).values([{ name: 'Plugins', slug: 'plugins', ownerId: owner }, { name: 'Foreign', slug: 'foreign', ownerId: outsider }]).returning();
@@ -68,6 +97,10 @@ try {
   const [task, second] = await db.insert(schema.tasks).values(['One', 'Two'].map((title) => ({ workspaceId: workspace.id, boardId: board.id, columnId: column.id, title, createdById: owner }))).returning();
   const module = await Test.createTestingModule({ imports: [ConfigModule.forRoot({ isGlobal: true, ignoreEnvFile: true, load: [() => config] }), DatabaseModule, BoardAccessModule, PluginsModule] }).overrideProvider(schema.DATABASE).useValue(db).compile();
   const plugins = module.get(PluginsService);
+  assert.equal((await plugins.providerAction(null, migratedUser, 'github')).length, 1);
+  const [upgraded] = await db.select().from(schema.accountPlugins).where(schema.and(schema.eq(schema.accountPlugins.userId, migratedUser), schema.eq(schema.accountPlugins.key, 'github')));
+  assert.equal(upgraded.credentialsContext, `account:${migratedUser}:github`);
+  assert.equal(decryptTokens(upgraded.credentials, encryptionKey, upgraded.credentialsContext).accessToken, 'legacy-private-token');
   const access = module.get(BoardAccessService);
   app = module.createNestApplication({ logger: false });
   app.setGlobalPrefix('api');
@@ -78,44 +111,49 @@ try {
   app.useGlobalGuards(new WorkspaceMembershipGuard(new Reflector(), module.get(ModuleRef), db), new BoardAccessGuard(db, access));
   await app.init();
   const http = request(app.getHttpServer());
-  const base = `/api/v1/workspaces/${workspace.id}/plugins`;
+  const workspaceBase = `/api/v1/workspaces/${workspace.id}/plugins`;
+  const base = '/api/v1/plugins';
   await http.get(base).expect(401);
-  await http.get(base).set('x-test-user', outsider).expect(403);
+  await http.get(workspaceBase).set('x-test-user', outsider).expect(403);
+  await http.get(base).set('x-test-user', outsider).expect(200);
   const catalog = await http.get(base).set('x-test-user', viewer).expect(200);
-  assert.equal(catalog.body.canManage, false);
+  assert.equal(catalog.body.canManage, true);
   assert.equal(catalog.body.plugins.length, 6);
   assert.equal(catalog.body.plugins.find((plugin) => plugin.key === 'custom-extensions').comingSoon, true);
   await http.put(`${base}/custom-extensions`).set('x-test-user', owner).send({ enabled: true }).expect(400);
-  await http.put(`${base}/task-voting`).set('x-test-user', viewer).send({ enabled: true }).expect(403);
+  await http.put(`${base}/task-voting`).set('x-test-user', viewer).send({ enabled: true }).expect(200);
+  await plugins.setEnabled(null, editor, 'time-tracking', true);
+  await plugins.setEnabled(null, editor, 'task-voting', true);
   await http.put(`${base}/task-voting`).set('x-test-user', owner).send({ enabled: true, userId: outsider }).expect(400);
   await http.put(`${base}/task-voting`).set('x-test-user', owner).send({ enabled: true }).expect(200);
   await http.put(`${base}/time-tracking`).set('x-test-user', owner).send({ enabled: true }).expect(200);
-  await http.put(`${base}/tasks/${task.id}/vote`).set('x-test-user', viewer).send({ voted: true }).expect(200);
+  await http.put(`${workspaceBase}/tasks/${task.id}/vote`).set('x-test-user', viewer).send({ voted: true }).expect(200);
   await plugins.vote(workspace.id, viewer, task.id, true);
   assert.equal((await plugins.taskStatus(workspace.id, viewer, task.id)).votes, 1);
   assert.equal((await plugins.taskStatus(workspace.id, editor, task.id)).voted, false);
   await plugins.vote(workspace.id, viewer, task.id, false);
   assert.equal((await plugins.taskStatus(workspace.id, viewer, task.id)).votes, 0);
-  await http.post(`${base}/tasks/${task.id}/timer`).set('x-test-user', viewer).expect(403);
+  await http.post(`${workspaceBase}/tasks/${task.id}/timer`).set('x-test-user', viewer).expect(403);
   await plugins.startTimer(workspace.id, editor, task.id);
   await plugins.startTimer(workspace.id, editor, task.id);
   await assert.rejects(plugins.startTimer(workspace.id, editor, second.id), (error) => error.getStatus() === 409);
   assert.equal((await plugins.myTime(workspace.id, editor)).length, 1);
   assert.equal((await plugins.taskStatus(workspace.id, editor, task.id)).runningTaskId, task.id);
   await access.set(board.id, owner, workspace.id, []);
-  await http.get(`${base}/tasks/${task.id}`).set('x-test-user', editor).expect(403);
+  await http.get(`${workspaceBase}/tasks/${task.id}`).set('x-test-user', editor).expect(403);
   await assert.rejects(plugins.vote(workspace.id, editor, task.id, true));
   // Revoked board access must not strand a person's running timer.
-  await http.post(`${base}/timers/stop`).set('x-test-user', editor).expect(201);
+  await http.post(`${workspaceBase}/timers/stop`).set('x-test-user', editor).expect(201);
   assert.ok((await plugins.myTime(workspace.id, editor))[0].endedAt);
   await access.set(board.id, owner, workspace.id, null);
   await plugins.startTimer(workspace.id, editor, task.id);
-  await plugins.setEnabled(workspace.id, owner, 'time-tracking', false);
+  await plugins.setEnabled(null, editor, 'time-tracking', false);
+  assert.equal((await plugins.list(null, owner)).plugins.find((p) => p.key === 'time-tracking').enabled, true);
   assert.ok((await plugins.myTime(workspace.id, editor)).every((entry) => entry.endedAt));
   await assert.rejects(plugins.startTimer(workspace.id, editor, task.id));
   await assert.rejects(plugins.taskStatus(foreign.id, editor, task.id));
-  await assert.rejects(plugins.setEnabled(workspace.id, editor, 'task-voting', false));
-  await http.post(`${base}/github/connect`).set('x-test-user', viewer).expect(403);
+  await plugins.setEnabled(null, editor, 'task-voting', false);
+  await http.post(`${workspaceBase}/github/connect`).set('x-test-user', viewer).expect(403);
   for (const provider of ['github', 'slack', 'google-calendar']) {
     const flowResponse = await http.post(`${base}/${provider}/connect`).set('x-test-user', owner).expect(201);
     const flow = flowResponse.body;
@@ -123,16 +161,16 @@ try {
     assert.equal(url.searchParams.get('state'), flow.state);
     assert.equal(url.searchParams.get('redirect_uri'), `https://workspace.example.test/plugins/callback/${provider}`);
     if (provider !== 'slack') assert.equal(url.searchParams.get('code_challenge_method'), 'S256');
-    const [pending] = await db.select().from(schema.pluginOauthStates).where(schema.eq(schema.pluginOauthStates.hash, createHash('sha256').update(flow.state).digest('hex')));
+    const [pending] = await db.select().from(schema.accountPluginOauthStates).where(schema.eq(schema.accountPluginOauthStates.hash, createHash('sha256').update(flow.state).digest('hex')));
     assert.notEqual(pending.hash, flow.state);
     await assert.rejects(plugins.complete(workspace.id, admin, provider, flow.state, 'code'));
     await http.post(`${base}/${provider}/complete`).set('x-test-user', owner).send({ state: flow.state, code: 'code', userId: outsider }).expect(400);
     await http.post(`${base}/${provider}/complete`).set('x-test-user', owner).send({ state: flow.state, code: 'code' }).expect(201);
-    assert.equal((await db.select().from(schema.pluginOauthStates).where(schema.eq(schema.pluginOauthStates.hash, pending.hash))).length, 0);
+    assert.equal((await db.select().from(schema.accountPluginOauthStates).where(schema.eq(schema.accountPluginOauthStates.hash, pending.hash))).length, 0);
     await assert.rejects(plugins.complete(workspace.id, owner, provider, flow.state, 'code'));
     await assert.rejects(plugins.providerAction(workspace.id, admin, provider));
     await http.get(`${base}/${provider}/data`).set('x-test-user', viewer).expect(403);
-    const [saved] = await db.select().from(schema.workspacePlugins).where(schema.and(schema.eq(schema.workspacePlugins.workspaceId, workspace.id), schema.eq(schema.workspacePlugins.key, provider)));
+    const [saved] = await db.select().from(schema.accountPlugins).where(schema.and(schema.eq(schema.accountPlugins.userId, owner), schema.eq(schema.accountPlugins.key, provider)));
     assert.ok(!saved.credentials.includes('private-provider-token'));
     const response = JSON.stringify(await plugins.list(workspace.id, owner));
     assert.ok(!response.includes(saved.credentials) && !response.includes('private-provider-token'));
@@ -150,21 +188,53 @@ try {
       await http.post(`${base}/slack/messages`).set('x-test-user', owner).send({ channel: 'invalid', text: 'Hello' }).expect(400);
     }
     // A rotated refresh token must survive a failed downstream API request.
-    const tokens = decryptTokens(saved.credentials, encryptionKey, `${workspace.id}:${provider}:${owner}`);
+    const tokens = decryptTokens(saved.credentials, encryptionKey, `account:${owner}:${provider}`);
     const { encryptTokens } = await import('../dist/modules/plugins/plugin-crypto.js');
-    await db.update(schema.workspacePlugins).set({ credentials: encryptTokens({ ...tokens, expiresAt: 1 }, encryptionKey, `${workspace.id}:${provider}:${owner}`) }).where(schema.eq(schema.workspacePlugins.id, saved.id));
+    await db.update(schema.accountPlugins).set({ credentials: encryptTokens({ ...tokens, expiresAt: 1 }, encryptionKey, `account:${owner}:${provider}`) }).where(schema.eq(schema.accountPlugins.id, saved.id));
     failData = true;
     await assert.rejects(plugins.providerAction(workspace.id, owner, provider), (error) => !error.message.includes('private-provider-message'));
     failData = false;
-    const [rotated] = await db.select().from(schema.workspacePlugins).where(schema.eq(schema.workspacePlugins.id, saved.id));
-    assert.equal(decryptTokens(rotated.credentials, encryptionKey, `${workspace.id}:${provider}:${owner}`).refreshToken, 'rotated-private-refresh');
+    const [rotated] = await db.select().from(schema.accountPlugins).where(schema.eq(schema.accountPlugins.id, saved.id));
+    assert.equal(decryptTokens(rotated.credentials, encryptionKey, `account:${owner}:${provider}`).refreshToken, 'rotated-private-refresh');
     await plugins.setEnabled(workspace.id, owner, provider, false);
-    const [disconnected] = await db.select().from(schema.workspacePlugins).where(schema.eq(schema.workspacePlugins.id, saved.id));
+    const [disconnected] = await db.select().from(schema.accountPlugins).where(schema.eq(schema.accountPlugins.id, saved.id));
     assert.equal(disconnected.credentials, null);
     await assert.rejects(plugins.providerAction(workspace.id, owner, provider));
   }
+
+  // Enable once, then use the same add-on on an additional workspace.
+  const [another] = await db.insert(schema.workspaces).values({ name: 'Second', slug: 'second', ownerId: owner }).returning();
+  await db.insert(schema.workspaceMembers).values({ workspaceId: another.id, userId: editor, role: 'EDITOR', status: 'ACTIVE', joinedAt: new Date() });
+  const [anotherBoard] = await db.insert(schema.boards).values({ workspaceId: another.id, name: 'Another', position: 0 }).returning();
+  const [anotherColumn] = await db.insert(schema.boardColumns).values({ boardId: anotherBoard.id, name: 'Tasks', position: 0 }).returning();
+  const [anotherTask] = await db.insert(schema.tasks).values({ workspaceId: another.id, boardId: anotherBoard.id, columnId: anotherColumn.id, title: 'Global add-on', createdById: editor }).returning();
+  await plugins.setEnabled(null, editor, 'task-voting', true);
+  assert.equal((await plugins.taskStatus(workspace.id, editor, task.id)).voting, true);
+  assert.equal((await plugins.taskStatus(another.id, editor, anotherTask.id)).voting, true);
+  await plugins.vote(another.id, editor, anotherTask.id, true);
+  await plugins.setEnabled(null, editor, 'task-voting', false);
+  assert.equal((await plugins.taskStatus(workspace.id, editor, task.id)).voting, false);
+  assert.equal((await plugins.taskStatus(another.id, editor, anotherTask.id)).voting, false);
+  assert.equal((await plugins.list(null, viewer)).plugins.find((p) => p.key === 'task-voting').enabled, true);
+  await plugins.setEnabled(null, editor, 'time-tracking', true);
+  await plugins.startTimer(workspace.id, editor, task.id);
+  await plugins.startTimer(another.id, editor, anotherTask.id);
+  assert.equal((await plugins.myTime(null, editor)).filter((entry) => !entry.endedAt).length, 2);
+  await plugins.setEnabled(null, owner, 'time-tracking', false);
+  assert.equal((await plugins.myTime(null, editor)).filter((entry) => !entry.endedAt).length, 2);
+  await plugins.setEnabled(null, editor, 'time-tracking', false);
+  assert.ok((await plugins.myTime(null, editor)).every((entry) => entry.endedAt));
+  // Account APIs reject user/workspace ID injection and have no member-role requirement.
+  await http.put(base + '/task-voting').set('x-test-user', outsider).send({ enabled: true, workspaceId: workspace.id }).expect(400);
+  await http.put(base + '/task-voting').set('x-test-user', outsider).send({ enabled: true }).expect(200);
+  await http.get(workspaceBase + '/tasks/' + task.id).set('x-test-user', outsider).expect(403);
+  const personalFlow = await plugins.begin(null, outsider, 'github');
+  await assert.rejects(plugins.complete(null, owner, 'github', personalFlow.state, 'code'));
+  await plugins.complete(null, outsider, 'github', personalFlow.state, 'code');
+  assert.equal((await plugins.providerAction(null, outsider, 'github')).length, 1);
+  assert.equal((await plugins.list(null, owner)).plugins.find((p) => p.key === 'github').connected, false);
   const expired = await plugins.begin(workspace.id, owner, 'github');
-  await db.update(schema.pluginOauthStates).set({ expiresAt: new Date(0) });
+  await db.update(schema.accountPluginOauthStates).set({ expiresAt: new Date(0) });
   await assert.rejects(plugins.complete(workspace.id, owner, 'github', expired.state, 'code'));
   const invalidated = await plugins.begin(workspace.id, owner, 'github');
   await plugins.setEnabled(workspace.id, owner, 'github', false);
@@ -174,7 +244,7 @@ try {
   await assert.rejects(plugins.complete(workspace.id, owner, 'github', failed.state, 'code'), (error) => !error.message.includes('provider-secret'));
   failExchange = false;
   await assert.rejects(plugins.complete(workspace.id, owner, 'github', failed.state, 'code'));
-  console.log('Plugins integration passed: migrations, real HTTP validation and workspace/board guards, add-ons, timer revocation, OAuth binding/expiry/replay, all three mocked providers, encryption, refresh rotation and disconnect. No real accounts contacted.');
+  console.log('Plugins integration passed: migrations, real HTTP validation and account isolation, cross-workspace add-ons, workspace/board guards, timer revocation, OAuth binding/expiry/replay, all three mocked providers, encryption, refresh rotation and disconnect. No real accounts contacted.');
 } finally {
   globalThis.fetch = realFetch;
   if (app) await app.close();

@@ -25,11 +25,13 @@ import {
   Search,
   Plus,
   ShieldCheck,
+  Puzzle,
 } from 'lucide-react';
 
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard/plugins', label: 'Plugins', icon: Puzzle },
   { href: '/notifications', label: 'Notifications', icon: Bell },
   { href: '/users', label: 'Users', icon: Users },
   { href: '/settings', label: 'Settings', icon: Settings },

@@ -16,13 +16,13 @@ import {
   gt,
   isNull,
   lt,
-  pluginOauthStates,
+  accountPluginOauthStates,
   sql,
   tasks,
   taskTimeEntries,
   taskVotes,
   workspaceMembers,
-  workspacePlugins,
+  accountPlugins,
   type Db,
   type DbExecutor,
 } from '@repo/database';
@@ -50,7 +50,7 @@ export class PluginsService {
     return definition;
   }
 
-  private async member(workspaceId: string, userId: string, admin = false) {
+  private async member(workspaceId: string, userId: string) {
     const [member] = await this.db
       .select({ role: workspaceMembers.role })
       .from(workspaceMembers)
@@ -62,25 +62,23 @@ export class PluginsService {
         ),
       )
       .limit(1);
-    if (!member || (admin && !['OWNER', 'ADMIN'].includes(member.role)))
-      throw new ForbiddenException('Workspace access denied.');
+    if (!member) throw new ForbiddenException('Workspace access denied.');
     return member;
   }
 
-  async list(workspaceId: string, userId: string) {
-    const member = await this.member(workspaceId, userId);
-    const admin = ['OWNER', 'ADMIN'].includes(member.role);
+  async list(workspaceId: string | null, userId: string) {
+    if (workspaceId) await this.member(workspaceId, userId);
     const installed = await this.db
       .select({
-        key: workspacePlugins.key,
-        enabled: workspacePlugins.enabled,
-        connectedBy: workspacePlugins.connectedBy,
-        connected: sql<boolean>`${workspacePlugins.credentials} IS NOT NULL`,
+        key: accountPlugins.key,
+        enabled: accountPlugins.enabled,
+        connectedBy: accountPlugins.userId,
+        connected: sql<boolean>`${accountPlugins.credentials} IS NOT NULL`,
       })
-      .from(workspacePlugins)
-      .where(eq(workspacePlugins.workspaceId, workspaceId));
+      .from(accountPlugins)
+      .where(eq(accountPlugins.userId, userId));
     return {
-      canManage: admin,
+      canManage: true,
       plugins: PLUGIN_CATALOG.map((plugin) => {
         const entry = installed.find((item) => item.key === plugin.key);
         return {
@@ -89,64 +87,60 @@ export class PluginsService {
             ? this.providers.ready(plugin.key)
             : plugin.category !== 'custom',
           enabled: Boolean(entry?.enabled),
-          connected: admin && Boolean(entry?.connected),
-          ownedConnection: admin && entry?.connectedBy === userId,
+          connected: Boolean(entry?.connected),
+          ownedConnection: entry?.connectedBy === userId,
         };
       }),
     };
   }
 
-  private async lock(tx: DbExecutor, workspaceId: string, key: string) {
+  private async lock(tx: DbExecutor, userId: string, key: string) {
     await tx
-      .insert(workspacePlugins)
-      .values({ workspaceId, key })
+      .insert(accountPlugins)
+      .values({ userId, key })
       .onConflictDoNothing();
     const [row] = await tx
       .select()
-      .from(workspacePlugins)
+      .from(accountPlugins)
       .where(
-        and(
-          eq(workspacePlugins.workspaceId, workspaceId),
-          eq(workspacePlugins.key, key),
-        ),
+        and(eq(accountPlugins.userId, userId), eq(accountPlugins.key, key)),
       )
       .for('update');
     return row;
   }
 
   async setEnabled(
-    workspaceId: string,
+    workspaceId: string | null,
     userId: string,
     key: string,
     enabled: boolean,
   ) {
     const definition = this.definition(key);
-    await this.member(workspaceId, userId, true);
+    if (workspaceId) await this.member(workspaceId, userId);
     if (definition.category === 'integration' && enabled)
       throw new BadRequestException(
         'Use Connect to authorize this integration.',
       );
     await this.db.transaction(async (tx) => {
-      await this.lock(tx, workspaceId, key);
+      await this.lock(tx, userId, key);
       await tx
-        .update(workspacePlugins)
+        .update(accountPlugins)
         .set({
           enabled,
-          ...(isProvider(key) ? { credentials: null, connectedBy: null } : {}),
+          ...(isProvider(key)
+            ? { credentials: null, credentialsContext: null }
+            : {}),
           updatedAt: new Date(),
         })
         .where(
-          and(
-            eq(workspacePlugins.workspaceId, workspaceId),
-            eq(workspacePlugins.key, key),
-          ),
+          and(eq(accountPlugins.userId, userId), eq(accountPlugins.key, key)),
         );
       await tx
-        .delete(pluginOauthStates)
+        .delete(accountPluginOauthStates)
         .where(
           and(
-            eq(pluginOauthStates.workspaceId, workspaceId),
-            eq(pluginOauthStates.provider, key),
+            eq(accountPluginOauthStates.userId, userId),
+            eq(accountPluginOauthStates.provider, key),
           ),
         );
       if (key === 'time-tracking' && !enabled)
@@ -155,7 +149,7 @@ export class PluginsService {
           .set({ endedAt: sql`GREATEST(now(), ${taskTimeEntries.startedAt})` })
           .where(
             and(
-              eq(taskTimeEntries.workspaceId, workspaceId),
+              eq(taskTimeEntries.userId, userId),
               isNull(taskTimeEntries.endedAt),
             ),
           );
@@ -163,34 +157,32 @@ export class PluginsService {
     return { enabled };
   }
 
-  async begin(workspaceId: string, userId: string, key: string) {
+  async begin(workspaceId: string | null, userId: string, key: string) {
     if (!isProvider(key))
       throw new BadRequestException('Choose a supported integration.');
-    await this.member(workspaceId, userId, true);
+    if (workspaceId) await this.member(workspaceId, userId);
     const state = randomBytes(32).toString('base64url');
     const verifier = randomBytes(32).toString('base64url');
     const url = this.providers.authorizationUrl(key, state, verifier);
     await this.db.transaction(async (tx) => {
-      const entry = await this.lock(tx, workspaceId, key);
+      const entry = await this.lock(tx, userId, key);
       if (entry.credentials)
         throw new ConflictException(
           'Disconnect the existing account before connecting another.',
         );
       await tx
-        .delete(pluginOauthStates)
-        .where(lt(pluginOauthStates.expiresAt, new Date()));
+        .delete(accountPluginOauthStates)
+        .where(lt(accountPluginOauthStates.expiresAt, new Date()));
       await tx
-        .delete(pluginOauthStates)
+        .delete(accountPluginOauthStates)
         .where(
           and(
-            eq(pluginOauthStates.workspaceId, workspaceId),
-            eq(pluginOauthStates.provider, key),
-            eq(pluginOauthStates.userId, userId),
+            eq(accountPluginOauthStates.userId, userId),
+            eq(accountPluginOauthStates.provider, key),
           ),
         );
-      await tx.insert(pluginOauthStates).values({
+      await tx.insert(accountPluginOauthStates).values({
         hash: createHash('sha256').update(state).digest('hex'),
-        workspaceId,
         userId,
         provider: key,
         verifier,
@@ -210,7 +202,7 @@ export class PluginsService {
   }
 
   async complete(
-    workspaceId: string,
+    workspaceId: string | null,
     userId: string,
     key: string,
     state: string,
@@ -218,25 +210,24 @@ export class PluginsService {
   ) {
     if (!isProvider(key))
       throw new BadRequestException('Choose a supported integration.');
-    await this.member(workspaceId, userId, true);
+    if (workspaceId) await this.member(workspaceId, userId);
     const result = await this.db.transaction(async (tx) => {
-      const entry = await this.lock(tx, workspaceId, key);
+      const entry = await this.lock(tx, userId, key);
       if (entry.credentials)
         throw new ConflictException(
           'This integration is already connected. Disconnect it before starting again.',
         );
       const [pending] = await tx
-        .delete(pluginOauthStates)
+        .delete(accountPluginOauthStates)
         .where(
           and(
             eq(
-              pluginOauthStates.hash,
+              accountPluginOauthStates.hash,
               createHash('sha256').update(state).digest('hex'),
             ),
-            eq(pluginOauthStates.workspaceId, workspaceId),
-            eq(pluginOauthStates.userId, userId),
-            eq(pluginOauthStates.provider, key),
-            gt(pluginOauthStates.expiresAt, new Date()),
+            eq(accountPluginOauthStates.userId, userId),
+            eq(accountPluginOauthStates.provider, key),
+            gt(accountPluginOauthStates.expiresAt, new Date()),
           ),
         )
         .returning();
@@ -251,22 +242,19 @@ export class PluginsService {
         return { error };
       }
       await tx
-        .update(workspacePlugins)
+        .update(accountPlugins)
         .set({
           enabled: true,
           credentials: encryptTokens(
             tokens,
             this.encryptionKey(),
-            `${workspaceId}:${key}:${userId}`,
+            `account:${userId}:${key}`,
           ),
-          connectedBy: userId,
+          credentialsContext: `account:${userId}:${key}`,
           updatedAt: new Date(),
         })
         .where(
-          and(
-            eq(workspacePlugins.workspaceId, workspaceId),
-            eq(workspacePlugins.key, key),
-          ),
+          and(eq(accountPlugins.userId, userId), eq(accountPlugins.key, key)),
         );
       return { connected: true };
     });
@@ -275,26 +263,26 @@ export class PluginsService {
   }
 
   async providerAction(
-    workspaceId: string,
+    workspaceId: string | null,
     userId: string,
     key: string,
     action: { repository?: string; channel?: string; text?: string } = {},
   ) {
     if (!isProvider(key))
       throw new BadRequestException('Choose a supported integration.');
-    await this.member(workspaceId, userId, true);
+    if (workspaceId) await this.member(workspaceId, userId);
     const result = await this.db.transaction(async (tx) => {
-      const entry = await this.lock(tx, workspaceId, key);
-      if (!entry.enabled || !entry.credentials || entry.connectedBy !== userId)
+      const entry = await this.lock(tx, userId, key);
+      if (!entry.enabled || !entry.credentials || entry.userId !== userId)
         throw new ForbiddenException(
-          'Connect your own admin account before using this integration.',
+          'Connect your account before using this integration.',
         );
       let tokens: Tokens;
       try {
         tokens = decryptTokens<Tokens>(
           entry.credentials,
           this.encryptionKey(),
-          `${workspaceId}:${key}:${userId}`,
+          entry.credentialsContext ?? `account:${userId}:${key}`,
         );
       } catch {
         throw new ServiceUnavailableException(
@@ -303,16 +291,17 @@ export class PluginsService {
       }
       tokens = await this.providers.refresh(key, tokens);
       await tx
-        .update(workspacePlugins)
+        .update(accountPlugins)
         .set({
           credentials: encryptTokens(
             tokens,
             this.encryptionKey(),
-            `${workspaceId}:${key}:${userId}`,
+            `account:${userId}:${key}`,
           ),
+          credentialsContext: `account:${userId}:${key}`,
           updatedAt: new Date(),
         })
-        .where(eq(workspacePlugins.id, entry.id));
+        .where(eq(accountPlugins.id, entry.id));
       // Commit rotated tokens even when the subsequent API operation fails.
       // Rolling back here would lose a newly rotated refresh token.
       try {
@@ -354,12 +343,12 @@ export class PluginsService {
   async taskStatus(workspaceId: string, userId: string, taskId: string) {
     const entry = await this.task(workspaceId, userId, taskId);
     const enabled = await this.db
-      .select({ key: workspacePlugins.key })
-      .from(workspacePlugins)
+      .select({ key: accountPlugins.key })
+      .from(accountPlugins)
       .where(
         and(
-          eq(workspacePlugins.workspaceId, workspaceId),
-          eq(workspacePlugins.enabled, true),
+          eq(accountPlugins.userId, userId),
+          eq(accountPlugins.enabled, true),
         ),
       );
     const voting = enabled.some((plugin) => plugin.key === 'task-voting');
@@ -416,7 +405,7 @@ export class PluginsService {
   ) {
     await this.task(workspaceId, userId, taskId);
     await this.db.transaction(async (tx) => {
-      const plugin = await this.lock(tx, workspaceId, 'task-voting');
+      const plugin = await this.lock(tx, userId, 'task-voting');
       if (!plugin.enabled)
         throw new ForbiddenException('Task voting is disabled.');
       if (voted)
@@ -439,7 +428,7 @@ export class PluginsService {
     if (!['EDITOR', 'ADMIN', 'OWNER'].includes(entry.role))
       throw new ForbiddenException('An editor role is required to track time.');
     return this.db.transaction(async (tx) => {
-      const plugin = await this.lock(tx, workspaceId, 'time-tracking');
+      const plugin = await this.lock(tx, userId, 'time-tracking');
       if (!plugin.enabled)
         throw new ForbiddenException('Time tracking is disabled.');
       const [running] = await tx
@@ -461,14 +450,16 @@ export class PluginsService {
     });
   }
 
-  async stopTimer(workspaceId: string, userId: string) {
-    await this.member(workspaceId, userId);
+  async stopTimer(workspaceId: string | null, userId: string) {
+    if (workspaceId) await this.member(workspaceId, userId);
     await this.db
       .update(taskTimeEntries)
       .set({ endedAt: sql`GREATEST(now(), ${taskTimeEntries.startedAt})` })
       .where(
         and(
-          eq(taskTimeEntries.workspaceId, workspaceId),
+          workspaceId
+            ? eq(taskTimeEntries.workspaceId, workspaceId)
+            : undefined,
           eq(taskTimeEntries.userId, userId),
           isNull(taskTimeEntries.endedAt),
         ),
@@ -476,8 +467,8 @@ export class PluginsService {
     return { running: false };
   }
 
-  async myTime(workspaceId: string, userId: string) {
-    await this.member(workspaceId, userId);
+  async myTime(workspaceId: string | null, userId: string) {
+    if (workspaceId) await this.member(workspaceId, userId);
     // Do not expose task names or board IDs here: access may have been revoked.
     return this.db
       .select({
@@ -488,7 +479,9 @@ export class PluginsService {
       .from(taskTimeEntries)
       .where(
         and(
-          eq(taskTimeEntries.workspaceId, workspaceId),
+          workspaceId
+            ? eq(taskTimeEntries.workspaceId, workspaceId)
+            : undefined,
           eq(taskTimeEntries.userId, userId),
         ),
       )

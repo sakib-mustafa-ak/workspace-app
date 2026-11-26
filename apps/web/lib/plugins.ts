@@ -37,27 +37,30 @@ export type TimeEntry = {
 };
 const base = (workspaceId: string) => `/workspaces/${workspaceId}/plugins`;
 export const pluginsApi = {
-  list: (id: string) => api.get<PluginCatalog>(base(id)),
-  set: (id: string, key: string, enabled: boolean) =>
-    api.put(base(id) + `/${key}`, { enabled }),
-  connect: (id: string, key: string) =>
-    api.post<{ url: string; state: string }>(base(id) + `/${key}/connect`),
-  complete: (id: string, key: string, state: string, code: string) =>
-    api.post(base(id) + `/${key}/complete`, { state, code }),
-  data: (id: string, key: string, repository?: string) =>
+  list: () => api.get<PluginCatalog>("/plugins"),
+  set: (key: string, enabled: boolean) =>
+    api.put("/plugins" + `/${key}`, { enabled }),
+  connect: (key: string) =>
+    api.post<{ url: string; state: string }>("/plugins" + `/${key}/connect`),
+  complete: (key: string, state: string, code: string) =>
+    api.post("/plugins" + `/${key}/complete`, { state, code }),
+  data: (key: string, repository?: string) =>
     api.get<PluginItem[]>(
-      base(id) +
+      "/plugins" +
         `/${key}/data` +
         (repository ? `?repository=${encodeURIComponent(repository)}` : ""),
     ),
-  send: (id: string, channel: string, text: string) =>
-    api.post(base(id) + "/slack/messages", { channel, text }),
+  send: (channel: string, text: string) =>
+    api.post("/plugins/slack/messages", { channel, text }),
   task: (id: string, taskId: string) =>
     api.get<TaskPluginStatus>(base(id) + `/tasks/${taskId}`),
   vote: (id: string, taskId: string, voted: boolean) =>
     api.put(base(id) + `/tasks/${taskId}/vote`, { voted }),
   start: (id: string, taskId: string) =>
     api.post(base(id) + `/tasks/${taskId}/timer`),
-  stop: (id: string) => api.post(base(id) + "/timers/stop"),
-  time: (id: string) => api.get<TimeEntry[]>(base(id) + "/timers/mine"),
+  stop: (workspaceId?: string) =>
+    api.post(
+      workspaceId ? base(workspaceId) + "/timers/stop" : "/plugins/timers/stop",
+    ),
+  time: () => api.get<TimeEntry[]>("/plugins/timers/mine"),
 };

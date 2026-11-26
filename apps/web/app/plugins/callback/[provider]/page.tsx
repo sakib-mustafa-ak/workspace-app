@@ -10,7 +10,6 @@ export default function PluginCallbackPage() {
   const router = useRouter();
   const read = useRef(false);
   const [pending, setPending] = useState<{
-    workspaceId: string;
     state: string;
     code: string;
   } | null>(null);
@@ -32,7 +31,7 @@ export default function PluginCallbackPage() {
       if (
         !stored ||
         !["github", "slack", "google-calendar"].includes(provider) ||
-        !/^[0-9a-f-]{36}$/i.test(stored.workspaceId) ||
+        stored.scope !== "account" ||
         stored.state !== params.get("state") ||
         Date.now() - stored.createdAt > 10 * 60_000 ||
         !params.get("code")
@@ -41,7 +40,6 @@ export default function PluginCallbackPage() {
           "This connection request is missing or expired. Start again from Plugins in the same browser tab.",
         );
       setPending({
-        workspaceId: stored.workspaceId,
         state: stored.state,
         code: params.get("code")!,
       });
@@ -56,14 +54,9 @@ export default function PluginCallbackPage() {
     setBusy(true);
     setError("");
     try {
-      await pluginsApi.complete(
-        pending.workspaceId,
-        provider,
-        pending.state,
-        pending.code,
-      );
+      await pluginsApi.complete(provider, pending.state, pending.code);
       sessionStorage.removeItem(`plugin-oauth:${provider}`);
-      router.replace(`/workspaces/${pending.workspaceId}/plugins`);
+      router.replace("/dashboard/plugins");
     } catch (err) {
       setError(
         err instanceof Error
@@ -86,8 +79,8 @@ export default function PluginCallbackPage() {
               : "integration"}
       </h1>
       <p className="mt-3 text-sm leading-relaxed text-surface-400">
-        Confirm to save the connection to your workspace. Your provider
-        credentials stay on the server.
+        Confirm to save the connection to your account for use across all your
+        workspaces. Your provider credentials stay on the server.
       </p>
       {error && (
         <p role="alert" className="mt-5 text-sm text-red-400">
@@ -104,9 +97,7 @@ export default function PluginCallbackPage() {
         </button>
       )}
       <Link
-        href={
-          pending ? `/workspaces/${pending.workspaceId}/plugins` : "/dashboard"
-        }
+        href={"/dashboard/plugins"}
         className="mt-5 block text-sm text-surface-400"
       >
         {pending ? "Back to Plugins" : "Back to dashboard"}

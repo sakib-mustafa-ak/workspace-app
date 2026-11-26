@@ -8,6 +8,7 @@ import {
   Loader2,
   ArrowRight,
   Columns3,
+  Puzzle,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { workspacesApi, type Invitation, type Workspace } from '@/lib/workspaces';
@@ -280,6 +281,8 @@ function DashboardContent() {
             </h1>
             <p className="mt-2 text-sm text-surface-500">Pick up where you left off.</p>
           </div>
+          <div className="flex flex-wrap items-center gap-3">
+          <Link href="/dashboard/plugins" className="flex items-center gap-2 rounded-lg border border-surface-700 bg-surface-900 px-4 py-2.5 text-xs font-medium text-surface-200 hover:border-surface-500"><Puzzle size={16} />Plugins</Link>
           <button
             onClick={() => setShowCreate(true)}
             aria-expanded={showCreate}
@@ -288,6 +291,7 @@ function DashboardContent() {
             <Plus size={16} />
             New workspace
           </button>
+          </div>
         </div>
       </header>
 

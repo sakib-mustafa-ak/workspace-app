@@ -5,13 +5,14 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { AuthProvider, useAuth } from '@/contexts/auth-context';
 import { Sidebar } from '@/components/sidebar';
-import { Menu, LayoutDashboard, Bell, Users, Settings } from 'lucide-react';
+import { Menu, LayoutDashboard, Bell, Users, Settings, Puzzle } from 'lucide-react';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { useFocusTrap } from '@/hooks/use-focus-trap';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard/plugins', label: 'Plugins', icon: Puzzle },
   { href: '/notifications', label: 'Notifications', icon: Bell },
   { href: '/users', label: 'Users', icon: Users },
   { href: '/settings', label: 'Settings', icon: Settings },
@@ -20,7 +21,7 @@ const navItems = [
 export function AuthenticatedLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
-  const showSidebar = pathname === '/dashboard';
+  const showSidebar = pathname === '/dashboard' || pathname.startsWith('/dashboard/');
   const isBoardPage = /^\/workspaces\/[^/]+\/boards\/[^/]+\/?$/.test(pathname);
   const workspaceId = pathname.match(/^\/workspaces\/([^/]+)/)?.[1];
   const router = useRouter();
@@ -89,7 +90,7 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
         </main>
 
         {showSidebar && <nav className="fixed bottom-0 left-0 right-0 z-40 flex max-lg:flex lg:hidden border-t border-surface-800 bg-surface-950/95 backdrop-blur-md">
-          {navItems.slice(0, 4).map((item) => (
+          {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}

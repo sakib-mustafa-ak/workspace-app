@@ -172,8 +172,72 @@ export class PluginsController {
   }
 }
 
+// Ownership comes only from the authenticated account, never the request body.
+@Controller({ path: 'plugins', version: '1' })
+export class AccountPluginsController {
+  constructor(
+    @Inject(PluginsService) private readonly plugins: PluginsService,
+  ) {}
+
+  @Get()
+  list(@CurrentUser() user: User) {
+    return this.plugins.list(null, user.id);
+  }
+
+  @Put(':key')
+  set(
+    @CurrentUser() user: User,
+    @Param('key') key: string,
+    @Body() body: PluginEnabledDto,
+  ) {
+    return this.plugins.setEnabled(null, user.id, key, body.enabled);
+  }
+
+  @Post(':key/connect')
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  connect(@CurrentUser() user: User, @Param('key') key: string) {
+    return this.plugins.begin(null, user.id, key);
+  }
+
+  @Post(':key/complete')
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  complete(
+    @CurrentUser() user: User,
+    @Param('key') key: string,
+    @Body() body: PluginCompleteDto,
+  ) {
+    return this.plugins.complete(null, user.id, key, body.state, body.code);
+  }
+
+  @Get(':key/data')
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
+  data(
+    @CurrentUser() user: User,
+    @Param('key') key: string,
+    @Query() query: PluginDataQuery,
+  ) {
+    return this.plugins.providerAction(null, user.id, key, query);
+  }
+
+  @Post('slack/messages')
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  send(@CurrentUser() user: User, @Body() body: SlackMessageDto) {
+    return this.plugins.providerAction(null, user.id, 'slack', body);
+  }
+
+  @Get('timers/mine')
+  time(@CurrentUser() user: User) {
+    return this.plugins.myTime(null, user.id);
+  }
+
+  @Post('timers/stop')
+  stop(@CurrentUser() user: User) {
+    return this.plugins.stopTimer(null, user.id);
+  }
+}
+
 @Module({
-  controllers: [PluginsController],
+  controllers: [PluginsController, AccountPluginsController],
   providers: [PluginsService, PluginProviderService],
 })
 export class PluginsModule {}

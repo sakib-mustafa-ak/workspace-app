@@ -84,8 +84,11 @@ database and do not apply migrations to Neon or send real verification emails.
 
 ### Workspace plugins
 
-Plugin add-ons and integrations require migration `0010_workspace_plugins` and
-matching API/web deployments. Integration credentials are optional: unconfigured
+Plugin add-ons and integrations require migrations through `0011_account_plugins`
+and matching API/web deployments. Plugins are enabled or connected once per
+account, across all accessible workspaces, from dashboard Plugins. Migration
+preserves enabled add-ons and unambiguous existing personal connections; multiple
+old connections for the same provider require reconnecting once. Integration credentials are optional: unconfigured
 connectors remain disabled without blocking the rest of the app. Follow the
 [workspace plugins setup guide](docs/plans/workspace-plugins.md) for GitHub,
 Slack, Google Calendar, encryption keys and callback URLs. Custom extensions

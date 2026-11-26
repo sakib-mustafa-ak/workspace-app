@@ -7,5 +7,7 @@ if (dsn) {
     dsn,
     environment: process.env.NODE_ENV ?? 'development',
     tracesSampleRate: process.env.NODE_ENV === 'development' ? 1.0 : 0.1,
+    beforeSend: (event) => event.request?.url?.includes('/plugins/callback/') ? null : event,
+    beforeSendTransaction: (event) => event.request?.url?.includes('/plugins/callback/') ? null : event,
   });
 }

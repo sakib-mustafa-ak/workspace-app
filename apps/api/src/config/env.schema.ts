@@ -81,6 +81,18 @@ export const envSchema = z.object({
   MAIL_FROM: z.string().trim().optional(),
   DEV_MAIL_INBOX_ENABLED: z.enum(['true', 'false']).default('false'),
 
+  // Optional: connectors stay unavailable until these are configured.
+  PLUGIN_TOKEN_ENCRYPTION_KEY: z
+    .string()
+    .regex(/^[A-Za-z0-9+/]{43}=$/, 'Use a base64-encoded 32-byte key.')
+    .optional(),
+  PLUGIN_GITHUB_CLIENT_ID: z.string().optional(),
+  PLUGIN_GITHUB_CLIENT_SECRET: z.string().optional(),
+  PLUGIN_SLACK_CLIENT_ID: z.string().optional(),
+  PLUGIN_SLACK_CLIENT_SECRET: z.string().optional(),
+  PLUGIN_GOOGLE_CLIENT_ID: z.string().optional(),
+  PLUGIN_GOOGLE_CLIENT_SECRET: z.string().optional(),
+
   // Error tracking. When SENTRY_DSN is set, runtimes capture exceptions to
   // Sentry; when absent, error tracking is disabled and the app runs normally.
   SENTRY_DSN: z.string().url().optional(),

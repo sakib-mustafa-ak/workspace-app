@@ -71,6 +71,13 @@
       "when": 1794867841332,
       "tag": "0009_chief_living_tribunal",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795653411282,
+      "tag": "0010_workspace_plugins",
+      "breakpoints": true
     }
   ]
 }

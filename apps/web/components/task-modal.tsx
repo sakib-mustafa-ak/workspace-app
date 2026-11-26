@@ -9,6 +9,7 @@ import { useToast } from '@/contexts/toast-context';
 import { ConfirmModal } from '@/components/confirm-modal';
 import { useFocusTrap } from '@/hooks/use-focus-trap';
 import { boardsApi } from '@/lib/boards';
+import { TaskPlugins } from '@/components/task-plugins';
 
 export type TaskModalMode = 'create' | 'edit';
 
@@ -297,6 +298,8 @@ export function TaskModal({
               </div>
             </div>
           )}
+
+          {mode === 'edit' && task && <TaskPlugins workspaceId={workspaceId} taskId={task.id} />}
 
           <div className="flex items-center justify-between pt-2">
             {mode === 'edit' && onDeleted && (

@@ -91,6 +91,22 @@ export function configuration() {
       priceTeamMonthly: env.STRIPE_PRICE_TEAM_MONTHLY,
     },
 
+    plugins: {
+      encryptionKey: env.PLUGIN_TOKEN_ENCRYPTION_KEY,
+      github: {
+        clientId: env.PLUGIN_GITHUB_CLIENT_ID,
+        clientSecret: env.PLUGIN_GITHUB_CLIENT_SECRET,
+      },
+      slack: {
+        clientId: env.PLUGIN_SLACK_CLIENT_ID,
+        clientSecret: env.PLUGIN_SLACK_CLIENT_SECRET,
+      },
+      google: {
+        clientId: env.PLUGIN_GOOGLE_CLIENT_ID,
+        clientSecret: env.PLUGIN_GOOGLE_CLIENT_SECRET,
+      },
+    },
+
     sentry: {
       dsn: env.SENTRY_DSN,
     },

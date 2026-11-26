@@ -23,6 +23,7 @@
     "test:verification-prototype": "node scripts/local-verification.mjs --smoke",
     "test:workspace-home": "node scripts/check-workspace-home.mjs",
     "test:events": "node scripts/check-events.mjs",
+    "test:plugins": "node scripts/check-plugins.mjs",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",

@@ -11,6 +11,7 @@ import { WorkspaceMembershipGuard } from './common/guards/workspace-membership.g
 import { BoardAccessModule } from './common/board-access/board-access.module';
 import { BoardAccessGuard } from './common/board-access/board-access.guard';
 import { EventsModule } from './modules/events/events.module';
+import { PluginsModule } from './modules/plugins/plugins.module';
 import { HealthModule } from './modules/health/health.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard.js';
@@ -80,6 +81,7 @@ import { BillingModule } from './modules/billing/billing.module.js';
     DatabaseModule,
     BoardAccessModule,
     EventsModule,
+    PluginsModule,
     RedisModule,
 
     HealthModule,

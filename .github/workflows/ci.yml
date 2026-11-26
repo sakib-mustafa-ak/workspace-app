@@ -65,6 +65,7 @@ jobs:
         run: |
           pnpm --filter api build
           pnpm --filter api test:events
+          pnpm --filter api test:plugins
           pnpm --filter api test:workspace-home
           pnpm --filter api test:trello-integration
           pnpm --filter api test:email-integration

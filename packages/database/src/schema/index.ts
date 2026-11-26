@@ -23,3 +23,4 @@ export * from './audit/index.js';
 export * from './checklists/index.js';
 export * from './billing/index.js';
 export * from './events/index.js';
+export * from './plugins/index.js';

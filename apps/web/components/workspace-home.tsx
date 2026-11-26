@@ -13,6 +13,7 @@ import {
   Plus,
   RefreshCw,
   Settings2,
+  Puzzle,
   SquarePen,
   Upload,
   X,
@@ -374,6 +375,7 @@ export function WorkspaceHome() {
           >
             <RefreshCw size={15} className={refreshing ? "animate-spin" : ""} />
           </button>
+          <Link href={`/workspaces/${workspaceId}/plugins`} className="flex items-center gap-2 rounded-lg border border-surface-700 px-3 py-2 text-xs text-surface-300 hover:bg-surface-800"><Puzzle size={14} />Plugins</Link>
           {canManage && (
             <Link
               href={`/workspaces/${workspaceId}/manage`}

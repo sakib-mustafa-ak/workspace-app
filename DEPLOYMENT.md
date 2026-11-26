@@ -82,6 +82,15 @@ database and do not apply migrations to Neon or send real verification emails.
 
 ## Env var inventory
 
+### Workspace plugins
+
+Plugin add-ons and integrations require migration `0010_workspace_plugins` and
+matching API/web deployments. Integration credentials are optional: unconfigured
+connectors remain disabled without blocking the rest of the app. Follow the
+[workspace plugins setup guide](docs/plans/workspace-plugins.md) for GitHub,
+Slack, Google Calendar, encryption keys and callback URLs. Custom extensions
+are listed as Coming soon.
+
 | Variable | Where | Value |
 |---|---|---|
 | `DATABASE_URL` | Render | Neon connection string with `?sslmode=require` |

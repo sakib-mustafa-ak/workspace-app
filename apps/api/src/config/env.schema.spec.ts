@@ -7,6 +7,26 @@ const base = {
   JWT_REFRESH_SECRET: '0123456789abcdef0123456789abc',
 };
 
+describe('optional workspace plugin configuration', () => {
+  it('does not require provider credentials for the rest of the app', () => {
+    expect(envSchemaWithRefinements.safeParse(base).success).toBe(true);
+  });
+  it('validates a supplied encryption key', () => {
+    expect(
+      envSchemaWithRefinements.safeParse({
+        ...base,
+        PLUGIN_TOKEN_ENCRYPTION_KEY: Buffer.alloc(32).toString('base64'),
+      }).success,
+    ).toBe(true);
+    expect(
+      envSchemaWithRefinements.safeParse({
+        ...base,
+        PLUGIN_TOKEN_ENCRYPTION_KEY: 'short-key',
+      }).success,
+    ).toBe(false);
+  });
+});
+
 describe('production email configuration', () => {
   const gmail = {
     ...base,

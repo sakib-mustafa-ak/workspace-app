@@ -7,6 +7,10 @@ const nextConfig = {
     return [{ source: '/auth/:path*', headers: [
       { key: 'Referrer-Policy', value: 'no-referrer' },
       { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+    ] }, { source: '/plugins/callback/:path*', headers: [
+      { key: 'Referrer-Policy', value: 'no-referrer' },
+      { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+      { key: 'Cache-Control', value: 'no-store' },
     ] }];
   },
   async rewrites() {

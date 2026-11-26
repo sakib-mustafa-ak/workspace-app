@@ -26,6 +26,7 @@ import { useToast } from '@/contexts/toast-context';
 import { ConfirmModal } from '@/components/confirm-modal';
 import { BoardToolbar } from '@/components/board-toolbar';
 import { BoardListSurface } from '@/components/board-list-surface';
+import { WorkbenchSidePanel } from '@/components/workbench-side-panel';
 
 type ModalState =
   | { type: 'create'; columnId: string }
@@ -422,13 +423,13 @@ export default function BoardDetailPage() {
         </DndContext>
         )}
         {showFiles && (
-          <BoardFileSidebar workspaceId={workspaceId} boardId={boardId} onClose={() => setShowFiles(false)} />
+          <WorkbenchSidePanel name={`board:${boardId}:files`} label="Resize board files"><BoardFileSidebar workspaceId={workspaceId} boardId={boardId} onClose={() => setShowFiles(false)} /></WorkbenchSidePanel>
         )}
         {showComments && (
-          <div className="w-full shrink-0 border-l border-surface-800 lg:w-80">
+          <WorkbenchSidePanel name={`board:${boardId}:comments`} label="Resize board comments">
             <div className="flex items-center justify-between border-b border-surface-800 px-4 py-3 text-xs text-surface-400">Board comments<button aria-label="Close comments" onClick={() => setShowComments(false)} className="rounded p-1 hover:bg-surface-800"><X size={14} /></button></div>
             <CommentsPanel boardId={boardId} />
-          </div>
+          </WorkbenchSidePanel>
         )}
       </div>
 

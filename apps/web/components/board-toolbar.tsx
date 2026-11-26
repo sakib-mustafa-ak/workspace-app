@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Archive, Calendar, ChevronLeft, Columns3, FileText, MessageSquare, MoreHorizontal, Pencil, Search, Sparkles, SquarePen, Trash2, X } from 'lucide-react';
 import type { Board } from '@/lib/boards';
 import { BoardUploadButton } from './board-upload-button';
@@ -26,6 +27,10 @@ type Props = {
 
 export function BoardToolbar(props: Props) {
   const { board, workspaceId, workspaceName, calendar, comments, search } = props;
+  const pathname = usePathname();
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('workbench:title', { detail: { href: pathname, title: board.name } }));
+  }, [pathname, board.name]);
   const menuRef = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
     function closeOutside(event: PointerEvent) {
@@ -40,16 +45,16 @@ export function BoardToolbar(props: Props) {
   }
   const itemClass = 'flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-left text-xs text-surface-300 hover:bg-surface-800 focus-visible:outline-primary-400';
   return (
-    <header className="relative z-20 shrink-0 border-b border-surface-800 bg-surface-950/95">
-      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-        <div className="min-w-0 flex-1">
-          <Link href={`/workspaces/${workspaceId}`} className="mb-1 inline-flex max-w-full items-center gap-1 text-xs text-surface-500 hover:text-surface-200">
+    <header className="relative z-20 flex shrink-0 flex-wrap items-center gap-2 border-b border-surface-800 bg-surface-950 px-3 py-2">
+      <div className="contents">
+        <div className="mr-auto flex min-w-0 flex-wrap items-center gap-2">
+          <Link href={`/workspaces/${workspaceId}`} className="inline-flex max-w-36 items-center gap-1 text-xs text-surface-500 hover:text-surface-200">
             <ChevronLeft size={12} className="shrink-0" /><span className="truncate">{workspaceName}</span>
           </Link>
-          <h1 className="truncate text-lg font-semibold tracking-tight text-surface-100">{board.name}</h1>
-          {board.description && <p className="mt-1 max-w-xl truncate text-xs text-surface-500" title={board.description}>{board.description}</p>}
+          <span className="text-surface-600" aria-hidden="true">/</span>
+          <h1 className="max-w-64 truncate font-semibold text-surface-100" style={{ fontSize: '14px' }} title={board.description || board.name}>{board.name}</h1>
         </div>
-        <div className="flex shrink-0 items-center gap-1.5">
+        <div className="order-2 flex shrink-0 items-center gap-1">
           <Link href={`/workspaces/${workspaceId}/boards/${board.id}/canvas`} className="flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-surface-300 hover:bg-surface-800">
             <SquarePen size={15} />Canvas
           </Link>
@@ -80,12 +85,12 @@ export function BoardToolbar(props: Props) {
           </details>
         </div>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-surface-800/70 px-4 py-2 sm:px-6">
-        <div role="group" aria-label="Board view" className="flex items-center gap-1 rounded-lg bg-surface-900 p-1">
+      <div className="contents">
+        <div role="group" aria-label="Board view" className="order-1 flex items-center gap-1 rounded-sm bg-surface-900 p-0.5">
           <button type="button" aria-pressed={!calendar} onClick={() => props.onView(false)} className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-xs ${!calendar ? 'bg-surface-700 text-surface-100' : 'text-surface-500 hover:text-surface-200'}`}><Columns3 size={14} />Board</button>
           <button type="button" aria-pressed={calendar} onClick={() => props.onView(true)} className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-xs ${calendar ? 'bg-surface-700 text-surface-100' : 'text-surface-500 hover:text-surface-200'}`}><Calendar size={14} />Calendar</button>
         </div>
-        <div className="relative w-full sm:w-60">
+        <div className="relative order-3 w-full lg:w-44">
           <Search size={14} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-surface-500" />
           <input aria-label="Find a task" value={search} onChange={(event) => props.onSearch(event.target.value)} placeholder="Find a task…" className="w-full rounded-lg border border-surface-800 bg-transparent py-2 pl-9 pr-8 text-xs text-surface-200 outline-none placeholder:text-surface-600 focus:border-surface-500" />
           {search && <button type="button" aria-label="Clear task search" onClick={() => props.onSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-surface-400 hover:text-surface-100"><X size={12} /></button>}

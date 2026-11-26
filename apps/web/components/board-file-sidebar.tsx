@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { FileText, Trash2, X } from 'lucide-react';
 import { uploadsApi, type UploadedFile } from '@/lib/uploads';
 import { useToast } from '@/contexts/toast-context';
-import { useFocusTrap } from '@/hooks/use-focus-trap';
 
 type Props = {
   workspaceId: string;
@@ -22,7 +21,6 @@ export function BoardFileSidebar({ workspaceId, boardId, onClose }: Props) {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [loading, setLoading] = useState(true);
   const toast = useToast();
-  const trapRef = useFocusTrap(true, onClose);
 
   async function load() {
     setLoading(true);
@@ -45,7 +43,7 @@ export function BoardFileSidebar({ workspaceId, boardId, onClose }: Props) {
   }
 
   return (
-    <div ref={trapRef} role="dialog" aria-modal="true" aria-labelledby="board-files-title" className="w-72 shrink-0 border-l border-surface-800 bg-surface-900">
+    <aside aria-labelledby="board-files-title" className="h-full w-full bg-surface-900" onKeyDown={(event) => { if (event.key === 'Escape') { event.stopPropagation(); onClose(); } }}>
       <div className="flex items-center justify-between border-b border-surface-800 px-4 py-3">
         <h3 id="board-files-title" className="text-xs font-semibold uppercase tracking-wider text-surface-400">Files</h3>
         <button onClick={onClose} className="text-surface-500 hover:text-surface-300" aria-label="Close files sidebar">
@@ -69,6 +67,6 @@ export function BoardFileSidebar({ workspaceId, boardId, onClose }: Props) {
           <p className="py-4 text-center text-xs text-surface-500">No files uploaded</p>
         )}
       </div>
-    </div>
+    </aside>
   );
 }

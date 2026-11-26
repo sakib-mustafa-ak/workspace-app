@@ -5,28 +5,30 @@
   --font-display: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
 
-  --color-primary-50: #f8f6fb;
-  --color-primary-100: #f0edf6;
-  --color-primary-200: #e4e0ec;
-  --color-primary-300: #e8e3f0;
-  --color-primary-400: #d6cfe1;
-  --color-primary-500: #b9b0c8;
-  --color-primary-600: #2e2e2e;
-  --color-primary-700: #3a3a3a;
-  --color-primary-800: #242424;
-  --color-primary-900: #1a1a1a;
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #9cdcfe;
+  --color-primary-400: #75beff;
+  --color-primary-500: #006cc0;
+  --color-primary-600: #0078d4;
+  --color-primary-700: #005a9e;
+  --color-primary-800: #16466b;
+  --color-primary-900: #102b40;
 
-  --color-surface-50: #f8f6fb;
-  --color-surface-100: #f4f1f8;
-  --color-surface-200: #e6e1ec;
-  --color-surface-300: #d6cfe1;
-  --color-surface-400: #9b93a8;
-  --color-surface-500: #7a7385;
-  --color-surface-600: #4a4a4a;
-  --color-surface-700: #2e2e2e;
-  --color-surface-800: #242424;
-  --color-surface-900: #1a1a1a;
-  --color-surface-950: #121212;
+  --color-surface-50: #f5f5f5;
+  --color-surface-100: #eeeeee;
+  --color-surface-200: #dddddd;
+  --color-surface-300: #cccccc;
+  --color-surface-400: #aaaaaa;
+  --color-surface-500: #969696;
+  --color-surface-600: #626262;
+  --color-surface-700: #454545;
+  --color-surface-800: #303030;
+  --color-surface-900: #252526;
+  --color-surface-950: #1f1f1f;
+  --color-workbench-chrome: #181818;
+  --color-workbench-tab: #1f1f1f;
 
   --color-warm-200: #f2d98c;
   --color-warm-300: #e6c46f;
@@ -260,24 +262,26 @@
 
 .light {
   color-scheme: light;
-  --color-surface-50: #1a1a1a;
+  --color-surface-50: #171717;
   --color-surface-100: #242424;
   --color-surface-200: #2e2e2e;
   --color-surface-300: #3a3a3a;
-  --color-surface-400: #6b6573;
-  --color-surface-500: #9b93a8;
-  --color-surface-600: #c9c2d4;
-  --color-surface-700: #e4e0ec;
-  --color-surface-800: #e4e0ec;
-  --color-surface-900: #f8f6fb;
+  --color-surface-400: #525252;
+  --color-surface-500: #666666;
+  --color-surface-600: #8c8c8c;
+  --color-surface-700: #c8c8c8;
+  --color-surface-800: #e0e0e0;
+  --color-surface-900: #f3f3f3;
   --color-surface-950: #ffffff;
-  --color-primary-300: #6e637e;
-  --color-primary-400: #4a4454;
-  --color-primary-500: #4a4454;
-  --color-primary-600: #4a4454;
-  --color-primary-700: #242424;
-  --color-primary-800: #1a1a1a;
-  --color-primary-900: #121212;
+  --color-primary-300: #005a9e;
+  --color-primary-400: #006ab1;
+  --color-primary-500: #006cc0;
+  --color-primary-600: #0078d4;
+  --color-primary-700: #005a9e;
+  --color-primary-800: #16466b;
+  --color-primary-900: #102b40;
+  --color-workbench-chrome: #f3f3f3;
+  --color-workbench-tab: #ffffff;
   --color-amber-300: #b45309;
   --color-amber-400: #92400e;
   --color-amber-500: #d97706;
@@ -287,7 +291,7 @@
   --color-warm-500: #b8923a;
 }
 
-.light .hover\:bg-primary-500:hover { background-color: #6e637e; }
+.light .hover\:bg-primary-500:hover { background-color: #006cc0; }
 
 .light .bg-surface-900\/60 { background-color: rgb(255 255 255 / 0.95); }
 .light .bg-surface-900\/50 { background-color: rgb(255 255 255 / 0.95); }
@@ -295,3 +299,23 @@
 .light .bg-surface-800\/50 { background-color: rgb(255 255 255 / 0.9); }
 
 .light .shadow-black\/20 { --tw-shadow-color: rgb(0 0 0 / 0.08); }
+
+/* Workbench: flat, compact application chrome; content stays readable. */
+.ide-shell {
+  font-family: "Segoe UI", var(--font-sans);
+  color-scheme: dark;
+}
+.light .ide-shell { color-scheme: light; }
+.light .ide-shell .hover\:text-white:hover { color: var(--color-surface-100); }
+.ide-shell :where(.rounded-lg, .rounded-xl, .rounded-2xl) { border-radius: 4px; }
+.ide-shell h1 { font-size: 1.375rem; line-height: 1.4; letter-spacing: -0.025em; }
+.ide-shell :where(.shadow-sm, .shadow-lg, .hover\:shadow-lg:hover) { box-shadow: none; }
+.ide-shell :where(input, textarea, select) { border-radius: 3px; }
+.ide-shell :where(button, a) { transition-duration: 120ms; }
+.ide-shell .surface-interaction:hover { transform: none; }
+.ide-shell :where(.animate-borderGlow, .animate-breathe) { animation: none; }
+.ide-shell main { scrollbar-gutter: stable; }
+.ide-shell :where(main, .workbench-explorer) {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-surface-700) transparent;
+}

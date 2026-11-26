@@ -269,13 +269,13 @@ function DashboardContent() {
 
   return (
     <div className="flex-1 shrink-0 bg-surface-950">
-      <div className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 lg:py-12">
+      <div className="mx-auto w-full max-w-6xl px-5 py-6 sm:px-6">
         <EmailVerificationBanner />
 
-      <header className="mb-8 border-b border-surface-800 pb-7">
+      <header className="mb-6 border-b border-surface-800 pb-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.2em] text-surface-500">Your overview</p>
+            <p className="mb-2 font-mono text-[11px] text-surface-500">workspace / overview</p>
             <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
               Hello, {user?.displayName || 'there'}
             </h1>

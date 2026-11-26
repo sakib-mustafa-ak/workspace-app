@@ -352,8 +352,8 @@ export function WorkspaceHome() {
     board.name.toLowerCase().includes(search.toLowerCase()),
   );
   return (
-    <div className="mx-auto w-full max-w-6xl flex-1 px-5 py-8 sm:px-8 lg:py-12">
-      <header className="mb-10 flex flex-wrap items-start justify-between gap-5">
+    <div className="mx-auto w-full max-w-6xl flex-1 px-5 py-6 sm:px-6">
+      <header className="mb-6 flex flex-wrap items-start justify-between gap-5 border-b border-surface-800 pb-5">
         <div>
           <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.2em] text-surface-500">
             Your workspace

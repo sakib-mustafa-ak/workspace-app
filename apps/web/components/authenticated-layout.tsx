@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { AuthProvider, useAuth } from '@/contexts/auth-context';
-import { Sidebar } from '@/components/sidebar';
-import { Menu, LayoutDashboard, Bell, Users, Settings, Puzzle } from 'lucide-react';
+import { WorkbenchActivityBar, WorkbenchStatusBar, WorkbenchTitleBar } from '@/components/workbench-chrome';
+import { LayoutDashboard, Bell, Users, Settings, Puzzle, X } from 'lucide-react';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { useFocusTrap } from '@/hooks/use-focus-trap';
@@ -19,11 +19,20 @@ const navItems = [
 ];
 
 export function AuthenticatedLayout({ children }: { children: ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
   const showSidebar = pathname === '/dashboard' || pathname.startsWith('/dashboard/');
   const isBoardPage = /^\/workspaces\/[^/]+\/boards\/[^/]+\/?$/.test(pathname);
   const workspaceId = pathname.match(/^\/workspaces\/([^/]+)/)?.[1];
+  const section = pathname === '/dashboard' ? 'Dashboard'
+    : pathname === '/dashboard/plugins' ? 'Plugins'
+    : pathname.endsWith('/canvas') ? 'Canvas'
+    : isBoardPage ? 'Board'
+    : pathname.endsWith('/manage') ? 'Workspace settings'
+    : workspaceId ? 'Workspace'
+    : pathname === '/notifications' ? 'Notifications'
+    : pathname.startsWith('/users') ? 'People'
+    : pathname === '/settings' ? 'Settings'
+    : 'Workspace OS';
   const router = useRouter();
 
   const shortcuts = [
@@ -38,43 +47,23 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
   return (
     <AuthProvider>
       <VerifiedAccess>
-      <div className="flex h-screen">
-        {showSidebar && sidebarOpen && (
-          <div
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-
-        {showSidebar && <div
-          className={`fixed inset-y-0 left-0 z-50 -translate-x-full transition-transform duration-200 ease-in-out lg:static lg:z-auto lg:translate-x-0 ${
-            sidebarOpen ? 'translate-x-0' : ''
-          }`}
-        >
-          <Sidebar />
-        </div>}
-
+      <div className="ide-shell flex h-dvh flex-col bg-surface-950 text-surface-200">
+        <WorkbenchTitleBar section={section} onShortcuts={() => setShowCheatSheet(true)} />
+        <div className="flex min-h-0 flex-1">
+        {showSidebar && <WorkbenchActivityBar />}
         <main className={`relative flex min-w-0 flex-1 flex-col overflow-auto ${showSidebar ? 'pb-16 lg:pb-0' : ''}`}>
+          <nav aria-label="Page tabs" className="workbench-tabs flex h-9 shrink-0 items-stretch border-b border-surface-800 bg-workbench-chrome text-xs">
+            <Link href="/dashboard" aria-current={pathname === '/dashboard' ? 'page' : undefined} className={`flex items-center gap-2 border-r border-surface-800 px-4 ${pathname === '/dashboard' ? 'border-t-2 border-t-primary-400 bg-workbench-tab text-surface-200' : 'text-surface-500 hover:text-surface-200'}`}><LayoutDashboard size={13} className="text-primary-400" />Dashboard</Link>
+            {pathname !== '/dashboard' && <span aria-current="page" className="flex min-w-0 items-center gap-2 border-r border-t-2 border-surface-800 border-t-primary-400 bg-workbench-tab px-4 text-surface-200"><span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary-400" /><span className="truncate">{section}</span></span>}
+          </nav>
           {!showSidebar && <nav aria-label="Main navigation" className="flex shrink-0 items-center justify-between gap-4 border-b border-surface-800 px-5 py-3 text-sm">
             <div className="flex items-center gap-4"><Link href="/dashboard" className="font-semibold text-surface-300 hover:text-white">← Dashboard</Link>{workspaceId && !isBoardPage && <Link href={`/workspaces/${workspaceId}`} className="text-surface-500 hover:text-surface-200">Workspace home</Link>}</div>
             <div className="flex gap-4"><Link href="/notifications" aria-label="Notifications" className="text-surface-500 hover:text-surface-200"><Bell size={17} /></Link><Link href="/settings" aria-label="Account settings" className="text-surface-500 hover:text-surface-200"><Settings size={17} /></Link></div>
           </nav>}
-          {showSidebar && <div className="sticky top-0 z-30 flex h-20 flex-col items-center justify-center border-b border-surface-800/70 bg-surface-950/70 px-4 backdrop-blur-xl lg:hidden">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              title="Open navigation menu"
-              aria-label="Open navigation menu"
-              className="absolute left-5 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-surface-800 bg-surface-900 text-surface-300 transition-colors hover:bg-surface-800 hover:text-white"
-            >
-              <Menu size={22} />
-            </button>
-            <span className="text-xl font-bold uppercase tracking-[0.26em] text-surface-100">Workspace</span>
-            <span className="mt-1.5 text-xs font-medium uppercase tracking-[0.26em] text-surface-500">OS</span>
-          </div>}
 
           <ErrorBoundary>{children}</ErrorBoundary>
 
-          <footer className="shrink-0 border-t border-surface-800/70 px-6 py-5 lg:px-8">
+          <footer className="shrink-0 border-t border-surface-800 px-5 py-2 lg:px-6">
             <div className="flex flex-col gap-2 text-xs text-surface-500 sm:flex-row sm:items-center sm:justify-between">
               <span>© {new Date().getFullYear()} Workspace OS</span>
               <div className="flex gap-4">
@@ -94,12 +83,15 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
             <Link
               key={item.href}
               href={item.href}
+              aria-label={item.label}
+              title={item.label}
+              aria-current={pathname === item.href ? 'page' : undefined}
               className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-caption ${
                 pathname === item.href ? 'text-primary-400' : 'text-surface-500'
               }`}
             >
               <item.icon size={18} />
-              {item.label}
+              <span className="sr-only">{item.label}</span>
             </Link>
           ))}
         </nav>}
@@ -114,7 +106,10 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
               className="w-full max-w-sm rounded-xl border border-surface-800 bg-surface-900 p-6 shadow-xl shadow-black/20"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 id="shortcuts-dialog-title" className="text-sm font-semibold mb-4">Keyboard Shortcuts</h3>
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <h3 id="shortcuts-dialog-title" className="text-sm font-semibold">Keyboard Shortcuts</h3>
+                <button type="button" aria-label="Close keyboard shortcuts" onClick={() => setShowCheatSheet(false)} className="flex h-8 w-8 items-center justify-center rounded-sm text-surface-400 hover:bg-surface-800"><X size={16} /></button>
+              </div>
               <div className="space-y-2">
                 {shortcuts.map((s) => (
                   <div key={s.keys.join('')} className="flex items-center justify-between text-sm">
@@ -128,6 +123,8 @@ export function AuthenticatedLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
         )}
+        </div>
+        <WorkbenchStatusBar section={section} onShortcuts={() => setShowCheatSheet(true)} />
       </div>
       </VerifiedAccess>
     </AuthProvider>

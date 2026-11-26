@@ -246,11 +246,11 @@ export function Sidebar() {
   const activeBoards = activeWorkspaceId ? workspaceBoards[activeWorkspaceId] || [] : [];
 
   return (
-    <aside className="flex h-full w-60 flex-shrink-0 flex-col border-r border-surface-800 bg-gradient-to-b from-surface-900 to-surface-900/95">
-      <div className="flex h-14 items-center border-b border-surface-800 px-4">
+    <aside className="workbench-explorer flex h-full w-56 flex-shrink-0 flex-col border-r border-surface-800 bg-workbench-chrome">
+      <div className="flex h-9 items-center border-b border-surface-800 px-4">
         <div className="flex items-center gap-2.5">
-          <WorkspaceLogo className="h-7 w-7" />
-          <span className="font-display text-sm font-semibold tracking-tight">Workspace OS</span>
+          <WorkspaceLogo className="h-4 w-4" />
+          <span className="text-[11px] font-medium uppercase tracking-wider text-surface-400">Explorer</span>
         </div>
       </div>
 
@@ -288,17 +288,18 @@ export function Sidebar() {
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        <nav className="space-y-1 p-3">
+        <nav className="space-y-0.5 px-2 pb-3">
           {navItems.map((item) => {
             const active = pathname === item.href;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-all ${
+                aria-current={active ? 'page' : undefined}
+                className={`flex items-center gap-2.5 rounded-sm border-l-2 px-3 py-1.5 text-xs transition-colors ${
                   active
-                    ? 'bg-surface-800 text-white shadow-sm'
-                    : 'text-surface-400 hover:bg-surface-800/50 hover:text-surface-200'
+                    ? 'border-primary-400 bg-surface-800/70 text-surface-100'
+                    : 'border-transparent text-surface-400 hover:bg-surface-800/50 hover:text-surface-200'
                 }`}
               >
                 <item.icon size={16} className={active ? 'text-primary-400' : ''} />
